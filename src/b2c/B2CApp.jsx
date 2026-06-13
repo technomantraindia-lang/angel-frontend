@@ -3,6 +3,8 @@ import './b2c.css';
 import logo from '../logo.png';
 import carouselTwo from '../carousle 2.png';
 import carouselThree from '../carousle 3.png';
+import carouselFour from '../carousle 4.png';
+import machineImage from '../machine.png';
 const heroBanner = '/b2c-hero-banner.png';
 
 const IconEmail = () => (
@@ -47,6 +49,96 @@ const defaultPolicy = {
   title: 'Printing Policy',
   content: '',
 };
+
+function downloadTextFile(content, filename, type = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+}
+function B2CNotificationMenu({ notifications = [], unreadCount = 0, onMarkRead, onMarkAllRead }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = () => setOpen(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [open]);
+
+  return (
+    <div className="b2c-notification-menu" onClick={(event) => event.stopPropagation()}>
+      <button type="button" className="b2c-notification-bell" onClick={() => setOpen((prev) => !prev)}>
+        <span>Bell</span>
+        {unreadCount > 0 ? <span className="b2c-notification-count">{unreadCount}</span> : null}
+      </button>
+      {open ? (
+        <div className="b2c-notification-panel">
+          <div className="b2c-notification-panel-head">
+            <strong>Notifications</strong>
+            {notifications.length ? (
+              <button type="button" className="b2c-notification-link" onClick={onMarkAllRead}>Mark all read</button>
+            ) : null}
+          </div>
+          {!notifications.length ? (
+            <div className="b2c-notification-empty">No notifications yet.</div>
+          ) : (
+            <div className="b2c-notification-list">
+              {notifications.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`b2c-notification-item ${item.is_read ? 'read' : 'unread'}`}
+                  onClick={() => {
+                    if (!item.is_read) onMarkRead(item.id);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="b2c-notification-title">{item.title}</span>
+                  <span className="b2c-notification-copy">{item.message}</span>
+                  <span className="b2c-notification-time">{new Date(item.created_at).toLocaleString('en-IN')}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function B2CHeaderDrawer({ open, onClose, label, children }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  return (
+    <div className={`b2c-mobile-menu-overlay ${open ? 'open' : ''}`} onClick={onClose}>
+      <div className={`b2c-mobile-menu-panel ${open ? 'open' : ''}`} onClick={(event) => event.stopPropagation()}>
+        <div className="b2c-mobile-menu-head">
+          <BrandBlock compact label={label} />
+          <button type="button" className="b2c-mobile-menu-close" onClick={onClose} aria-label="Close menu">
+            ×
+          </button>
+        </div>
+        <div className="b2c-mobile-menu-links">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const formatDateTimeLocal = (value) => {
   if (!value) return '';
   const date = new Date(value);
@@ -91,6 +183,13 @@ const heroSlides = [
     title: 'Sharp colors, polished finish, and dependable production care.',
     description: 'Our B2C workflow is made for customers who want premium print quality, thoughtful support, and a beautifully finished final product.',
   },
+  {
+    image: carouselFour,
+    alt: 'Angel Enterprise premium print showcase banner',
+    eyebrow: 'Production Studio',
+    title: 'Elegant print presentation backed by strong machine performance.',
+    description: 'From customer approval to final output, we keep every premium print order clean, refined, and production-ready.',
+  },
 ];
 
 const aboutHighlights = [
@@ -115,6 +214,7 @@ const aboutPrinciples = [
 ];
 
 const aboutStats = [
+  { value: '2013', label: 'established and serving premium print clients' },
   { value: 'Konica', label: 'production setup for crisp premium output' },
   { value: '3-Step', label: 'creative review to approval workflow' },
   { value: 'Custom', label: 'GSM, side option, and print detail flexibility' },
@@ -122,16 +222,46 @@ const aboutStats = [
 
 const aboutShowcaseCards = [
   {
-    title: 'Invitation Craft',
-    description: 'Elegant wedding sets, luxury sleeves, inserts, and envelopes with balanced finishing details.',
+    title: 'Wedding Invitations',
+    eyebrow: 'Celebration',
+    image: '/velvet_kankotri.png',
+    description: 'Premium kankotri sets, inserts, and coordinated invitation pieces designed for refined event presentation.',
   },
   {
-    title: 'Brand Print',
-    description: 'Visiting cards, premium presentation pieces, and custom collateral designed to feel polished.',
+    title: 'Business Cards',
+    eyebrow: 'Branding',
+    image: '/visiting_card.png',
+    description: 'Visiting cards and brand stationery with sharp typography, balanced layouts, and a more polished first impression.',
   },
   {
-    title: 'Production Care',
-    description: 'Artwork review, quantity planning, and finishing coordination handled with print-floor clarity.',
+    title: 'Packaging & Envelopes',
+    eyebrow: 'Finishing',
+    image: '/luxury_envelope.png',
+    description: 'Luxury envelopes, sleeves, and finishing-led pieces prepared with clean approval flow before production starts.',
+  },
+  {
+    title: 'Konica Machine Production',
+    eyebrow: 'Machinery',
+    image: machineImage,
+    description: 'We use Konica machine production for stable color, sharper detail, and dependable premium print output.',
+  },
+];
+
+const aboutVisualGallery = [
+  {
+    title: 'Konica Machine Setup',
+    caption: 'The production machine behind our clean output, reliable color, and premium finishing workflow.',
+    image: machineImage,
+  },
+  {
+    title: 'Business Card Collections',
+    caption: 'Professional visiting cards for premium brand presentation.',
+    image: '/visiting_card.png',
+  },
+  {
+    title: 'Luxury Envelope Work',
+    caption: 'Elegant envelope and sleeve combinations for gifting and events.',
+    image: '/luxury_envelope.png',
   },
 ];
 
@@ -305,7 +435,15 @@ function emptyB2CProductForm(categories = []) {
   };
 }
 
-function B2CAdminPanel({ user, onLogout, api }) {
+function B2CAdminPanel({
+  user,
+  onLogout,
+  api,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   const isStaffModule = user.role === 'staff';
   const [tab, setTab] = useState('dashboard');
   const [stats, setStats] = useState({});
@@ -731,6 +869,23 @@ function B2CAdminPanel({ user, onLogout, api }) {
     }
   };
 
+  const handleExportCustomers = () => {
+    const rows = [
+      ['Name', 'Email', 'Phone', 'Orders', 'Joined'],
+      ...customers.map((customer) => ([
+        customer.name || '',
+        customer.email || '',
+        customer.phone || '',
+        String(customer.orders_count || 0),
+        customer.created_at ? new Date(customer.created_at).toLocaleDateString('en-IN') : '',
+      ])),
+    ];
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    downloadTextFile(csv, `b2c-customers-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8');
+  };
+
   if (loading) {
     return (
       <div className="b2c-page b2c-page-muted b2c-loader-page">
@@ -748,6 +903,12 @@ function B2CAdminPanel({ user, onLogout, api }) {
         <BrandBlock compact label={isStaffModule ? 'B2C Staff Module' : 'B2C Admin Module'} />
         <div className="b2c-shell-actions">
           <a href="/portal" className="b2c-link-strong">Back to B2B Module</a>
+          <B2CNotificationMenu
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkRead={onMarkNotificationRead}
+            onMarkAllRead={onMarkAllNotificationsRead}
+          />
           <span className="b2c-user-badge">Welcome, {user.name}</span>
           <button className="b2c-btn-secondary" onClick={onLogout}>Sign Out</button>
         </div>
@@ -1270,6 +1431,9 @@ function B2CAdminPanel({ user, onLogout, api }) {
                                   {item.gsm ? ` | ${item.gsm}${Number(item.gsm_price || 0) > 0 ? ` (+${money(item.gsm_price)})` : ''}` : ''}
                                   {item.finish ? ` | ${finishLabels[item.finish] || item.finish}` : ''}
                                 </div>
+                                {item.design_serial_number && (
+                                  <div className="b2c-admin-table-sub">Design Serial No: {item.design_serial_number}</div>
+                                )}
                                 {item.custom_text && (
                                   <div className="b2c-admin-table-sub">Customer text: {item.custom_text}</div>
                                 )}
@@ -1372,6 +1536,9 @@ function B2CAdminPanel({ user, onLogout, api }) {
                 <span className="b2c-pill subtle">Customers</span>
                 <h2>B2C registered customers</h2>
               </div>
+              <button type="button" className="b2c-btn-secondary b2c-btn-inline" onClick={handleExportCustomers}>
+                Export CSV
+              </button>
             </div>
 
             {customers.length === 0 ? (
@@ -1503,6 +1670,7 @@ function B2CAdminPanel({ user, onLogout, api }) {
                         <div><strong>Quantity:</strong> <span>{item.quantity}</span></div>
                         <div><strong>Print Side:</strong> <span>{printSideLabels[item.print_side] || item.print_side}</span></div>
                         <div><strong>Paper GSM:</strong> <span>{item.gsm || 'Not selected'}{item.gsm && Number(item.gsm_price || 0) > 0 ? ` (+${money(item.gsm_price)} per copy)` : ''}</span></div>
+                        <div><strong>Design Serial No:</strong> <span>{item.design_serial_number || 'Not provided'}</span></div>
                         <div><strong>Finish:</strong> <span>{finishLabels[item.finish] || item.finish || 'Standard'}</span></div>
                         <div><strong>Unit Price:</strong> <span>{money(item.unit_price)}</span></div>
                       </div>
@@ -1564,43 +1732,120 @@ function HeroCarousel() {
 }
 
 function GuestHeader({ onLoginClick, currentPage = 'home' }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <header className="b2c-store-header">
-      <BrandBlock compact label="B2C Customer Portal" />
-      <div className="b2c-shell-actions">
-        <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
-        <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
-        <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
-        <a href="/portal" className="b2c-orders-btn b2c-orders-btn-wide">Login as B2B</a>
-        <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={onLoginClick}>
+    <>
+      <header className="b2c-store-header">
+        <BrandBlock compact label="B2C Customer Portal" />
+        <button
+          type="button"
+          className="b2c-mobile-menu-toggle"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="b2c-shell-actions">
+          <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
+          <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+          <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+          <a href="/portal" className="b2c-orders-btn b2c-orders-btn-wide">Login as B2B</a>
+          <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={onLoginClick}>
+            Login as B2C
+          </button>
+        </div>
+      </header>
+
+      <B2CHeaderDrawer open={menuOpen} onClose={() => setMenuOpen(false)} label="B2C Customer Portal">
+        <a href="/" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
+        <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+        <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+        <a href="/portal" onClick={() => setMenuOpen(false)} className="b2c-orders-btn b2c-orders-btn-wide">Login as B2B</a>
+        <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={() => { setMenuOpen(false); onLoginClick(); }}>
           Login as B2C
         </button>
-      </div>
-    </header>
+      </B2CHeaderDrawer>
+    </>
   );
 }
 
-function CustomerHeader({ user, onLogout, currentPage = 'home', cartCount = 0, onOpenCart = null }) {
+function CustomerHeader({
+  user,
+  onLogout,
+  currentPage = 'home',
+  cartCount = 0,
+  onOpenCart = null,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <header className="b2c-store-header">
-      <BrandBlock compact label="B2C Storefront" />
-      <div className="b2c-shell-actions">
-        <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
-        <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
-        <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
-        <a href="/my-orders" className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
-        <a href="/profile" className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
+    <>
+      <header className="b2c-store-header">
+        <BrandBlock compact label="B2C Storefront" />
+        <button
+          type="button"
+          className="b2c-mobile-menu-toggle"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="b2c-shell-actions">
+          <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
+          <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+          <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+          <a href="/my-orders" className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
+          <a href="/profile" className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
+          {onOpenCart ? (
+            <button className="b2c-cart-toggle-btn" onClick={onOpenCart}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+              <span>Cart</span>
+              {cartCount > 0 && <span className="b2c-cart-count">{cartCount}</span>}
+            </button>
+          ) : null}
+          <B2CNotificationMenu
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkRead={onMarkNotificationRead}
+            onMarkAllRead={onMarkAllNotificationsRead}
+          />
+          <span className="b2c-user-badge">Hi, {user.name}</span>
+          <button className="b2c-btn-secondary" onClick={onLogout}>Logout</button>
+        </div>
+      </header>
+
+      <B2CHeaderDrawer open={menuOpen} onClose={() => setMenuOpen(false)} label="B2C Storefront">
+        <a href="/" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
+        <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+        <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+        <a href="/my-orders" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
+        <a href="/profile" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
         {onOpenCart ? (
-          <button className="b2c-cart-toggle-btn" onClick={onOpenCart}>
+          <button className="b2c-cart-toggle-btn" onClick={() => { setMenuOpen(false); onOpenCart(); }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span>Cart</span>
             {cartCount > 0 && <span className="b2c-cart-count">{cartCount}</span>}
           </button>
         ) : null}
+        <B2CNotificationMenu
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkRead={onMarkNotificationRead}
+          onMarkAllRead={onMarkAllNotificationsRead}
+        />
         <span className="b2c-user-badge">Hi, {user.name}</span>
-        <button className="b2c-btn-secondary" onClick={onLogout}>Logout</button>
-      </div>
-    </header>
+        <button className="b2c-btn-secondary" onClick={() => { setMenuOpen(false); onLogout(); }}>Logout</button>
+      </B2CHeaderDrawer>
+    </>
   );
 }
 
@@ -1669,16 +1914,13 @@ function StoreFooter({ user }) {
         </div>
 
         <div className="b2c-footer-column">
-          <h4>Production Promise</h4>
-          <div className="b2c-footer-note">
-            <span className="b2c-footer-icon"><IconSpark /></span>
-            <p>Focused artwork review, premium finish direction, and sharp Konica print output for every approved order.</p>
-          </div>
-          <div className="b2c-footer-note">
-            <span className="b2c-footer-icon"><IconMapPin /></span>
-            <p>Customer support and production coordination stay centered around your approved order details.</p>
-          </div>
+          <h4>Contact</h4>
+          <a href="tel:8200391418">Office: 8200391418</a>
+          <a href="tel:9724503723">Customer Care WhatsApp: 9724503723</a>
+          <span>F/4, First Floor, Shyamal Complex, New CG Road</span>
+          <span>Near Kotak Mahindra Bank, Chandkheda, Ahmedabad, Gujarat 382424</span>
         </div>
+
       </div>
 
       <div className="b2c-footer-bottom">
@@ -1717,7 +1959,7 @@ function getProductImage(category) {
   if (category && typeof category === 'object') {
     if (category.primary_image_url) return category.primary_image_url;
     if (Array.isArray(category.image_urls) && category.image_urls.length) return category.image_urls[0];
-    category = category.category;
+    category = [category.category, category.name].filter(Boolean).join(' ');
   }
 
   const cat = (category || '').toLowerCase();
@@ -1733,7 +1975,17 @@ function getProductImage(category) {
   return '/gift_sleeve.png';
 }
 
-function CustomerHome({ user, onLogout, products, categories, api }) {
+function CustomerHome({
+  user,
+  onLogout,
+  products,
+  categories,
+  api,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   const productCards = useMemo(() => buildProductCards(products), [products]);
 
   // Search & Filter state
@@ -1758,6 +2010,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
   const [quantity, setQuantity] = useState(100);
   const [selectedPrintSide, setSelectedPrintSide] = useState('front');
   const [selectedGsm, setSelectedGsm] = useState('');
+  const [designSerialNumber, setDesignSerialNumber] = useState('');
   const [customText, setCustomText] = useState('');
   const [artworkFile, setArtworkFile] = useState(null);
   const [inquiryLoading, setInquiryLoading] = useState(false);
@@ -1839,6 +2092,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
     setQuantity(product.print_copy || 1);
     setSelectedPrintSide(getInitialPrintSide(product));
     setSelectedGsm(getProductGsmOptions(product)[0]?.label || '');
+    setDesignSerialNumber('');
     setCustomText('');
     setArtworkFile(null);
     setActiveImageIndex(0);
@@ -1864,6 +2118,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
         printSide: selectedPrintSide,
         gsm: selectedGsm,
         gsmPrice: gsmExtraPrice,
+        designSerialNumber: designSerialNumber.trim(),
       },
       file: artworkFile,
     };
@@ -1903,6 +2158,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
           quantity: item.quantity,
           print_side: item.details.printSide,
           gsm: item.details.gsm || null,
+          design_serial_number: item.details.designSerialNumber || null,
           custom_text: item.details.customText || null,
         }))
       ));
@@ -1950,7 +2206,17 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
 
   return (
     <div className="b2c-store-shell">
-      <CustomerHeader user={user} onLogout={onLogout} currentPage="home" cartCount={cart.length} onOpenCart={() => setIsCartOpen(true)} />
+      <CustomerHeader
+        user={user}
+        onLogout={onLogout}
+        currentPage="home"
+        cartCount={cart.length}
+        onOpenCart={() => setIsCartOpen(true)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+      />
 
       <HeroCarousel />
 
@@ -2034,7 +2300,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
                       <div className="b2c-card-actions">
                         {product.sample_pdf_url && (
                           <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" className="b2c-card-link-btn">
-                            View Sample PDF
+                            Open Sample PDF
                           </a>
                         )}
                         <button
@@ -2145,7 +2411,7 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
                   <p>{selectedProduct.description || selectedProduct.tagline}</p>
                   {selectedProduct.sample_pdf_url && (
                     <a href={selectedProduct.sample_pdf_url} target="_blank" rel="noreferrer" className="b2c-card-link-btn b2c-modal-download-btn">
-                      Download Sample PDF
+                      Open Sample PDF
                     </a>
                   )}
                   {selectedProductImages.length > 1 && (
@@ -2212,6 +2478,20 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
                             <option key={gsmOption.id} value={gsmOption.label}>{formatGsmOptionLabel(gsmOption)}</option>
                           ))}
                         </select>
+                      </div>
+                    )}
+
+                    {selectedProduct.sample_pdf_url && (
+                      <div className="b2c-modal-field">
+                        <label>Design Serial Number (Optional)</label>
+                        <input
+                          type="text"
+                          className="b2c-input-styled"
+                          value={designSerialNumber}
+                          onChange={(e) => setDesignSerialNumber(e.target.value)}
+                          placeholder="Enter design serial no. from the sample PDF"
+                        />
+                        <span className="b2c-field-hint">Use this only if you selected a design from the sample PDF.</span>
                       </div>
                     )}
 
@@ -2363,7 +2643,15 @@ function CustomerHome({ user, onLogout, products, categories, api }) {
   );
 }
 
-function CustomerOrdersPage({ user, onLogout, api }) {
+function CustomerOrdersPage({
+  user,
+  onLogout,
+  api,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
@@ -2394,22 +2682,15 @@ function CustomerOrdersPage({ user, onLogout, api }) {
 
   return (
     <div className="b2c-store-shell">
-      <header className="b2c-store-header">
-        <BrandBlock compact label="B2C Storefront" />
-        <div className="b2c-shell-actions">
-          <a href="/profile" className="b2c-orders-btn">
-            Profile
-          </a>
-          <a href="/printing-policy" className="b2c-orders-btn">
-            Printing Policy
-          </a>
-          <a href="/" className="b2c-orders-btn">
-            Store Home
-          </a>
-          <span className="b2c-user-badge">Hi, {user.name}</span>
-          <button className="b2c-btn-secondary" onClick={onLogout}>Logout</button>
-        </div>
-      </header>
+      <CustomerHeader
+        user={user}
+        onLogout={onLogout}
+        currentPage="orders"
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+      />
 
       <main className="b2c-store-main">
         <section className="b2c-orders-page-hero">
@@ -2462,6 +2743,7 @@ function CustomerOrdersPage({ user, onLogout, api }) {
                           <p>Quantity: {item.quantity}</p>
                           <p>Print Side: {printSideLabels[item.print_side] || item.print_side}</p>
                           {item.gsm && <p>Paper GSM: {item.gsm}{Number(item.gsm_price || 0) > 0 ? ` (+${money(item.gsm_price)} per copy)` : ''}</p>}
+                          {item.design_serial_number && <p>Design Serial No: {item.design_serial_number}</p>}
                           {item.custom_text && <p>Notes: {item.custom_text}</p>}
                           {item.file_path && (
                             <a
@@ -2494,7 +2776,16 @@ function CustomerOrdersPage({ user, onLogout, api }) {
   );
 }
 
-function CustomerProfilePage({ user, onLogout, api, onProfileUpdated }) {
+function CustomerProfilePage({
+  user,
+  onLogout,
+  api,
+  onProfileUpdated,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   const [profileForm, setProfileForm] = useState({
     name: user.name || '',
     email: user.email || '',
@@ -2573,22 +2864,15 @@ function CustomerProfilePage({ user, onLogout, api, onProfileUpdated }) {
 
   return (
     <div className="b2c-store-shell">
-      <header className="b2c-store-header">
-        <BrandBlock compact label="B2C Storefront" />
-        <div className="b2c-shell-actions">
-          <a href="/" className="b2c-orders-btn">
-            Store Home
-          </a>
-          <a href="/printing-policy" className="b2c-orders-btn">
-            Printing Policy
-          </a>
-          <a href="/my-orders" className="b2c-orders-btn">
-            My Orders
-          </a>
-          <span className="b2c-user-badge">Hi, {user.name}</span>
-          <button className="b2c-btn-secondary" onClick={onLogout}>Logout</button>
-        </div>
-      </header>
+      <CustomerHeader
+        user={user}
+        onLogout={onLogout}
+        currentPage="profile"
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkNotificationRead={onMarkNotificationRead}
+        onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+      />
 
       <main className="b2c-store-main">
         <section className="b2c-orders-page-hero">
@@ -2681,7 +2965,16 @@ function CustomerProfilePage({ user, onLogout, api, onProfileUpdated }) {
   );
 }
 
-function CustomerPolicyPage({ user, onLogout, policy, policyLoading }) {
+function CustomerPolicyPage({
+  user,
+  onLogout,
+  policy,
+  policyLoading,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   const policyParagraphs = (policy?.content || '')
     .split(/\n+/)
     .filter(Boolean);
@@ -2691,7 +2984,17 @@ function CustomerPolicyPage({ user, onLogout, policy, policyLoading }) {
   return (
     <div className="b2c-store-shell">
       {user
-        ? <CustomerHeader user={user} onLogout={onLogout} currentPage="policy" />
+        ? (
+          <CustomerHeader
+            user={user}
+            onLogout={onLogout}
+            currentPage="policy"
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkNotificationRead={onMarkNotificationRead}
+            onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+          />
+        )
         : <GuestHeader onLoginClick={() => { window.location.href = '/'; }} currentPage="policy" />}
 
       <main className="b2c-store-main">
@@ -2699,7 +3002,7 @@ function CustomerPolicyPage({ user, onLogout, policy, policyLoading }) {
           <div className="b2c-policy-hero-copy">
             <span className="b2c-pill">Printing Policy</span>
             <h1>{policy?.title || 'Printing Policy'}</h1>
-            <p>Please review these order, artwork, and production notes before confirming your B2C print request.</p>
+            <p>Review the key approval points before your print request moves to production.</p>
           </div>
 
           <div className="b2c-policy-hero-points">
@@ -2724,9 +3027,6 @@ function CustomerPolicyPage({ user, onLogout, policy, policyLoading }) {
                   <span className="b2c-policy-summary-label">Order Checkpoint</span>
                   <h2>Confirm artwork, spelling, quantity, and finish before production begins.</h2>
                 </div>
-                <p>
-                  This page is meant to keep every premium print order accurate, smooth, and clearly approved before it reaches the production floor.
-                </p>
               </div>
 
               <div className="b2c-policy-grid">
@@ -2747,20 +3047,37 @@ function CustomerPolicyPage({ user, onLogout, policy, policyLoading }) {
   );
 }
 
-function AboutUsPage({ user, onLogout }) {
+function AboutUsPage({
+  user,
+  onLogout,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
   return (
     <div className="b2c-store-shell">
       {user
-        ? <CustomerHeader user={user} onLogout={onLogout} currentPage="about" />
+        ? (
+          <CustomerHeader
+            user={user}
+            onLogout={onLogout}
+            currentPage="about"
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkNotificationRead={onMarkNotificationRead}
+            onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+          />
+        )
         : <GuestHeader onLoginClick={() => { window.location.href = '/'; }} currentPage="about" />}
 
       <main className="b2c-store-main">
         <section className="b2c-about-page-hero">
           <div className="b2c-about-page-copy">
             <span className="b2c-pill">About Us</span>
-            <h1>Premium print experiences for invitations, branding, and celebration stationery.</h1>
+            <h1>Premium printing for invitations, business stationery, and finished presentation pieces.</h1>
             <p>
-              Angel Enterprise serves customers who want print work that feels refined, reliable, and beautifully finished. We combine creative guidance with Konica-based production quality to deliver standout results.
+              Angel Enterprise was established in 2013 and helps customers order wedding stationery, visiting cards, envelopes, sleeves, and custom print pieces with better clarity from design approval to final production.
             </p>
             <div className="b2c-about-stats-row">
               {aboutStats.map((item) => (
@@ -2770,18 +3087,72 @@ function AboutUsPage({ user, onLogout }) {
                 </article>
               ))}
             </div>
+            <div className="b2c-about-trust-list">
+              {aboutPrinciples.map((item) => (
+                <div key={item} className="b2c-about-trust-row">
+                  <span className="b2c-about-preview-mark"><IconSpark /></span>
+                  <p>{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="b2c-about-page-badge">
-            <strong>Konica Print Focus</strong>
-            <span>Sharp colors, smooth production flow, and premium presentation details.</span>
+          <div className="b2c-about-hero-visual">
+            <article className="b2c-about-hero-feature b2c-about-hero-feature-large">
+              <img src={aboutVisualGallery[0].image} alt={aboutVisualGallery[0].title} />
+              <div className="b2c-about-hero-caption">
+                <span>{aboutVisualGallery[0].title}</span>
+                <p>{aboutVisualGallery[0].caption}</p>
+              </div>
+            </article>
+            <div className="b2c-about-hero-stack">
+              {aboutVisualGallery.slice(1).map((item) => (
+                <article key={item.title} className="b2c-about-hero-feature">
+                  <img src={item.image} alt={item.title} />
+                  <div className="b2c-about-hero-caption">
+                    <span>{item.title}</span>
+                    <p>{item.caption}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="b2c-about-page-badge">
+              <strong>Konica Print Focus</strong>
+              <span>Sharp color output, controlled approval flow, and premium finishing details across every order.</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="b2c-about-machine-section">
+          <div className="b2c-about-machine-panel">
+            <div className="b2c-about-machine-copy">
+              <span className="b2c-pill subtle">Konica Machine</span>
+              <h2>We use Konica machine production for sharper color, cleaner detailing, and more dependable premium print output.</h2>
+              <p>
+                Our machine setup helps us maintain better consistency across invitation sets, visiting cards, envelopes, sleeves, and custom print jobs.
+              </p>
+              <p>
+                Combined with artwork review and approval discipline, this gives customers a stronger final result from design stage to printed delivery.
+              </p>
+            </div>
+            <div className="b2c-about-machine-visual">
+              <img src={machineImage} alt="Konica machine used by Angel Enterprise" />
+            </div>
           </div>
         </section>
 
         <section className="b2c-about-showcase-section">
+          <div className="b2c-section-head-centered">
+            <span className="b2c-pill subtle">What We Offer</span>
+            <h2>Built like a premium print storefront, backed by real production care.</h2>
+            <p>We keep the product selection elegant, the approval steps clear, and the final printed result presentation-ready.</p>
+          </div>
           <div className="b2c-about-showcase-grid">
-            {aboutShowcaseCards.map((item, index) => (
+            {aboutShowcaseCards.map((item) => (
               <article key={item.title} className="b2c-about-showcase-card">
-                <span className="b2c-about-showcase-index">0{index + 1}</span>
+                <div className="b2c-about-showcase-media">
+                  <img src={item.image} alt={item.title} />
+                </div>
+                <span className="b2c-about-showcase-index">{item.eyebrow}</span>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </article>
@@ -2790,19 +3161,26 @@ function AboutUsPage({ user, onLogout }) {
         </section>
 
         <section className="b2c-about-story-section">
-          <div className="b2c-section-head-centered">
-            <span className="b2c-pill subtle">What We Create</span>
-            <h2>Designed for memorable celebrations and polished brand communication.</h2>
-            <p>Our work blends premium materials, thoughtful customization, and a finish-first mindset for every approved order.</p>
-          </div>
+          <div className="b2c-about-story-layout">
+            <div className="b2c-about-story-copy">
+              <span className="b2c-pill subtle">Why It Feels Better</span>
+              <h2>A cleaner order journey for premium print customers.</h2>
+              <p>
+                From artwork review to GSM selection and sample checking, we shape each order so the customer knows what is being produced before it reaches the machine.
+              </p>
+              <p>
+                That makes Angel Enterprise feel less like a generic print counter and more like a premium print storefront for wedding, gifting, and business stationery needs.
+              </p>
+            </div>
 
-          <div className="b2c-about-story-grid">
-            {aboutHighlights.map((item) => (
-              <article key={item.title} className="b2c-about-story-card">
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
-            ))}
+            <div className="b2c-about-story-grid">
+              {aboutHighlights.map((item) => (
+                <article key={item.title} className="b2c-about-story-card">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -2827,7 +3205,7 @@ function AboutUsPage({ user, onLogout }) {
           <div className="b2c-about-journey-panel">
             <div className="b2c-about-journey-copy">
               <span className="b2c-pill subtle">Studio Approach</span>
-              <h2>We treat each job like a finished presentation piece, not just a file to print.</h2>
+              <h2>We treat each order like a finished product experience, not just a file to print.</h2>
               <p>
                 That means better alignment between design intent, paper feel, print-side choice, GSM selection, and final production output. The result is cleaner communication with customers and stronger print results on the machine.
               </p>
@@ -2849,7 +3227,7 @@ function AboutUsPage({ user, onLogout }) {
         <section className="b2c-about-cta-section">
           <div className="b2c-about-cta-card">
             <span className="b2c-pill subtle">Start Your Order</span>
-            <h2>Explore the B2C collection and plan your next premium print order.</h2>
+            <h2>Explore the collection and plan your next premium print order.</h2>
             <div className="b2c-guest-hero-actions">
               <a href="/printing-policy" className="b2c-btn-secondary b2c-btn-inline">Read Printing Policy</a>
               <a href="/" className="b2c-btn-primary b2c-btn-inline">
@@ -2897,7 +3275,7 @@ function GuestExperience({
         <section className="b2c-intro-section">
           <div className="b2c-intro-container">
             <span className="b2c-pill">Premium Print Atelier</span>
-            <h1 className="b2c-intro-title">About Us — Premium Printing with Creative Care</h1>
+            <h1 className="b2c-intro-title">Premium Printing for Celebrations and Brands</h1>
             <p className="b2c-intro-text">
               We create premium wedding kankotris, customized envelopes, invitation sets, brand inserts, and festive print products with a strong focus on quality and elegant finishing.
               For sharp colors, clean detailing, and reliable output, we use Konica printing machine technology in our production process.
@@ -3135,6 +3513,8 @@ export default function B2CApp() {
   const [categories, setCategories] = useState([]);
   const [policy, setPolicy] = useState(defaultPolicy);
   const [policyLoading, setPolicyLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -3228,6 +3608,24 @@ export default function B2CApp() {
     }
   }
 
+  async function loadNotifications() {
+    if (!user) {
+      setNotifications([]);
+      setUnreadNotifications(0);
+      return;
+    }
+
+    const baseUrl = isAdminModule ? '/portal/api/notifications' : '/api/b2c/notifications';
+    try {
+      const data = await api(baseUrl);
+      setNotifications(data.notifications || []);
+      setUnreadNotifications(data.unread_count || 0);
+    } catch {
+      setNotifications([]);
+      setUnreadNotifications(0);
+    }
+  }
+
   useEffect(() => {
     Promise.all([
       checkUser(),
@@ -3235,6 +3633,22 @@ export default function B2CApp() {
       loadPolicy(),
     ]).finally(() => setLoadingUser(false));
   }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [user?.id, user?.role, isAdminModule]);
+
+  const markNotificationRead = async (notificationId) => {
+    const baseUrl = isAdminModule ? '/portal/api/notifications' : '/api/b2c/notifications';
+    await api(`${baseUrl}/${notificationId}/read`, { method: 'POST', body: JSON.stringify({}) });
+    await loadNotifications();
+  };
+
+  const markAllNotificationsRead = async () => {
+    const baseUrl = isAdminModule ? '/portal/api/notifications' : '/api/b2c/notifications';
+    await api(`${baseUrl}/read-all`, { method: 'POST', body: JSON.stringify({}) });
+    await loadNotifications();
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -3311,27 +3725,90 @@ export default function B2CApp() {
       return <AdminAccessRequired />;
     }
 
-    return <B2CAdminPanel user={user} onLogout={handleLogout} api={api} />;
+    return (
+      <B2CAdminPanel
+        user={user}
+        onLogout={handleLogout}
+        api={api}
+        notifications={notifications}
+        unreadCount={unreadNotifications}
+        onMarkNotificationRead={markNotificationRead}
+        onMarkAllNotificationsRead={markAllNotificationsRead}
+      />
+    );
   }
 
   if (user) {
     if (isAboutPage) {
-      return <AboutUsPage user={user} onLogout={handleLogout} />;
+      return (
+        <AboutUsPage
+          user={user}
+          onLogout={handleLogout}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     }
 
     if (isPolicyPage) {
-      return <CustomerPolicyPage user={user} onLogout={handleLogout} policy={policy} policyLoading={policyLoading} />;
+      return (
+        <CustomerPolicyPage
+          user={user}
+          onLogout={handleLogout}
+          policy={policy}
+          policyLoading={policyLoading}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     }
 
     if (isOrdersPage) {
-      return <CustomerOrdersPage user={user} onLogout={handleLogout} api={api} />;
+      return (
+        <CustomerOrdersPage
+          user={user}
+          onLogout={handleLogout}
+          api={api}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     }
 
     if (isProfilePage) {
-      return <CustomerProfilePage user={user} onLogout={handleLogout} api={api} onProfileUpdated={setUser} />;
+      return (
+        <CustomerProfilePage
+          user={user}
+          onLogout={handleLogout}
+          api={api}
+          onProfileUpdated={setUser}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     }
 
-    return <CustomerHome user={user} onLogout={handleLogout} products={products} categories={categories} api={api} />;
+    return (
+      <CustomerHome
+        user={user}
+        onLogout={handleLogout}
+        products={products}
+        categories={categories}
+        api={api}
+        notifications={notifications}
+        unreadCount={unreadNotifications}
+        onMarkNotificationRead={markNotificationRead}
+        onMarkAllNotificationsRead={markAllNotificationsRead}
+      />
+    );
   }
 
   if (isAboutPage) {

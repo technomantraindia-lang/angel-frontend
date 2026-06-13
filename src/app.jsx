@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './app.css';
 import logo from './logo.png';
@@ -63,7 +63,96 @@ function Alert({ message, type = 'success' }) {
   return message ? <div className={`alert ${type}`}>{message}</div> : null;
 }
 
-function Header({ user, onLogout, onOpenProfile }) {
+function downloadTextFile(content, filename, type = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+}
+
+function NotificationMenu({ notifications, unreadCount, onMarkRead, onMarkAllRead }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = () => setOpen(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [open]);
+
+  return (
+    <div className="notification-menu" onClick={(event) => event.stopPropagation()}>
+      <button type="button" className="notification-bell" onClick={() => setOpen((prev) => !prev)}>
+        <span>Bell</span>
+        {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
+      </button>
+      {open && (
+        <div className="notification-panel">
+          <div className="notification-panel-head">
+            <strong>Notifications</strong>
+            {notifications.length > 0 && (
+              <button type="button" className="notification-link-btn" onClick={onMarkAllRead}>Mark all read</button>
+            )}
+          </div>
+          {!notifications.length ? (
+            <div className="notification-empty">No notifications yet.</div>
+          ) : (
+            <div className="notification-list">
+              {notifications.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`notification-item ${item.is_read ? 'read' : 'unread'}`}
+                  onClick={() => {
+                    if (!item.is_read) onMarkRead(item.id);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="notification-item-title">{item.title}</span>
+                  <span className="notification-item-copy">{item.message}</span>
+                  <span className="notification-item-time">{new Date(item.created_at).toLocaleString('en-IN')}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortalNavMenu({ items, activeKey, onChange, badgeCount = 0 }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [activeKey]);
+
+  return (
+    <div className={`portal-nav-shell ${open ? 'open' : ''}`}>
+      <button type="button" className="portal-menu-toggle" onClick={() => setOpen((prev) => !prev)}>
+        <span className="portal-menu-toggle-icon">Menu</span>
+        <span>Sections</span>
+        {badgeCount > 0 && <span className="portal-menu-count">{badgeCount}</span>}
+      </button>
+      <div className={`portal-nav ${open ? 'show-mobile' : ''}`}>
+        {items.map((item) => (
+          <button key={item.key} className={activeKey === item.key ? 'active' : ''} onClick={() => onChange(item.key)}>
+            {item.label}
+            {item.count > 0 && <span className="portal-tab-count">{item.count}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Header({ user, onLogout, onOpenProfile, notifications = [], unreadCount = 0, onMarkNotificationRead, onMarkAllNotificationsRead }) {
   return <header className="header">
     <div className="brand">
       <img src={logo} className="header-logo" alt="Angel Enterprise" />
@@ -75,6 +164,12 @@ function Header({ user, onLogout, onOpenProfile }) {
           <span className="wallet-pill">Wallet: {money(user.wallet_balance)}</span>
           <button className="btn ghost btn-profile" onClick={onOpenProfile}>Profile</button>
         </>}
+        <NotificationMenu
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkRead={onMarkNotificationRead}
+          onMarkAllRead={onMarkAllNotificationsRead}
+        />
         <span className="user-pill">{user.name} · {user.role}</span>
         {user.role !== 'dealer' && (
           <a
@@ -232,10 +327,59 @@ function AuthPage({ onLogin }) {
   </div>;
 }
 
-const getTierPrice = (product, copies, printSide = 'front') => {
+function createEmptyGsmOption() {
+  return { label: '', extra_price: '' };
+}
+
+function normalizeGsmOption(option, index = 0) {
+  if (typeof option === 'string') {
+    const label = option.trim();
+    return label ? { id: `gsm-${index}-${label}`, label, extra_price: 0 } : null;
+  }
+
+  if (!option || typeof option !== 'object') {
+    return null;
+  }
+
+  const label = String(option.label || '').trim();
+  if (!label) {
+    return null;
+  }
+
+  const extraPrice = Number(option.extra_price ?? 0);
+
+  return {
+    id: option.id || `gsm-${index}-${label}`,
+    label,
+    extra_price: Number.isFinite(extraPrice) ? extraPrice : 0,
+  };
+}
+
+function getProductGsmOptions(product) {
+  return Array.isArray(product?.gsm_options)
+    ? product.gsm_options.map((option, index) => normalizeGsmOption(option, index)).filter(Boolean)
+    : [];
+}
+
+function getSelectedGsmOption(product, selectedGsm) {
+  return getProductGsmOptions(product).find((option) => option.label === selectedGsm) || null;
+}
+
+function getSelectedGsmExtraPrice(product, selectedGsm) {
+  return Number(getSelectedGsmOption(product, selectedGsm)?.extra_price || 0);
+}
+
+function formatGsmOptionLabel(option) {
+  const normalized = normalizeGsmOption(option);
+  if (!normalized) return '';
+  return normalized.extra_price > 0 ? `${normalized.label} (+${money(normalized.extra_price)})` : normalized.label;
+}
+
+const getTierPrice = (product, copies, printSide = 'front', selectedGsm = '') => {
   const count = Number(copies) || product.print_copy;
   const productPrice = printSide === 'both' && product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0 ? product.front_back_amount : product.amount;
-  const baseCost = Number(productPrice) * count;
+  const gsmExtraPrice = getSelectedGsmExtraPrice(product, selectedGsm);
+  const baseCost = (Number(productPrice) + gsmExtraPrice) * count;
   let discount = 0;
   if (product.pricing_tiers && product.pricing_tiers.length > 0) {
     for (const tier of product.pricing_tiers) {
@@ -423,7 +567,7 @@ const printLedger = (title, subtitle, transactions) => {
   win.document.close();
 };
 
-function DealerPortal({ user, refreshUser }) {
+function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
   const [products, setProducts] = useState([]); const [cart, setCart] = useState([]); const [orders, setOrders] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -431,6 +575,7 @@ function DealerPortal({ user, refreshUser }) {
   const [cartStep, setCartStep] = useState(1);
   const [chosenCopies, setChosenCopies] = useState({});
   const [chosenSides, setChosenSides] = useState({});
+  const [chosenGsm, setChosenGsm] = useState({});
 
   async function load() {
     try {
@@ -473,27 +618,27 @@ function DealerPortal({ user, refreshUser }) {
 
   const total = cart.reduce((sum, item) => sum + Number(item.amount) * item.packs, 0);
 
-  function addToCart(product, copiesCount, printSide = 'front') {
+  function addToCart(product, copiesCount, printSide = 'front', selectedGsm = '') {
     const copies = Number(copiesCount) || product.print_copy;
-    const unitPrice = getTierPrice(product, copies, printSide);
+    const unitPrice = getTierPrice(product, copies, printSide, selectedGsm);
     setCart(current => {
-      const exists = current.some(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide);
+      const exists = current.some(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide && (i.gsm || '') === (selectedGsm || ''));
       if (exists) {
-        return current.map(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide ? { ...i, packs: i.packs + 1 } : i);
+        return current.map(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide && (i.gsm || '') === (selectedGsm || '') ? { ...i, packs: i.packs + 1 } : i);
       } else {
-        return [...current, { ...product, print_copy: copies, print_side: printSide, amount: unitPrice, packs: 1, file: null }];
+        return [...current, { ...product, print_copy: copies, print_side: printSide, gsm: selectedGsm || '', gsm_price: getSelectedGsmExtraPrice(product, selectedGsm), amount: unitPrice, packs: 1, file: null }];
       }
     });
-    setNotice(`${product.name} (${copies} copies, ${printSide === 'both' ? 'Front & Back' : 'Front Only'}) added to cart.`);
+    setNotice(`${product.name} (${copies} copies, ${printSide === 'both' ? 'Front & Back' : 'Front Only'}${selectedGsm ? `, ${selectedGsm}` : ''}) added to cart.`);
   }
 
-  function updateCart(id, printCopy, printSide, values) {
-    setCart(current => current.map(item => item.id === id && item.print_copy === printCopy && item.print_side === printSide ? { ...item, ...values } : item));
+  function updateCart(id, printCopy, printSide, gsm, values) {
+    setCart(current => current.map(item => item.id === id && item.print_copy === printCopy && item.print_side === printSide && (item.gsm || '') === (gsm || '') ? { ...item, ...values } : item));
   }
 
-  function removeCart(id, printCopy, printSide) {
+  function removeCart(id, printCopy, printSide, gsm) {
     setCart(current => {
-      const next = current.filter(item => !(item.id === id && item.print_copy === printCopy && item.print_side === printSide));
+      const next = current.filter(item => !(item.id === id && item.print_copy === printCopy && item.print_side === printSide && (item.gsm || '') === (gsm || '')));
       if (next.length === 0) setCartStep(1);
       return next;
     });
@@ -514,7 +659,7 @@ function DealerPortal({ user, refreshUser }) {
 
     try {
       const fd = new FormData();
-      fd.append('items_json', JSON.stringify(cart.map(i => ({ product_id: i.id, packs: i.packs, print_copy: i.print_copy, print_side: i.print_side }))));
+      fd.append('items_json', JSON.stringify(cart.map(i => ({ product_id: i.id, packs: i.packs, print_copy: i.print_copy, print_side: i.print_side, gsm: i.gsm || null }))));
       if (note) fd.append('customer_note', note);
       cart.forEach((item, index) => { if (item.file) fd.append(`files[${index}]`, item.file); });
       const result = await api('/checkout', { method: 'POST', body: fd });
@@ -522,12 +667,14 @@ function DealerPortal({ user, refreshUser }) {
       await refreshUser(); await load(); setTab('orders');
     } catch (e) { setError(e.message); }
   }
+  const navItems = [
+    { key: 'shop', label: 'Order Products' },
+    { key: 'orders', label: 'My Orders' },
+    { key: 'adjustments', label: 'Wallet Ledger' },
+  ];
+
   return <main className="portal">
-    <div className="portal-nav">
-      <button className={tab === 'shop' ? 'active' : ''} onClick={() => setTab('shop')}>Order Products</button>
-      <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>My Orders</button>
-      <button className={tab === 'adjustments' ? 'active' : ''} onClick={() => setTab('adjustments')}>Wallet Ledger</button>
-    </div>
+    <PortalNavMenu items={navItems} activeKey={tab} onChange={setTab} badgeCount={unreadNotifications} />
     <Alert message={notice} /><Alert message={error} type="error" />
     {tab === 'shop' ? <div className="shop-layout">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', flex: 1 }}>
@@ -555,6 +702,7 @@ function DealerPortal({ user, refreshUser }) {
                         <tr>
                           <th>Product Name</th>
                           <th>Print Side</th>
+                          <th>Paper GSM</th>
                           <th>Base Price</th>
                           <th>Select Copies</th>
                           <th style={{ textAlign: 'right' }}>Total Price</th>
@@ -565,7 +713,10 @@ function DealerPortal({ user, refreshUser }) {
                         {catProducts.map(product => {
                           const currentCopies = chosenCopies[product.id] ?? product.print_copy;
                           const currentSide = chosenSides[product.id] ?? 'front';
-                          const totalPrice = getTierPrice(product, currentCopies, currentSide);
+                          const gsmOptions = getProductGsmOptions(product);
+                          const currentGsm = chosenGsm[product.id] ?? (gsmOptions[0]?.label || '');
+                          const selectedGsmOption = getSelectedGsmOption(product, currentGsm);
+                          const totalPrice = getTierPrice(product, currentCopies, currentSide, currentGsm);
                           const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
                           const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
                           const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
@@ -585,8 +736,26 @@ function DealerPortal({ user, refreshUser }) {
                                   {hasBoth && <option value="both">Front & Back</option>}
                                 </select>
                               </td>
+                              <td>
+                                {gsmOptions.length > 0 ? (
+                                  <select
+                                    value={currentGsm}
+                                    onChange={e => setChosenGsm(prev => ({ ...prev, [product.id]: e.target.value }))}
+                                    style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)' }}
+                                  >
+                                    {gsmOptions.map((option) => (
+                                      <option key={option.id} value={option.label}>{formatGsmOptionLabel(option)}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span style={{ color: 'var(--muted)', fontSize: '13px', fontWeight: '600' }}>Standard</span>
+                                )}
+                              </td>
                               <td style={{ color: 'var(--ink)', fontWeight: '600' }}>
                                 {money(basePriceDisplay)} / copy
+                                {selectedGsmOption && Number(selectedGsmOption.extra_price || 0) > 0 ? (
+                                  <small style={{ display: 'block', color: 'var(--muted)', marginTop: '4px' }}>+ {money(selectedGsmOption.extra_price)} GSM / copy</small>
+                                ) : null}
                               </td>
                               <td>
                                 <div className="copies-adjuster">
@@ -623,12 +792,12 @@ function DealerPortal({ user, refreshUser }) {
                               </td>
                               <td style={{ textAlign: 'right' }}>
                                 <strong style={{ fontSize: '18px', color: 'var(--blue)', display: 'block' }}>{money(totalPrice)}</strong>
-                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
+                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy{currentGsm ? ` · ${currentGsm}` : ''}</small>
                               </td>
                               <td style={{ textAlign: 'right' }}>
                                 <button 
                                   className="btn primary" 
-                                  onClick={() => addToCart(product, currentCopies, currentSide)}
+                                  onClick={() => addToCart(product, currentCopies, currentSide, currentGsm)}
                                   style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
                                 >
                                   + Add to Cart
@@ -657,11 +826,11 @@ function DealerPortal({ user, refreshUser }) {
           <>
             <div className="cart-head"><h2>Shopping Cart</h2><span>{cart.length} items</span></div>
             {!cart.length && <div className="empty">Add products from the price list.</div>}
-            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}`}>
-              <button className="remove" onClick={() => removeCart(item.id, item.print_copy, item.print_side)}>×</button>
+            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`}>
+              <button className="remove" onClick={() => removeCart(item.id, item.print_copy, item.print_side, item.gsm)}>×</button>
               <strong>{item.name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
-              <small>{item.print_copy} copies · {money(item.amount)} per set</small>
-              <label>Packs<input type="number" min="1" value={item.packs} onChange={e => updateCart(item.id, item.print_copy, item.print_side, { packs: Math.max(1, Number(e.target.value) || 1) })} /></label>
+              <small>{item.print_copy} copies · {money(item.amount)} per set{item.gsm ? ` · ${item.gsm}` : ''}</small>
+              <label>Packs<input type="number" min="1" value={item.packs} onChange={e => updateCart(item.id, item.print_copy, item.print_side, item.gsm, { packs: Math.max(1, Number(e.target.value) || 1) })} /></label>
               <b>{money(Number(item.amount) * item.packs)}</b>
             </div>)}
             {cart.length > 0 && <>
@@ -675,13 +844,13 @@ function DealerPortal({ user, refreshUser }) {
               <h2>Upload & Details</h2>
               <button className="btn ghost" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => setCartStep(1)}>← Back</button>
             </div>
-            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}`} style={{ borderBottom: '1px solid var(--line)', padding: '18px 24px', display: 'block', background: '#fff' }}>
+            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ borderBottom: '1px solid var(--line)', padding: '18px 24px', display: 'block', background: '#fff' }}>
               <strong style={{ display: 'block', marginBottom: '4px' }}>{item.name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
-              <small style={{ display: 'block', marginBottom: '12px' }}>{item.print_copy} copies · {item.packs} set(s) · {money(Number(item.amount) * item.packs)}</small>
-              <label htmlFor={`file-upload-${item.id}-${item.print_copy}-${item.print_side}`} style={{ display: 'block', padding: '16px 12px', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', textAlign: 'center', cursor: 'pointer' }}>
+              <small style={{ display: 'block', marginBottom: '12px' }}>{item.print_copy} copies · {item.packs} set(s) · {money(Number(item.amount) * item.packs)}{item.gsm ? ` · ${item.gsm}` : ''}</small>
+              <label htmlFor={`file-upload-${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ display: 'block', padding: '16px 12px', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', fontWeight: 'bold', marginBottom: '6px' }}>📁 Choose Artwork File (.cdr, .jpg, .jpeg, .png, .zip)</span>
                 <input
-                  id={`file-upload-${item.id}-${item.print_copy}-${item.print_side}`}
+                  id={`file-upload-${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`}
                   type="file"
                   accept=".cdr,.jpg,.jpeg,.png,.zip"
                   style={{ display: 'none' }}
@@ -692,11 +861,11 @@ function DealerPortal({ user, refreshUser }) {
                       if (!['cdr', 'jpg', 'jpeg', 'png', 'zip'].includes(ext)) {
                         alert('Only .cdr, .jpg, .jpeg, .png, and .zip files are allowed.');
                         e.target.value = null;
-                        updateCart(item.id, item.print_copy, item.print_side, { file: null });
+                        updateCart(item.id, item.print_copy, item.print_side, item.gsm, { file: null });
                         return;
                       }
                     }
-                    updateCart(item.id, item.print_copy, item.print_side, { file: file || null });
+                    updateCart(item.id, item.print_copy, item.print_side, item.gsm, { file: file || null });
                   }}
                 />
                 {item.file ? (
@@ -779,8 +948,8 @@ function WalletLedgerLog({ transactions }) {
                       {tx.order && tx.order.items && tx.order.items.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {tx.order.items.map(item => (
-                            <span key={item.id} style={{ fontSize: '13px', fontWeight: '750', color: 'var(--navy)' }}>
-                              {item.product_name} <small style={{fontWeight:'bold', color:'var(--blue)'}}>({item.print_side === 'both' ? 'F&B' : 'Front'})</small> <small style={{ color: 'var(--muted)', fontWeight: 'normal' }}>({item.print_copy * item.packs} copies)</small>
+                        <span key={item.id} style={{ fontSize: '13px', fontWeight: '750', color: 'var(--navy)' }}>
+                              {item.product_name} <small style={{fontWeight:'bold', color:'var(--blue)'}}>({item.print_side === 'both' ? 'F&B' : 'Front'})</small> <small style={{ color: 'var(--muted)', fontWeight: 'normal' }}>({item.print_copy * item.packs} copies{item.gsm ? ` · ${item.gsm}` : ''})</small>
                             </span>
                           ))}
                         </div>
@@ -808,6 +977,110 @@ function WalletLedgerLog({ transactions }) {
 }
 
 function StatusBadge({ status }) { return <span className={`status ${status}`}>{status.replaceAll('_', ' ')}</span>; }
+
+function B2BOrderDetailsModal({ order, onClose, showReceiptActions = false, onShareReceipt = null }) {
+  if (!order) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content panel b2b-order-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="panel-head b2b-order-modal-head">
+          <div>
+            <h2>{order.order_number}</h2>
+            <p>Detailed B2B order view for admin and staff review.</p>
+          </div>
+          <div className="b2b-order-modal-meta">
+            <StatusBadge status={order.status || 'new'} />
+            <StatusBadge status={order.staff_status || 'pending'} />
+            <button type="button" className="remove" onClick={onClose} style={{ position: 'static', fontSize: '28px' }}>x</button>
+          </div>
+        </div>
+
+        <div className="b2b-order-modal-grid">
+          <section className="b2b-order-panel">
+            <h3>Dealer Details</h3>
+            <div className="b2b-order-detail-list">
+              <div><strong>Dealer</strong><span>{order.dealer?.company_name || 'N/A'}</span></div>
+              <div><strong>Contact</strong><span>{order.dealer?.name || 'N/A'}</span></div>
+              <div><strong>Phone</strong><span>{order.dealer?.phone || 'N/A'}</span></div>
+              <div><strong>Email</strong><span>{order.dealer?.email || 'N/A'}</span></div>
+              <div><strong>Assigned Staff</strong><span>{order.assigned_staff?.name || order.assignedStaff?.name || 'Unassigned'}</span></div>
+              <div><strong>Deadline</strong><span>{order.deadline_at ? new Date(order.deadline_at).toLocaleString('en-IN') : 'No deadline set'}</span></div>
+              <div><strong>Placed On</strong><span>{new Date(order.created_at).toLocaleString('en-IN')}</span></div>
+              <div><strong>Total</strong><span>{money(order.grand_total)}</span></div>
+            </div>
+            {order.customer_note && (
+              <div className="b2b-order-note">
+                <strong>Dealer Note</strong>
+                <p>{order.customer_note}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="b2b-order-panel">
+            <h3>Products & Artwork</h3>
+            <div className="b2b-order-items">
+              {(order.items || []).map((item) => (
+                <article key={item.id} className="b2b-order-item">
+                  <div className="b2b-order-item-top">
+                    <div>
+                      <strong>{item.product_name}</strong>
+                      <span>{item.category}</span>
+                    </div>
+                    <strong>{money(item.line_total)}</strong>
+                  </div>
+                  <div className="b2b-order-detail-list compact">
+                    <div><strong>Print Side</strong><span>{item.print_side === 'both' ? 'Front & Back' : 'Front Only'}</span></div>
+                    <div><strong>Paper GSM</strong><span>{item.gsm || 'Standard'}</span></div>
+                    <div><strong>Copies</strong><span>{item.print_copy}</span></div>
+                    <div><strong>Sets</strong><span>{item.packs}</span></div>
+                    <div><strong>Unit Price</strong><span>{money(item.unit_price)}</span></div>
+                  </div>
+                  {item.file_path ? (
+                    <a
+                      href="#"
+                      className="file-link b2b-order-file"
+                      onClick={(event) => forceDownload(event, `/storage/${item.file_path}`, item.original_filename || 'Artwork')}
+                    >
+                      Download {item.original_filename || 'Artwork'}
+                    </a>
+                  ) : (
+                    <span className="b2b-order-missing-file">No artwork uploaded</span>
+                  )}
+                </article>
+              ))}
+            </div>
+            {order.extra_charges?.length > 0 && (
+              <div className="b2b-order-note">
+                <strong>Extra Charges / Adjustments</strong>
+                <div className="b2b-extra-list">
+                  {order.extra_charges.map((charge) => (
+                    <div key={charge.id} className="b2b-extra-item">
+                      <span>{charge.description}</span>
+                      <strong>{Number(charge.amount) < 0 ? `+ ${money(Math.abs(charge.amount))}` : `- ${money(charge.amount)}`}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {showReceiptActions && order.status === 'done' && (
+              <div className="b2b-order-receipt-actions">
+                <a href={`/portal/orders/${order.id}/receipt`} target="_blank" rel="noreferrer" className="btn primary">
+                  View Receipt
+                </a>
+                {!order.receipt_shared && onShareReceipt ? (
+                  <button type="button" className="btn ghost" onClick={() => onShareReceipt(order.id)}>
+                    Share with Dealer
+                  </button>
+                ) : null}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function OrderHistory({ orders }) {
   return <section className="panel orders"><div className="panel-head"><h2>My Orders</h2><p>Check job status and pickup information.</p></div>
@@ -840,10 +1113,10 @@ function OrderHistory({ orders }) {
           {order.items?.map(item => (
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
               <div>
-                <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
-                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                  ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
-                </span>
+                      <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
+                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
+                      </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <span style={{ fontWeight: 'bold', color: 'var(--blue)' }}>{money(item.line_total)}</span>
@@ -903,12 +1176,12 @@ function OrderHistory({ orders }) {
   </section>;
 }
 
-function AdminPanel() {
+function AdminPanel({ unreadNotifications = 0 }) {
   const [tab, setTab] = useState('dashboard'); const [stats, setStats] = useState({}); const [dealers, setDealers] = useState([]); const [holdDealers, setHoldDealers] = useState([]); const [products, setProducts] = useState([]); const [orders, setOrders] = useState([]); const [staff, setStaff] = useState([]); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
   const [categories, setCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryLoading, setCategoryLoading] = useState(false);
-  const [productForm, setProductForm] = useState({ category: '', name: '', print_copy: 1, amount: '', front_back_amount: '', pricing_tiers: [], sort_order: 0, is_active: true });
+  const [productForm, setProductForm] = useState({ category: '', name: '', print_copy: 1, amount: '', front_back_amount: '', gsm_options: [createEmptyGsmOption()], pricing_tiers: [], sort_order: 0, is_active: true });
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedDealerLedger, setSelectedDealerLedger] = useState(null);
   const [staffForm, setStaffForm] = useState({ name: '', email: '', password: '' });
@@ -917,6 +1190,7 @@ function AdminPanel() {
   const [showInlineCategoryForm, setShowInlineCategoryForm] = useState(false);
   const [inlineCategoryName, setInlineCategoryName] = useState('');
   const [inlineCategoryLoading, setInlineCategoryLoading] = useState(false);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
   async function addStaff(e) {
     e.preventDefault();
@@ -1141,7 +1415,7 @@ function AdminPanel() {
 
   function cancelEdit() {
     setEditingProductId(null);
-    setProductForm({ category: categories[0]?.name || '', name: '', print_copy: 1, amount: '', front_back_amount: '', pricing_tiers: [], sort_order: 0, is_active: true });
+    setProductForm({ category: categories[0]?.name || '', name: '', print_copy: 1, amount: '', front_back_amount: '', gsm_options: [createEmptyGsmOption()], pricing_tiers: [], sort_order: 0, is_active: true });
     setShowInlineCategoryForm(false);
     setInlineCategoryName('');
   }
@@ -1154,6 +1428,7 @@ function AdminPanel() {
       print_copy: product.print_copy,
       amount: product.amount,
       front_back_amount: product.front_back_amount !== null && product.front_back_amount !== undefined ? product.front_back_amount : '',
+      gsm_options: getProductGsmOptions(product).length ? getProductGsmOptions(product).map((option) => ({ label: option.label, extra_price: String(option.extra_price ?? 0) })) : [createEmptyGsmOption()],
       pricing_tiers: product.pricing_tiers || [],
       sort_order: product.sort_order || 0,
       is_active: product.is_active
@@ -1180,6 +1455,32 @@ function AdminPanel() {
       ...prev,
       pricing_tiers: (prev.pricing_tiers || []).filter((_, i) => i !== index)
     }));
+  };
+
+  const addGsmOption = () => {
+    setProductForm(prev => ({
+      ...prev,
+      gsm_options: [...(prev.gsm_options || []), createEmptyGsmOption()]
+    }));
+  };
+
+  const updateGsmOption = (index, field, value) => {
+    setProductForm(prev => ({
+      ...prev,
+      gsm_options: (prev.gsm_options || []).map((option, optionIndex) => (
+        optionIndex === index ? { ...option, [field]: value } : option
+      ))
+    }));
+  };
+
+  const removeGsmOption = (index) => {
+    setProductForm(prev => {
+      const nextOptions = (prev.gsm_options || []).filter((_, optionIndex) => optionIndex !== index);
+      return {
+        ...prev,
+        gsm_options: nextOptions.length ? nextOptions : [createEmptyGsmOption()]
+      };
+    });
   };
 
   async function quickEdit(product) {
@@ -1220,15 +1521,17 @@ function AdminPanel() {
   async function assignStaff(orderId, staffId, deadline) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/assign`, { method: 'PUT', body: JSON.stringify({ assigned_staff_id: staffId || null, deadline_at: deadline || null }) }); setNotice('Work assignment updated.'); load(); } catch (e) { setError(e.message); } }
   async function updateOrderStatus(orderId, status) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); setNotice('Order status updated.'); load(); } catch (e) { setError(e.message); } }
   async function shareReceipt(orderId) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/share-receipt`, { method: 'POST' }); setNotice('Receipt shared with dealer.'); load(); } catch (e) { setError(e.message); } }
+  const adminNavItems = [
+    { key: 'dashboard', label: 'Dashboard' },
+    { key: 'dealers', label: 'Dealers', count: Number(stats.pending_dealers || 0) },
+    { key: 'rejected_dealers', label: 'Reject Dealer' },
+    { key: 'products', label: 'Products' },
+    { key: 'orders', label: 'Orders', count: Number(stats.new_orders || 0) },
+    { key: 'staff', label: 'Manage Staff' },
+  ];
   return <main className="portal admin">
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '32px', gap: '16px' }}>
-      <div className="portal-nav" style={{ marginBottom: 0 }}>
-        {['dashboard', 'dealers', 'rejected_dealers', 'products', 'orders', 'staff'].map(x => (
-          <button key={x} className={tab === x ? 'active' : ''} onClick={() => setTab(x)}>
-            {x === 'rejected_dealers' ? 'reject dealer' : x === 'staff' ? 'manage staff' : x.replace('_', ' ')}
-          </button>
-        ))}
-      </div>
+      <PortalNavMenu items={adminNavItems} activeKey={tab} onChange={setTab} badgeCount={unreadNotifications} />
       <a href="/b2c-admin" className="btn primary" style={{ textDecoration: 'none', fontSize: '15px', fontWeight: '800', borderRadius: '99px', padding: '10px 24px', background: 'linear-gradient(135deg, #0d9488 0%, #0f172a 100%)', border: 'none' }}>
         Go to B2C Admin Module &rarr;
       </a>
@@ -1474,10 +1777,38 @@ function AdminPanel() {
               </div>
             </div>
           )}
-          <label>Product Name<input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></label>
+        <label>Product Name<input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></label>
         <label>Base Print Copies<input type="number" value={productForm.print_copy} onChange={e => setProductForm({ ...productForm, print_copy: Number(e.target.value) })} required /></label>
         <label>Front Only Base Amount (₹)<input type="number" step="0.01" value={productForm.amount} onChange={e => setProductForm({ ...productForm, amount: e.target.value })} required /></label>
         <label>Front & Back Base Amount (₹) <span style={{fontWeight:'normal', fontSize:'12px', color:'var(--muted)'}}>(Optional, leave blank if not supported)</span><input type="number" step="0.01" value={productForm.front_back_amount || ''} onChange={e => setProductForm({ ...productForm, front_back_amount: e.target.value })} /></label>
+        <div style={{ marginTop: '6px', padding: '14px', border: '1px solid var(--line)', borderRadius: '10px', background: '#f8fafc' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--navy)' }}>GSM Options & Extra Price</span>
+            <button type="button" className="btn ghost" style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '8px' }} onClick={addGsmOption}>+ Add GSM</button>
+          </div>
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {(productForm.gsm_options || []).map((option, index) => (
+              <div key={`b2b-gsm-option-${index}`} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr auto', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={option.label}
+                  onChange={e => updateGsmOption(index, 'label', e.target.value)}
+                  placeholder="e.g. 250 GSM"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={option.extra_price}
+                  onChange={e => updateGsmOption(index, 'extra_price', e.target.value)}
+                  placeholder="Extra price / copy"
+                />
+                <button type="button" className="btn ghost" style={{ padding: '8px 10px', fontSize: '12px' }} onClick={() => removeGsmOption(index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '11px', color: 'var(--muted)', margin: '10px 0 0' }}>Example: 250 GSM extra Rs. 2, 300 GSM extra Rs. 5. This amount is added on each copy like B2C.</p>
+        </div>
         <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
           <input 
             type="checkbox" 
@@ -1614,7 +1945,12 @@ function AdminPanel() {
           <tbody>
             {products.map(p => <tr key={p.id}>
               <td style={{ color: 'var(--muted)', fontWeight: '600' }}>{p.category}</td>
-              <td><strong style={{ color: 'var(--navy)' }}>{p.name}</strong></td>
+              <td>
+                <strong style={{ color: 'var(--navy)' }}>{p.name}</strong>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
+                  {getProductGsmOptions(p).length > 0 ? getProductGsmOptions(p).map((option) => formatGsmOptionLabel(option)).join(', ') : 'Standard GSM only'}
+                </div>
+              </td>
               <td>
                 {p.pricing_tiers && p.pricing_tiers.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1672,6 +2008,7 @@ function AdminPanel() {
               </div>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--navy)' }}>{money(o.grand_total)}</div>
+                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setSelectedOrderDetails(o)}>View Details</button>
                 <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => addCharge(o)}>+ Add Extra Work</button>
               </div>
             </div>
@@ -1684,7 +2021,7 @@ function AdminPanel() {
                     <div>
                       <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
                       <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
+                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1808,6 +2145,13 @@ function AdminPanel() {
         ))}
       </div>
     </div>}
+
+    <B2BOrderDetailsModal
+      order={selectedOrderDetails}
+      onClose={() => setSelectedOrderDetails(null)}
+      showReceiptActions
+      onShareReceipt={shareReceipt}
+    />
 
     {tab === 'staff' && <div className="admin-products" style={{ gridTemplateColumns: '360px 1fr' }}>
       <form className="panel product-form" onSubmit={addStaff} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)' }}>
@@ -2290,11 +2634,16 @@ function ProfileModal({ user, onClose, refreshUser }) {
   );
 }
 
-function StaffModulePanel() {
+function StaffModulePanel({ unreadNotifications = 0 }) {
   const [jobs, setJobs] = useState([]);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [activeModule, setActiveModule] = useState('b2b');
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const staffNavItems = [
+    { key: 'b2b', label: 'B2B Jobs' },
+    { key: 'b2c', label: 'B2C Jobs' },
+  ];
 
   async function load(module = activeModule) {
     try {
@@ -2329,10 +2678,7 @@ function StaffModulePanel() {
           <h2>{activeModule === 'b2c' ? 'B2C Printing Job Queue' : 'B2B Printing Job Queue'}</h2>
           <p>Switch between B2B and B2C jobs from here.</p>
         </div>
-        <div className="portal-nav" style={{ marginBottom: 0 }}>
-          <button className={activeModule === 'b2b' ? 'active' : ''} onClick={() => setActiveModule('b2b')}>B2B</button>
-          <button className={activeModule === 'b2c' ? 'active' : ''} onClick={() => setActiveModule('b2c')}>B2C</button>
-        </div>
+        <PortalNavMenu items={staffNavItems} activeKey={activeModule} onChange={setActiveModule} badgeCount={unreadNotifications} />
       </div>
 
       {!jobs.length ? (
@@ -2357,11 +2703,23 @@ function StaffModulePanel() {
               <div style={{ display: 'grid', gap: '8px' }}>
                 {job.items.map((item) => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: '#fff', border: '1px solid var(--line)', borderRadius: '6px', gap: '12px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--navy)' }}>
-                      {activeModule === 'b2c'
-                        ? `${item.product_name} — ${item.quantity} copies`
-                        : `${item.product_name} — ${item.print_copy * item.packs} copies (${item.packs} set(s))`}
-                    </span>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--navy)', display: 'block' }}>
+                        {activeModule === 'b2c'
+                          ? `${item.product_name} — ${item.quantity} copies`
+                          : `${item.product_name} — ${item.print_copy * item.packs} copies (${item.packs} set(s))`}
+                      </span>
+                      {activeModule === 'b2b' && item.gsm ? (
+                        <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)', fontSize: '11px', fontWeight: '700' }}>
+                          GSM: {item.gsm}
+                        </small>
+                      ) : null}
+                      {activeModule === 'b2c' && item.design_serial_number ? (
+                        <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)', fontSize: '11px', fontWeight: '700' }}>
+                          Design Serial No: {item.design_serial_number}
+                        </small>
+                      ) : null}
+                    </div>
                     {item.file_path ? (
                       <a
                         className="file-link"
@@ -2391,7 +2749,8 @@ function StaffModulePanel() {
             </div>
           </div>
           <StatusBadge status={job.staff_status || 'pending'} />
-          <div className="job-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div className="job-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+            <button onClick={() => setSelectedOrderDetails(job)}>View Details</button>
             <button onClick={() => status(job.id, 'started')}>Start</button>
             <button onClick={() => status(job.id, 'ready')}>Ready</button>
             <button onClick={() => status(job.id, 'picked_up')}>Picked Up</button>
@@ -2399,6 +2758,10 @@ function StaffModulePanel() {
         </article>
       ))}
     </section>
+
+    {activeModule === 'b2b' ? (
+      <B2BOrderDetailsModal order={selectedOrderDetails} onClose={() => setSelectedOrderDetails(null)} />
+    ) : null}
   </main>;
 }
 
@@ -2406,6 +2769,8 @@ function App() {
   const [user, setUser] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   async function getUser() { 
     try { 
@@ -2420,6 +2785,37 @@ function App() {
 
   useEffect(() => { getUser(); }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadNotifications(0);
+      return;
+    }
+
+    loadNotifications();
+  }, [user?.id, user?.role]);
+
+  async function loadNotifications() {
+    try {
+      const data = await api('/notifications');
+      setNotifications(data.notifications || []);
+      setUnreadNotifications(data.unread_count || 0);
+    } catch {
+      setNotifications([]);
+      setUnreadNotifications(0);
+    }
+  }
+
+  async function markNotificationRead(notificationId) {
+    await api(`/notifications/${notificationId}/read`, { method: 'POST', body: JSON.stringify({}) });
+    await loadNotifications();
+  }
+
+  async function markAllNotificationsRead() {
+    await api('/notifications/read-all', { method: 'POST', body: JSON.stringify({}) });
+    await loadNotifications();
+  }
+
   async function logout() { 
     await api('/logout', { method: 'POST', body: JSON.stringify({}) }); 
     window.location.reload(); 
@@ -2429,15 +2825,23 @@ function App() {
 
   return (
     <>
-      <Header user={user} onLogout={logout} onOpenProfile={() => setShowProfile(true)} />
+      <Header
+        user={user}
+        onLogout={logout}
+        onOpenProfile={() => setShowProfile(true)}
+        notifications={notifications}
+        unreadCount={unreadNotifications}
+        onMarkNotificationRead={markNotificationRead}
+        onMarkAllNotificationsRead={markAllNotificationsRead}
+      />
       {!user ? (
         <AuthPage onLogin={() => window.location.reload()} />
       ) : user.role === 'dealer' ? (
-        <DealerPortal user={user} refreshUser={getUser} />
+        <DealerPortal user={user} refreshUser={getUser} unreadNotifications={unreadNotifications} />
       ) : user.role === 'admin' ? (
-        <AdminPanel />
+        <AdminPanel unreadNotifications={unreadNotifications} />
       ) : (
-        <StaffModulePanel />
+        <StaffModulePanel unreadNotifications={unreadNotifications} />
       )}
       
       {showProfile && user && user.role === 'dealer' && (
