@@ -582,7 +582,7 @@ button {
 .portal {
   max-width: 1800px;
   margin: 0 auto;
-  padding: 36px 48px 88px;
+  padding: clamp(24px, 3vw, 36px) clamp(16px, 3vw, 48px) 88px;
 }
 
 .portal-nav {
@@ -624,9 +624,17 @@ button {
 /* Product list & cart layout */
 .shop-layout {
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 420px);
+  gap: clamp(20px, 2vw, 28px);
   align-items: start;
+}
+
+.shop-layout > div,
+.shop-layout > aside,
+.catalog,
+.panel,
+.grow {
+  min-width: 0;
 }
 
 .panel-head {
@@ -676,8 +684,16 @@ button {
   color: var(--ink);
 }
 
+.product-table tbody tr td {
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .product-table tr:not(.category-row):hover td {
-  background: #f8fafc;
+  background-color: rgba(16, 59, 92, 0.05) !important;
+}
+
+.product-table tr:not(.category-row):hover td:first-child {
+  box-shadow: inset 4px 0 0 0 var(--blue);
 }
 
 .product-table .category-row td {
@@ -713,6 +729,7 @@ button {
   top: 110px;
   overflow: hidden;
   padding-bottom: 20px;
+  width: 100%;
 }
 
 .cart-head {
@@ -936,8 +953,16 @@ button {
   color: var(--ink);
 }
 
+.admin-table tbody tr td {
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .admin-table tr:hover td {
-  background: #f8fafc;
+  background-color: rgba(185, 138, 50, 0.05) !important;
+}
+
+.admin-table tr:hover td:first-child {
+  box-shadow: inset 4px 0 0 0 var(--gold);
 }
 
 .actions {
@@ -1084,6 +1109,8 @@ button {
   z-index: 100;
   display: grid;
   place-items: center;
+  padding: 18px;
+  overflow-y: auto;
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1142,12 +1169,6 @@ button {
     max-width: 560px;
     margin: auto;
     width: 100%;
-  }
-  .shop-layout {
-    grid-template-columns: 1fr;
-  }
-  .cart {
-    position: static;
   }
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -1263,12 +1284,57 @@ button {
 }
 
 .profile-modal-content {
-  max-width: 650px;
-  width: 90%;
-  max-height: 90vh;
+  width: min(96vw, 960px);
+  max-width: 960px;
+  max-height: min(90vh, 940px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+.profile-modal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 28px 18px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(16, 59, 92, 0.12);
+}
+
+.profile-modal-tabs button {
+  border: 1.5px solid var(--surface-border);
+  background: #fff;
+  color: var(--navy);
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.profile-modal-tabs button.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+.profile-modal-form {
+  margin-top: 6px;
+  padding: 0 28px 28px;
+}
+
+.profile-admin-note {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-modal-content > .alert {
+  margin-left: 28px;
+  margin-right: 28px;
 }
 
 .profile-info-grid {
@@ -1554,8 +1620,16 @@ button {
   font-size: 16px;
 }
 
+.analytics-table tbody tr td {
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .analytics-table tr:hover td {
-  background: var(--surface-hover);
+  background-color: rgba(16, 59, 92, 0.05) !important;
+}
+
+.analytics-table tr:hover td:first-child {
+  box-shadow: inset 4px 0 0 0 var(--blue);
 }
 
 .analytics-table tr.total-row-footer td {
@@ -1761,6 +1835,20 @@ button {
 }
 
 /* Responsiveness for shop-layout */
+@media (max-width: 1280px) {
+  .portal {
+    padding-bottom: 72px;
+  }
+
+  .shop-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  }
+
+  .panel-head {
+    padding: 24px 24px 20px;
+  }
+}
+
 @media (max-width: 1024px) {
   .shop-layout {
     grid-template-columns: 1fr;
@@ -2121,6 +2209,26 @@ button {
     align-items: flex-start;
   }
 
+  .profile-modal-content {
+    width: min(100vw - 12px, 960px);
+    border-radius: 22px;
+  }
+
+  .profile-modal-tabs {
+    margin-left: 18px;
+    margin-right: 18px;
+    padding-top: 16px;
+  }
+
+  .profile-modal-form {
+    padding: 0 18px 20px;
+  }
+
+  .profile-modal-content > .alert {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
   .job {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -2137,4 +2245,295 @@ button {
     padding: 22px 18px 18px;
   }
 }
+
+/* Center Logo Loader and Transitions */
+.b2c-loader-page,
+.loader-page-transition {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  background-color: #f8fafc !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 99999 !important;
+}
+
+.b2c-loader-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 40px !important;
+  background: #ffffff !important;
+  border-radius: 24px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  text-align: center !important;
+  max-width: 320px !important;
+  width: 90% !important;
+}
+
+.b2c-loader-logo {
+  width: 140px !important;
+  height: 140px !important;
+  margin-bottom: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: logoPulse 2s infinite ease-in-out !important;
+}
+
+.b2c-loader-logo img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+.b2c-loader-text {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: 0.02em !important;
+  margin-top: 10px !important;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px rgba(201, 163, 94, 0));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 15px rgba(201, 163, 94, 0.4));
+  }
+}
+
+/* Mobile Table Optimizations for Dealer Side */
+@media (max-width: 768px) {
+  .portal {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .panel-head {
+    padding: 22px 18px 18px;
+  }
+
+  .panel-head h2,
+  .panel h2 {
+    font-size: 24px;
+  }
+
+  .shop-layout {
+    gap: 18px;
+  }
+
+  .shop-layout > div {
+    gap: 18px !important;
+  }
+
+  .cart {
+    padding-bottom: 14px;
+  }
+
+  .cart-head {
+    padding: 16px 18px;
+  }
+
+  .cart-item {
+    padding: 18px;
+  }
+
+  .cart-total {
+    margin: 18px 18px 8px;
+  }
+
+  .balance-note {
+    margin: 8px 18px 18px;
+  }
+
+  .cart .btn {
+    margin: 0 18px;
+    width: calc(100% - 36px);
+  }
+
+  .copies-adjuster {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .copies-adjuster button.adjust-btn {
+    width: 46px;
+    flex: 0 0 46px;
+  }
+
+  .copies-adjuster input {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Dealer catalog list layout card conversion */
+  .shop-layout .admin-table,
+  .shop-layout .admin-table thead,
+  .shop-layout .admin-table tbody,
+  .shop-layout .admin-table tr,
+  .shop-layout .admin-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .shop-layout .admin-table thead {
+    display: none !important;
+  }
+  
+  .shop-layout .admin-table tr {
+    background: #ffffff !important;
+    border: 1px solid var(--surface-border) !important;
+    border-radius: 16px !important;
+    padding: 18px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 4px 12px rgba(16, 59, 92, 0.03) !important;
+    position: relative !important;
+    text-align: left !important;
+  }
+
+  .shop-layout .admin-table td {
+    border: none !important;
+    padding: 10px 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    font-size: 14px !important;
+    color: var(--ink) !important;
+    text-align: right !important;
+    gap: 12px !important;
+  }
+
+  .shop-layout .admin-table td:first-child {
+    font-size: 18px !important;
+    border-bottom: 1.5px solid var(--surface-border) !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 12px !important;
+    font-weight: 800 !important;
+    display: block !important;
+    text-align: left !important;
+  }
+
+  .shop-layout .admin-table td:first-child strong {
+    font-size: 18px !important;
+    display: block !important;
+    text-align: left !important;
+  }
+
+  .shop-layout .admin-table td::before {
+    content: attr(data-label) !important;
+    font-weight: 800 !important;
+    color: var(--navy) !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    text-align: left !important;
+    margin-right: 15px !important;
+  }
+
+  .shop-layout .admin-table td[data-label="Product Name"]::before {
+    content: "" !important;
+    margin-right: 0 !important;
+  }
+
+  .shop-layout .admin-table td:last-child {
+    border-top: 1.5px solid var(--surface-border) !important;
+    padding-top: 14px !important;
+    margin-top: 14px !important;
+    justify-content: center !important;
+  }
+
+  .shop-layout .admin-table td:last-child::before {
+    content: "" !important;
+  }
+
+  .shop-layout .admin-table td:last-child .btn {
+    width: 100% !important;
+    padding: 12px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+  }
+
+  .shop-layout .admin-table td select,
+  .shop-layout .admin-table td input {
+    width: min(100%, 180px) !important;
+  }
+
+  /* Wallet Ledger card conversion */
+  .orders .admin-table,
+  .orders .admin-table thead,
+  .orders .admin-table tbody,
+  .orders .admin-table tr,
+  .orders .admin-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .orders .admin-table thead {
+    display: none !important;
+  }
+  
+  .orders .admin-table tr {
+    background: #ffffff !important;
+    border: 1px solid var(--surface-border) !important;
+    border-radius: 16px !important;
+    padding: 18px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 4px 12px rgba(16, 59, 92, 0.03) !important;
+    text-align: left !important;
+  }
+  
+  .orders .admin-table td {
+    border: none !important;
+    padding: 10px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 14px !important;
+    color: var(--ink) !important;
+    text-align: right !important;
+    gap: 12px !important;
+  }
+  
+  .orders .admin-table td:first-child {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    border-bottom: 1.5px solid var(--surface-border) !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 12px !important;
+    display: block !important;
+    text-align: left !important;
+  }
+  
+  .orders .admin-table td::before {
+    content: attr(data-label) !important;
+    font-weight: 800 !important;
+    color: var(--navy) !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    text-align: left !important;
+    margin-right: 15px !important;
+  }
+
+  .orders .admin-table td[data-label="Date"]::before {
+    content: "" !important;
+    margin-right: 0 !important;
+  }
+}
+
 

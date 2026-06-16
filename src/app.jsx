@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './app.css';
 import logo from './logo.png';
@@ -33,6 +33,8 @@ const forceDownload = async (e, url, filename) => {
     window.open(url, '_blank');
   }
 };
+
+const ADMIN_RECOVERY_PHONE = '8200391418';
 
 async function api(url, options = {}) {
   const isFormData = options.body instanceof FormData;
@@ -156,14 +158,14 @@ function Header({ user, onLogout, onOpenProfile, notifications = [], unreadCount
   return <header className="header">
     <div className="brand">
       <img src={logo} className="header-logo" alt="Angel Enterprise" />
-      <div><small style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>B2B Printing Portal</small></div>
+      <div><small style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)' }}>Dealer Printing Portal</small></div>
     </div>
     {user ? (
       <div className="header-actions">
-        {user.role === 'dealer' && <>
-          <span className="wallet-pill">Wallet: {money(user.wallet_balance)}</span>
+        {user.role === 'dealer' && <span className="wallet-pill">Wallet: {money(user.wallet_balance)}</span>}
+        {(user.role === 'dealer' || user.role === 'admin') && (
           <button className="btn ghost btn-profile" onClick={onOpenProfile}>Profile</button>
-        </>}
+        )}
         <NotificationMenu
           notifications={notifications}
           unreadCount={unreadCount}
@@ -177,7 +179,7 @@ function Header({ user, onLogout, onOpenProfile, notifications = [], unreadCount
             className="btn ghost"
             style={{ textDecoration: 'none', fontSize: '14px', padding: '10px 18px', borderRadius: '12px' }}
           >
-            Open B2C Module
+            Open Customer Module
           </a>
         )}
         <button className="btn ghost" onClick={onLogout}>Logout</button>
@@ -219,7 +221,7 @@ function AuthPage({ onLogin }) {
     <div className="auth-info">
       <p className="eyebrow">DEALER ORDERING SYSTEM</p>
       <h1>Printing orders made fast and simple.</h1>
-      <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--blue)', marginTop: '-8px', marginBottom: '24px', letterSpacing: '-0.02em' }}>Advanced Konica Production Printing Setup</h2>
+      <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#e7c47b', marginTop: '-8px', marginBottom: '24px', letterSpacing: '-0.02em' }}>Advanced Konica Production Printing Setup</h2>
       <p>Approved dealers can select products, upload artwork, add multiple jobs to cart and pay through wallet.</p>
       <div className="feature-grid"><span>Individual product price list</span><span>Multiple jobs in one cart</span><span>Artwork upload support</span><span>Staff-managed printing queue</span></div>
     </div>
@@ -315,12 +317,15 @@ function AuthPage({ onLogin }) {
         <p className="helper" style={{ margin: 0 }}>Dealer accounts can login only after admin approval.</p>
         <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); }} style={{ background: 'none', border: 'none', color: 'var(--blue)', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}>Forgot Password?</button>
       </div>}
+      {mode === 'forgot' && <p className="helper" style={{ marginTop: '12px', marginBottom: 0 }}>
+        Admin password reset mobile number: {ADMIN_RECOVERY_PHONE}. Dealers should use their own registered mobile number.
+      </p>}
       {mode === 'forgot' && <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <button type="button" onClick={() => { setMode('login'); setError(''); setNotice(''); }} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '13px', cursor: 'pointer' }}>← Back to Login</button>
       </div>}
       <div style={{ marginTop: '24px', borderTop: '1.5px solid var(--line)', paddingTop: '20px', display: 'flex', justifyContent: 'center' }}>
         <a href="/" className="btn ghost" style={{ width: '100%', textDecoration: 'none', fontSize: '15px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '12px' }}>
-          Go to B2C Customer Login &rarr;
+          Go to Customer Login &rarr;
         </a>
       </div>
     </div>
@@ -567,6 +572,153 @@ const printLedger = (title, subtitle, transactions) => {
   win.document.close();
 };
 
+function ProfileModal({ user, onClose, refreshUser }) {
+  const isAdmin = user.role === 'admin';
+  const [tab, setTab] = useState('profile');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: user.name || '',
+    company_name: user.company_name || '',
+    phone: user.phone || (isAdmin ? ADMIN_RECOVERY_PHONE : ''),
+    address: user.address || '',
+    pincode: user.pincode || '',
+    gst_number: user.gst_number || '',
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+  });
+
+  function updateProfileField(event) {
+    const { name, value } = event.target;
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
+    if (notice) setNotice('');
+    if (error) setError('');
+  }
+
+  function updatePasswordField(event) {
+    const { name, value } = event.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+    if (notice) setNotice('');
+    if (error) setError('');
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    setSavingProfile(true);
+    setNotice('');
+    setError('');
+
+    try {
+      const response = await api('/profile/update', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...profileForm,
+          phone: isAdmin ? ADMIN_RECOVERY_PHONE : profileForm.phone,
+        }),
+      });
+      setNotice(response.message || 'Profile details updated successfully.');
+      await refreshUser();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function savePassword(event) {
+    event.preventDefault();
+    setSavingPassword(true);
+    setNotice('');
+    setError('');
+
+    try {
+      const response = await api('/profile/reset-password', {
+        method: 'POST',
+        body: JSON.stringify(passwordForm),
+      });
+      setNotice(response.message || 'Password updated successfully.');
+      setPasswordForm({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content panel profile-modal-content" onClick={(event) => event.stopPropagation()}>
+        <div className="panel-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2>{isAdmin ? 'Admin Profile' : 'Dealer Profile'}</h2>
+            <p>{isAdmin ? 'Update admin details and reset the portal password here.' : 'Update dealer details and reset the portal password here.'}</p>
+          </div>
+          <button type="button" className="remove" onClick={onClose} style={{ position: 'static', fontSize: '28px' }}>x</button>
+        </div>
+
+        <div className="profile-modal-tabs">
+          <button type="button" className={tab === 'profile' ? 'active' : ''} onClick={() => setTab('profile')}>Profile</button>
+          <button type="button" className={tab === 'security' ? 'active' : ''} onClick={() => setTab('security')}>Reset Password</button>
+        </div>
+
+        <Alert message={notice} />
+        <Alert message={error} type="error" />
+
+        {tab === 'profile' ? (
+          <form onSubmit={saveProfile} className="form-grid profile-modal-form">
+            <label>Full Name<input name="name" value={profileForm.name} onChange={updateProfileField} required /></label>
+            <label>Company Name<input name="company_name" value={profileForm.company_name} onChange={updateProfileField} required /></label>
+            <label>
+              Email
+              <input value={user.email || ''} disabled style={{ background: '#f8fafc', color: 'var(--muted)', cursor: 'not-allowed' }} />
+            </label>
+            <label>
+              Phone Number
+              <input
+                name="phone"
+                value={isAdmin ? ADMIN_RECOVERY_PHONE : profileForm.phone}
+                onChange={updateProfileField}
+                required
+                disabled={isAdmin}
+                style={isAdmin ? { background: '#f8fafc', color: 'var(--muted)', cursor: 'not-allowed' } : undefined}
+              />
+            </label>
+            <label className="full">Address<textarea name="address" value={profileForm.address} onChange={updateProfileField} required rows="3" /></label>
+            <label>Pincode<input name="pincode" value={profileForm.pincode} onChange={updateProfileField} required pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" /></label>
+            <label>GST Number <em>(optional)</em><input name="gst_number" value={profileForm.gst_number} onChange={updateProfileField} /></label>
+            {isAdmin ? (
+              <div className="full profile-admin-note">
+                Admin forgot-password access is locked to <strong>{ADMIN_RECOVERY_PHONE}</strong>.
+              </div>
+            ) : null}
+            <button className="btn primary full" type="submit" disabled={savingProfile}>
+              {savingProfile ? 'Saving...' : 'Save Profile'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={savePassword} className="form-grid profile-modal-form reset-password-section">
+            <label className="full">Current Password<input type="password" name="current_password" value={passwordForm.current_password} onChange={updatePasswordField} required /></label>
+            <label className="full">New Password<input type="password" name="password" value={passwordForm.password} onChange={updatePasswordField} required /></label>
+            <label className="full">Confirm New Password<input type="password" name="password_confirmation" value={passwordForm.password_confirmation} onChange={updatePasswordField} required /></label>
+            <button className="btn primary full" type="submit" disabled={savingPassword}>
+              {savingPassword ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
   const [products, setProducts] = useState([]); const [cart, setCart] = useState([]); const [orders, setOrders] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
@@ -702,7 +854,6 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                         <tr>
                           <th>Product Name</th>
                           <th>Print Side</th>
-                          <th>Paper GSM</th>
                           <th>Base Price</th>
                           <th>Select Copies</th>
                           <th style={{ textAlign: 'right' }}>Total Price</th>
@@ -713,20 +864,17 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                         {catProducts.map(product => {
                           const currentCopies = chosenCopies[product.id] ?? product.print_copy;
                           const currentSide = chosenSides[product.id] ?? 'front';
-                          const gsmOptions = getProductGsmOptions(product);
-                          const currentGsm = chosenGsm[product.id] ?? (gsmOptions[0]?.label || '');
-                          const selectedGsmOption = getSelectedGsmOption(product, currentGsm);
-                          const totalPrice = getTierPrice(product, currentCopies, currentSide, currentGsm);
+                          const totalPrice = getTierPrice(product, currentCopies, currentSide, '');
                           const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
                           const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
                           const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
                           
                           return (
                             <tr key={product.id}>
-                              <td>
+                              <td data-label="Product Name">
                                 <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
                               </td>
-                              <td>
+                              <td data-label="Print Side">
                                 <select 
                                   value={currentSide} 
                                   onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
@@ -736,28 +884,10 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                                   {hasBoth && <option value="both">Front & Back</option>}
                                 </select>
                               </td>
-                              <td>
-                                {gsmOptions.length > 0 ? (
-                                  <select
-                                    value={currentGsm}
-                                    onChange={e => setChosenGsm(prev => ({ ...prev, [product.id]: e.target.value }))}
-                                    style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)' }}
-                                  >
-                                    {gsmOptions.map((option) => (
-                                      <option key={option.id} value={option.label}>{formatGsmOptionLabel(option)}</option>
-                                    ))}
-                                  </select>
-                                ) : (
-                                  <span style={{ color: 'var(--muted)', fontSize: '13px', fontWeight: '600' }}>Standard</span>
-                                )}
-                              </td>
-                              <td style={{ color: 'var(--ink)', fontWeight: '600' }}>
+                              <td data-label="Base Price" style={{ color: 'var(--ink)', fontWeight: '600' }}>
                                 {money(basePriceDisplay)} / copy
-                                {selectedGsmOption && Number(selectedGsmOption.extra_price || 0) > 0 ? (
-                                  <small style={{ display: 'block', color: 'var(--muted)', marginTop: '4px' }}>+ {money(selectedGsmOption.extra_price)} GSM / copy</small>
-                                ) : null}
                               </td>
-                              <td>
+                              <td data-label="Select Copies">
                                 <div className="copies-adjuster">
                                   <button 
                                     type="button" 
@@ -790,14 +920,14 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                                   </button>
                                 </div>
                               </td>
-                              <td style={{ textAlign: 'right' }}>
+                              <td data-label="Total Price" style={{ textAlign: 'right' }}>
                                 <strong style={{ fontSize: '18px', color: 'var(--blue)', display: 'block' }}>{money(totalPrice)}</strong>
-                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy{currentGsm ? ` · ${currentGsm}` : ''}</small>
+                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
                               </td>
-                              <td style={{ textAlign: 'right' }}>
+                              <td data-label="Action" style={{ textAlign: 'right' }}>
                                 <button 
                                   className="btn primary" 
-                                  onClick={() => addToCart(product, currentCopies, currentSide, currentGsm)}
+                                  onClick={() => addToCart(product, currentCopies, currentSide, '')}
                                   style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
                                 >
                                   + Add to Cart
@@ -925,8 +1055,8 @@ function WalletLedgerLog({ transactions }) {
                 const isCredit = tx.type === 'credit';
                 return (
                   <tr key={tx.id}>
-                    <td style={{ color: 'var(--muted)' }}>{new Date(tx.created_at).toLocaleString('en-IN')}</td>
-                    <td>
+                    <td data-label="Date" style={{ color: 'var(--muted)' }}>{new Date(tx.created_at).toLocaleString('en-IN')}</td>
+                    <td data-label="Type">
                       <span className={`status ${tx.type}`} style={{
                         background: isCredit ? 'var(--green-bg)' : 'var(--red-bg)',
                         color: isCredit ? 'var(--green)' : 'var(--red)',
@@ -941,14 +1071,14 @@ function WalletLedgerLog({ transactions }) {
                         {tx.type.toUpperCase()}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Description">
                       <div style={{ fontWeight: '600', color: 'var(--ink)' }}>{tx.description}</div>
                     </td>
-                    <td>
+                    <td data-label="Products">
                       {tx.order && tx.order.items && tx.order.items.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {tx.order.items.map(item => (
-                        <span key={item.id} style={{ fontSize: '13px', fontWeight: '750', color: 'var(--navy)' }}>
+                            <span key={item.id} style={{ fontSize: '13px', fontWeight: '750', color: 'var(--navy)' }}>
                               {item.product_name} <small style={{fontWeight:'bold', color:'var(--blue)'}}>({item.print_side === 'both' ? 'F&B' : 'Front'})</small> <small style={{ color: 'var(--muted)', fontWeight: 'normal' }}>({item.print_copy * item.packs} copies{item.gsm ? ` · ${item.gsm}` : ''})</small>
                             </span>
                           ))}
@@ -957,12 +1087,12 @@ function WalletLedgerLog({ transactions }) {
                         <span style={{ color: 'var(--muted)', fontSize: '13px' }}>—</span>
                       )}
                     </td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td data-label="Amount" style={{ textAlign: 'right' }}>
                       <strong style={{ color: isCredit ? 'var(--green)' : 'var(--red)', fontSize: '15px' }}>
                         {isCredit ? `+ ${money(tx.amount)}` : `- ${money(tx.amount)}`}
                       </strong>
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--ink)' }}>
+                    <td data-label="Running Balance" style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--ink)' }}>
                       {money(tx.balance_after)}
                     </td>
                   </tr>
@@ -987,7 +1117,7 @@ function B2BOrderDetailsModal({ order, onClose, showReceiptActions = false, onSh
         <div className="panel-head b2b-order-modal-head">
           <div>
             <h2>{order.order_number}</h2>
-            <p>Detailed B2B order view for admin and staff review.</p>
+            <p>Detailed Dealer order view for admin and staff review.</p>
           </div>
           <div className="b2b-order-modal-meta">
             <StatusBadge status={order.status || 'new'} />
@@ -1075,6 +1205,110 @@ function B2BOrderDetailsModal({ order, onClose, showReceiptActions = false, onSh
                 ) : null}
               </div>
             )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function B2COrderDetailsModal({ order, onClose }) {
+  if (!order) return null;
+
+  const printSideLabels = {
+    front: 'Front',
+    front_back: 'Front & Back',
+    single: 'Front',
+    double: 'Front & Back',
+  };
+
+  const finishLabels = {
+    none: 'Standard',
+    foil: 'Gold Foil',
+    textured: 'Textured Paper',
+    wax_seal: 'Wax Seal',
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content panel b2b-order-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="panel-head b2b-order-modal-head">
+          <div>
+            <h2>{order.order_number}</h2>
+            <p>Detailed Customer order view for admin and staff review.</p>
+          </div>
+          <div className="b2b-order-modal-meta">
+            <StatusBadge status={order.status || 'new'} />
+            <StatusBadge status={order.staff_status || 'pending'} />
+            <button type="button" className="remove" onClick={onClose} style={{ position: 'static', fontSize: '28px' }}>x</button>
+          </div>
+        </div>
+
+        <div className="b2b-order-modal-grid">
+          <section className="b2b-order-panel">
+            <h3>Customer Details</h3>
+            <div className="b2b-order-detail-list">
+              <div><strong>Customer</strong><span>{order.customer?.name || order.contact_name || 'N/A'}</span></div>
+              <div><strong>Phone</strong><span>{order.contact_phone || 'N/A'}</span></div>
+              <div><strong>Email</strong><span>{order.contact_email || 'N/A'}</span></div>
+              <div><strong>Address</strong><span>{order.customer?.address || 'No address provided'}</span></div>
+              <div><strong>Assigned Staff</strong><span>{order.assigned_staff?.name || order.assignedStaff?.name || 'Unassigned'}</span></div>
+              <div><strong>Deadline</strong><span>{order.deadline_at ? new Date(order.deadline_at).toLocaleString('en-IN') : 'No deadline set'}</span></div>
+              <div><strong>Placed On</strong><span>{new Date(order.created_at).toLocaleString('en-IN')}</span></div>
+              <div><strong>Total</strong><span>{money(order.grand_total)}</span></div>
+            </div>
+            {order.customer_note && (
+              <div className="b2b-order-note">
+                <strong>Customer Note</strong>
+                <p>{order.customer_note}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="b2b-order-panel">
+            <h3>Products & Artwork</h3>
+            <div className="b2b-order-items">
+              {(order.items || []).map((item) => (
+                <article key={item.id} className="b2b-order-item">
+                  <div className="b2b-order-item-top">
+                    <div>
+                      <strong>{item.product_name}</strong>
+                      {item.category_name && <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>{item.category_name}</span>}
+                      {!item.b2c_product_id && (
+                        <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>Customize Color Print</span>
+                      )}
+                    </div>
+                    <strong>{money(item.line_total)}</strong>
+                  </div>
+                  <div className="b2b-order-detail-list compact">
+                    <div><strong>Print Side</strong><span>{printSideLabels[item.print_side] || item.print_side}</span></div>
+                    {item.gsm && <div><strong>Paper GSM</strong><span>{item.gsm}</span></div>}
+                    <div><strong>Quantity</strong><span>{item.quantity}</span></div>
+                    {item.design_serial_number && <div><strong>Design Serial No</strong><span>{item.design_serial_number}</span></div>}
+                    {item.finish && item.finish !== 'none' && <div><strong>Finish</strong><span>{finishLabels[item.finish] || item.finish}</span></div>}
+                    <div><strong>Unit Price</strong><span>{money(item.unit_price)}</span></div>
+                  </div>
+                  {item.custom_text && (
+                    <div className="b2b-order-note" style={{ marginTop: '8px', padding: '8px' }}>
+                      <strong style={{ fontSize: '11px' }}>Customer Notes/Text</strong>
+                      <p style={{ fontSize: '11px', margin: '4px 0 0 0' }}>{item.custom_text}</p>
+                    </div>
+                  )}
+                  {item.file_path ? (
+                    <a
+                      href="#"
+                      className="file-link b2b-order-file"
+                      onClick={(event) => forceDownload(event, `/storage/${item.file_path}`, item.original_filename || 'Artwork')}
+                      style={{ marginTop: '10px' }}
+                    >
+                      Download {item.original_filename || 'Artwork'}
+                    </a>
+                  ) : (
+                    <span className="b2b-order-missing-file" style={{ marginTop: '10px', display: 'inline-block' }}>No artwork uploaded</span>
+                  )}
+                </article>
+              ))}
+            </div>
           </section>
         </div>
       </div>
@@ -1415,7 +1649,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
 
   function cancelEdit() {
     setEditingProductId(null);
-    setProductForm({ category: categories[0]?.name || '', name: '', print_copy: 1, amount: '', front_back_amount: '', gsm_options: [createEmptyGsmOption()], pricing_tiers: [], sort_order: 0, is_active: true });
+    setProductForm({ category: categories[0]?.name || '', name: '', print_copy: 1, amount: '', front_back_amount: '', pricing_tiers: [], sort_order: 0, is_active: true });
     setShowInlineCategoryForm(false);
     setInlineCategoryName('');
   }
@@ -1428,7 +1662,6 @@ function AdminPanel({ unreadNotifications = 0 }) {
       print_copy: product.print_copy,
       amount: product.amount,
       front_back_amount: product.front_back_amount !== null && product.front_back_amount !== undefined ? product.front_back_amount : '',
-      gsm_options: getProductGsmOptions(product).length ? getProductGsmOptions(product).map((option) => ({ label: option.label, extra_price: String(option.extra_price ?? 0) })) : [createEmptyGsmOption()],
       pricing_tiers: product.pricing_tiers || [],
       sort_order: product.sort_order || 0,
       is_active: product.is_active
@@ -1457,31 +1690,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
     }));
   };
 
-  const addGsmOption = () => {
-    setProductForm(prev => ({
-      ...prev,
-      gsm_options: [...(prev.gsm_options || []), createEmptyGsmOption()]
-    }));
-  };
 
-  const updateGsmOption = (index, field, value) => {
-    setProductForm(prev => ({
-      ...prev,
-      gsm_options: (prev.gsm_options || []).map((option, optionIndex) => (
-        optionIndex === index ? { ...option, [field]: value } : option
-      ))
-    }));
-  };
-
-  const removeGsmOption = (index) => {
-    setProductForm(prev => {
-      const nextOptions = (prev.gsm_options || []).filter((_, optionIndex) => optionIndex !== index);
-      return {
-        ...prev,
-        gsm_options: nextOptions.length ? nextOptions : [createEmptyGsmOption()]
-      };
-    });
-  };
 
   async function quickEdit(product) {
     startEdit(product);
@@ -1521,6 +1730,17 @@ function AdminPanel({ unreadNotifications = 0 }) {
   async function assignStaff(orderId, staffId, deadline) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/assign`, { method: 'PUT', body: JSON.stringify({ assigned_staff_id: staffId || null, deadline_at: deadline || null }) }); setNotice('Work assignment updated.'); load(); } catch (e) { setError(e.message); } }
   async function updateOrderStatus(orderId, status) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); setNotice('Order status updated.'); load(); } catch (e) { setError(e.message); } }
   async function shareReceipt(orderId) { setError(''); setNotice(''); try { await api(`/admin/orders/${orderId}/share-receipt`, { method: 'POST' }); setNotice('Receipt shared with dealer.'); load(); } catch (e) { setError(e.message); } }
+  async function deleteOrder(orderId) {
+    if (!window.confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+    setError(''); setNotice('');
+    try {
+      await api(`/admin/orders/${orderId}`, { method: 'DELETE' });
+      setNotice('Order deleted successfully.');
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
   const adminNavItems = [
     { key: 'dashboard', label: 'Dashboard' },
     { key: 'dealers', label: 'Dealers', count: Number(stats.pending_dealers || 0) },
@@ -1533,7 +1753,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '32px', gap: '16px' }}>
       <PortalNavMenu items={adminNavItems} activeKey={tab} onChange={setTab} badgeCount={unreadNotifications} />
       <a href="/b2c-admin" className="btn primary" style={{ textDecoration: 'none', fontSize: '15px', fontWeight: '800', borderRadius: '99px', padding: '10px 24px', background: 'linear-gradient(135deg, #0d9488 0%, #0f172a 100%)', border: 'none' }}>
-        Go to B2C Admin Module &rarr;
+        Go to Customer Admin Module &rarr;
       </a>
     </div>
     <Alert message={notice} /><Alert message={error} type="error" />
@@ -1781,34 +2001,6 @@ function AdminPanel({ unreadNotifications = 0 }) {
         <label>Base Print Copies<input type="number" value={productForm.print_copy} onChange={e => setProductForm({ ...productForm, print_copy: Number(e.target.value) })} required /></label>
         <label>Front Only Base Amount (₹)<input type="number" step="0.01" value={productForm.amount} onChange={e => setProductForm({ ...productForm, amount: e.target.value })} required /></label>
         <label>Front & Back Base Amount (₹) <span style={{fontWeight:'normal', fontSize:'12px', color:'var(--muted)'}}>(Optional, leave blank if not supported)</span><input type="number" step="0.01" value={productForm.front_back_amount || ''} onChange={e => setProductForm({ ...productForm, front_back_amount: e.target.value })} /></label>
-        <div style={{ marginTop: '6px', padding: '14px', border: '1px solid var(--line)', borderRadius: '10px', background: '#f8fafc' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--navy)' }}>GSM Options & Extra Price</span>
-            <button type="button" className="btn ghost" style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '8px' }} onClick={addGsmOption}>+ Add GSM</button>
-          </div>
-          <div style={{ display: 'grid', gap: '8px' }}>
-            {(productForm.gsm_options || []).map((option, index) => (
-              <div key={`b2b-gsm-option-${index}`} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr auto', gap: '8px', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={option.label}
-                  onChange={e => updateGsmOption(index, 'label', e.target.value)}
-                  placeholder="e.g. 250 GSM"
-                />
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={option.extra_price}
-                  onChange={e => updateGsmOption(index, 'extra_price', e.target.value)}
-                  placeholder="Extra price / copy"
-                />
-                <button type="button" className="btn ghost" style={{ padding: '8px 10px', fontSize: '12px' }} onClick={() => removeGsmOption(index)}>Remove</button>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontSize: '11px', color: 'var(--muted)', margin: '10px 0 0' }}>Example: 250 GSM extra Rs. 2, 300 GSM extra Rs. 5. This amount is added on each copy like B2C.</p>
-        </div>
         <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
           <input 
             type="checkbox" 
@@ -1940,16 +2132,13 @@ function AdminPanel({ unreadNotifications = 0 }) {
         <h2>Product Chart & Price list</h2>
         <table className="admin-table">
           <thead>
-            <tr><th>Category</th><th>Product Name/Gsm</th><th>Print Copies & Tiers</th><th>Base Amount (₹)</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
+            <tr><th>Category</th><th>Product Name</th><th>Print Copies & Tiers</th><th>Base Amount (₹)</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
           </thead>
           <tbody>
             {products.map(p => <tr key={p.id}>
               <td style={{ color: 'var(--muted)', fontWeight: '600' }}>{p.category}</td>
               <td>
                 <strong style={{ color: 'var(--navy)' }}>{p.name}</strong>
-                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-                  {getProductGsmOptions(p).length > 0 ? getProductGsmOptions(p).map((option) => formatGsmOptionLabel(option)).join(', ') : 'Standard GSM only'}
-                </div>
               </td>
               <td>
                 {p.pricing_tiers && p.pricing_tiers.length > 0 ? (
@@ -2010,6 +2199,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--navy)' }}>{money(o.grand_total)}</div>
                 <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setSelectedOrderDetails(o)}>View Details</button>
                 <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => addCharge(o)}>+ Add Extra Work</button>
+                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--red)', borderColor: '#fca5a5', background: 'var(--red-bg)' }} onClick={() => deleteOrder(o.id)}>Remove Order</button>
               </div>
             </div>
 
@@ -2021,7 +2211,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
                     <div>
                       <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
                       <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
+                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -2107,10 +2297,12 @@ function AdminPanel({ unreadNotifications = 0 }) {
                     value={o.status || 'new'}
                     onChange={e => updateOrderStatus(o.id, e.target.value)}
                     style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', fontWeight: 'bold' }}
+                    disabled={o.status === 'cancelled'}
                   >
                     <option value="new">New</option>
                     <option value="working">Working</option>
                     <option value="done">Done</option>
+                    <option value="cancelled">Cancelled</option>
                   </select>
                 </label>
               </div>
@@ -2359,281 +2551,6 @@ function AdminPanel({ unreadNotifications = 0 }) {
   </main>;
 }
 
-function StaffPanel() {
-  const [jobs, setJobs] = useState([]); const [notice, setNotice] = useState(''); const [error, setError] = useState('');
-  async function load() { try { setJobs(await api('/staff/queue')); } catch (e) { setError(e.message); } }
-  useEffect(() => { load(); }, []);
-  async function status(orderId, statusVal) { try { await api(`/staff/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status: statusVal }) }); setNotice('Job status updated.'); load(); } catch (e) { setError(e.message); } }
-  return <main className="portal"><Alert message={notice} /><Alert message={error} type="error" /><section className="panel"><div className="panel-head"><h2>Printing Job Queue</h2><p>Jobs are arranged by deadline first.</p></div>
-    {jobs.map((job, index) => <article className="job" key={job.id} style={{ display: 'grid', gridTemplateColumns: '58px 1fr auto auto', gap: '20px', alignItems: 'center', padding: '20px', margin: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#fff' }}>
-      <div className="seq">#{index + 1}</div>
-      <div className="job-detail" style={{ display: 'block' }}>
-        <strong style={{ fontSize: '18px', color: 'var(--navy)' }}>{job.order_number}</strong>
-        <span style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--ink)', marginTop: '4px' }}>
-          {job.dealer?.company_name || 'Dealer'} · {job.dealer?.phone || 'No phone'}
-        </span>
-        <small style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-          Deadline: {job.deadline_at ? new Date(job.deadline_at).toLocaleString('en-IN') : 'Not provided'}
-        </small>
-
-        <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
-          <div style={{ display: 'grid', gap: '8px' }}>
-            {job.items.map(i => (
-              <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: '#fff', border: '1px solid var(--line)', borderRadius: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--navy)' }}>
-                  {i.product_name} — {i.print_copy * i.packs} copies ({i.packs} set(s))
-                </span>
-                {i.file_path ? (
-                  <a
-                    className="file-link"
-                    href="#"
-                    onClick={(e) => forceDownload(e, `/storage/${i.file_path}`, i.original_filename || "Artwork")}
-                    style={{
-                      background: 'var(--blue2)',
-                      color: 'var(--blue)',
-                      padding: '4px 10px',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    📥 Download ({i.original_filename || 'Artwork'})
-                  </a>
-                ) : (
-                  <span style={{ fontSize: '11px', color: 'var(--red)', background: '#fff0f0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>No Artwork</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <StatusBadge status={job.staff_status || 'pending'} />
-      <div className="job-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-        <button onClick={() => status(job.id, 'started')}>Start</button>
-        <button onClick={() => status(job.id, 'ready')}>Ready</button>
-        <button onClick={() => status(job.id, 'picked_up')}>Picked Up</button>
-      </div>
-    </article>)}
-  </section></main>;
-}
-
-function ProfileModal({ user, onClose, refreshUser }) {
-  const [profileForm, setProfileForm] = useState({
-    name: user.name || '',
-    company_name: user.company_name || '',
-    phone: user.phone || '',
-    gst_number: user.gst_number || '',
-    address: user.address || '',
-    pincode: user.pincode || ''
-  });
-  const [profileLoading, setProfileLoading] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function handleUpdateProfile(e) {
-    e.preventDefault();
-    setError('');
-    setNotice('');
-    setProfileLoading(true);
-    try {
-      const response = await api('/profile/update', {
-        method: 'POST',
-        body: JSON.stringify(profileForm)
-      });
-      setNotice(response.message || 'Profile details updated successfully.');
-      if (refreshUser) await refreshUser();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setProfileLoading(false);
-    }
-  }
-
-  async function handleResetPassword(e) {
-    e.preventDefault();
-    setError('');
-    setNotice('');
-    
-    if (newPassword !== confirmPassword) {
-      setError('New password and confirmation do not match.');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const response = await api('/profile/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({
-          current_password: currentPassword,
-          password: newPassword,
-          password_confirmation: confirmPassword
-        })
-      });
-      setNotice(response.message || 'Password updated successfully.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      if (refreshUser) await refreshUser();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content panel profile-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px', width: '90%' }}>
-        <div className="panel-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2>Dealer Profile</h2>
-            <p>View your B2B account details and update your password.</p>
-          </div>
-          <button className="remove" onClick={onClose} style={{ position: 'static', fontSize: '28px' }}>×</button>
-        </div>
-        
-        <div style={{ padding: '24px' }}>
-          <Alert message={notice} />
-          <Alert message={error} type="error" />
-          
-          <form onSubmit={handleUpdateProfile} style={{ marginBottom: '28px' }}>
-            <div className="profile-info-grid">
-              <div className="profile-field">
-                <strong>Company Name</strong>
-                <input 
-                  type="text" 
-                  value={profileForm.company_name} 
-                  onChange={e => setProfileForm({...profileForm, company_name: e.target.value})} 
-                  required 
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none' }}
-                />
-              </div>
-              <div className="profile-field">
-                <strong>Contact Person</strong>
-                <input 
-                  type="text" 
-                  value={profileForm.name} 
-                  onChange={e => setProfileForm({...profileForm, name: e.target.value})} 
-                  required 
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none' }}
-                />
-              </div>
-              <div className="profile-field" style={{ background: '#f1f5f9', opacity: 0.8 }}>
-                <strong>Email Address <em style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'lowercase' }}>(read-only)</em></strong>
-                <span style={{ fontSize: '16px', color: 'var(--navy)', fontWeight: '700', display: 'block', marginTop: '2px' }}>{user.email}</span>
-              </div>
-              <div className="profile-field">
-                <strong>Mobile Number</strong>
-                <input 
-                  type="text" 
-                  value={profileForm.phone} 
-                  onChange={e => setProfileForm({...profileForm, phone: e.target.value})} 
-                  required 
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none' }}
-                />
-              </div>
-              <div className="profile-field">
-                <strong>GST Number</strong>
-                <input 
-                  type="text" 
-                  value={profileForm.gst_number} 
-                  onChange={e => setProfileForm({...profileForm, gst_number: e.target.value})} 
-                  placeholder="Not Provided"
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none' }}
-                />
-              </div>
-              <div className="profile-field">
-                <strong>Pincode</strong>
-                <input 
-                  type="text" 
-                  value={profileForm.pincode} 
-                  onChange={e => setProfileForm({...profileForm, pincode: e.target.value})} 
-                  required 
-                  pattern="[0-9]{6}"
-                  title="Please enter a valid 6-digit pincode"
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none' }}
-                />
-              </div>
-              <div className="profile-field" style={{ background: '#f1f5f9', opacity: 0.8 }}>
-                <strong>Wallet Balance <em style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'lowercase' }}>(read-only)</em></strong>
-                <span style={{ fontSize: '16px', color: 'var(--green)', fontWeight: '700', display: 'block', marginTop: '2px' }}>{money(user.wallet_balance)}</span>
-              </div>
-              <div className="profile-field full">
-                <strong>Office Address</strong>
-                <textarea 
-                  value={profileForm.address} 
-                  onChange={e => setProfileForm({...profileForm, address: e.target.value})} 
-                  required 
-                  rows="2"
-                  style={{ width: '100%', border: 'none', borderBottom: '1px dashed var(--line)', background: 'transparent', fontSize: '16px', color: 'var(--navy)', fontWeight: '700', padding: '2px 0', marginTop: '2px', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
-                />
-              </div>
-            </div>
-            <button className="btn primary full" type="submit" disabled={profileLoading} style={{ marginTop: '10px' }}>
-              {profileLoading ? 'Saving Profile Details...' : 'Save Profile Details'}
-            </button>
-          </form>
-          
-          <div className="reset-password-section">
-            <h3>Reset Account Password</h3>
-            <form onSubmit={handleResetPassword} className="form-grid">
-              <label>
-                Current Password
-                <input 
-                  type="password" 
-                  value={currentPassword} 
-                  onChange={e => setCurrentPassword(e.target.value)} 
-                  required 
-                  placeholder="Enter current password"
-                />
-              </label>
-              <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="full">
-                <label>
-                  New Password
-                  <input 
-                    type="password" 
-                    value={newPassword} 
-                    onChange={e => setNewPassword(e.target.value)} 
-                    required 
-                    placeholder="Min 8 characters"
-                  />
-                </label>
-                <label>
-                  Confirm New Password
-                  <input 
-                    type="password" 
-                    value={confirmPassword} 
-                    onChange={e => setConfirmPassword(e.target.value)} 
-                    required 
-                    placeholder="Re-enter new password"
-                  />
-                </label>
-              </div>
-              <button 
-                className="btn primary full" 
-                type="submit" 
-                disabled={loading}
-                style={{ marginTop: '10px' }}
-              >
-                {loading ? 'Updating Password...' : 'Update Password'}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function StaffModulePanel({ unreadNotifications = 0 }) {
   const [jobs, setJobs] = useState([]);
   const [notice, setNotice] = useState('');
@@ -2641,8 +2558,8 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
   const [activeModule, setActiveModule] = useState('b2b');
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const staffNavItems = [
-    { key: 'b2b', label: 'B2B Jobs' },
-    { key: 'b2c', label: 'B2C Jobs' },
+    { key: 'b2b', label: 'Dealer Jobs' },
+    { key: 'b2c', label: 'Customer Jobs' },
   ];
 
   async function load(module = activeModule) {
@@ -2675,15 +2592,15 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
     <section className="panel">
       <div className="panel-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h2>{activeModule === 'b2c' ? 'B2C Printing Job Queue' : 'B2B Printing Job Queue'}</h2>
-          <p>Switch between B2B and B2C jobs from here.</p>
+          <h2>{activeModule === 'b2c' ? 'Customer Printing Job Queue' : 'Dealer Printing Job Queue'}</h2>
+          <p>Switch between Dealer and Customer jobs from here.</p>
         </div>
         <PortalNavMenu items={staffNavItems} activeKey={activeModule} onChange={setActiveModule} badgeCount={unreadNotifications} />
       </div>
 
       {!jobs.length ? (
         <div style={{ padding: '24px', color: 'var(--muted)' }}>
-          No {activeModule.toUpperCase()} jobs available right now.
+          No {activeModule === 'b2c' ? 'customer' : 'dealer'} jobs available right now.
         </div>
       ) : jobs.map((job, index) => (
         <article className="job" key={`${activeModule}-${job.id}`} style={{ display: 'grid', gridTemplateColumns: '58px 1fr auto auto', gap: '20px', alignItems: 'center', padding: '20px', margin: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#fff' }}>
@@ -2709,11 +2626,9 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
                           ? `${item.product_name} — ${item.quantity} copies`
                           : `${item.product_name} — ${item.print_copy * item.packs} copies (${item.packs} set(s))`}
                       </span>
-                      {activeModule === 'b2b' && item.gsm ? (
-                        <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)', fontSize: '11px', fontWeight: '700' }}>
-                          GSM: {item.gsm}
-                        </small>
-                      ) : null}
+                      {activeModule === 'b2c' && !item.b2c_product_id && (
+                        <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '2px' }}>Customize Color Print</span>
+                      )}
                       {activeModule === 'b2c' && item.design_serial_number ? (
                         <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)', fontSize: '11px', fontWeight: '700' }}>
                           Design Serial No: {item.design_serial_number}
@@ -2761,7 +2676,9 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
 
     {activeModule === 'b2b' ? (
       <B2BOrderDetailsModal order={selectedOrderDetails} onClose={() => setSelectedOrderDetails(null)} />
-    ) : null}
+    ) : (
+      <B2COrderDetailsModal order={selectedOrderDetails} onClose={() => setSelectedOrderDetails(null)} />
+    )}
   </main>;
 }
 
@@ -2771,6 +2688,38 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [transitionLoading, setTransitionLoading] = useState(false);
+  const [transitionText, setTransitionText] = useState('Loading...');
+
+  useEffect(() => {
+    const handleAnchorClick = (e) => {
+      const anchor = e.target.closest('a');
+      if (!anchor) return;
+      
+      const href = anchor.getAttribute('href');
+      if (anchor.target === '_blank') return;
+      
+      const isSwitching = href && (
+        href === '/portal' || 
+        href.startsWith('/portal/') || 
+        href === '/b2c-admin' || 
+        href.startsWith('/b2c-admin/') ||
+        href === '/'
+      );
+      
+      if (isSwitching) {
+        e.preventDefault();
+        setTransitionText(href === '/' ? 'Returning to Home...' : 'Switching Modules...');
+        setTransitionLoading(true);
+        setTimeout(() => {
+          window.location.href = href;
+        }, 1000);
+      }
+    };
+    
+    document.addEventListener('click', handleAnchorClick);
+    return () => document.removeEventListener('click', handleAnchorClick);
+  }, []);
 
   async function getUser() { 
     try { 
@@ -2817,11 +2766,31 @@ function App() {
   }
 
   async function logout() { 
-    await api('/logout', { method: 'POST', body: JSON.stringify({}) }); 
-    window.location.reload(); 
+    setTransitionText('Logging out...');
+    setTransitionLoading(true);
+    const startTime = Date.now();
+    try {
+      await api('/logout', { method: 'POST', body: JSON.stringify({}) }); 
+    } catch (e) {
+      console.error(e);
+    }
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 1000 - elapsed);
+    setTimeout(() => {
+      window.location.reload(); 
+    }, remaining);
   }
 
-  if (loading) return <div className="loader">Loading portal…</div>;
+  if (loading || transitionLoading) {
+    return (
+      <div className="loader-page-transition">
+        <div className="b2c-loader-card">
+          <img src={logo} alt="Angel logo" className="b2c-loader-logo" />
+          <div className="b2c-loader-text">{loading ? 'Loading Portal...' : transitionText}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -2844,7 +2813,7 @@ function App() {
         <StaffModulePanel unreadNotifications={unreadNotifications} />
       )}
       
-      {showProfile && user && user.role === 'dealer' && (
+      {showProfile && user && (user.role === 'dealer' || user.role === 'admin') && (
         <ProfileModal user={user} onClose={() => setShowProfile(false)} refreshUser={getUser} />
       )}
     </>
