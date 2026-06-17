@@ -4308,6 +4308,25 @@ export default function B2CApp() {
     ]).finally(() => setLoadingUser(false));
   }, []);
 
+  const [b2cFlash, setB2cFlash] = useState(null);
+  const [showB2cFlash, setShowB2cFlash] = useState(false);
+
+  useEffect(() => {
+    if (user && !isAdminModule) {
+      const dismissed = sessionStorage.getItem('b2c_flash_dismissed');
+      if (!dismissed) {
+        api('/api/b2c/flash-message')
+          .then(data => {
+            if (data && data.active) {
+              setB2cFlash(data);
+              setShowB2cFlash(true);
+            }
+          })
+          .catch(err => console.error(err));
+      }
+    }
+  }, [user?.id, isAdminModule]);
+
   useEffect(() => {
     loadNotifications();
   }, [user?.id, user?.role, isAdminModule]);
@@ -4385,6 +4404,8 @@ export default function B2CApp() {
 
   const handleLogout = async () => {
     const logoutUrl = isAdminModule ? '/portal/api/logout' : '/api/b2c/logout';
+    sessionStorage.removeItem('b2c_flash_dismissed');
+    sessionStorage.removeItem('b2b_flash_dismissed');
     await api(logoutUrl, { method: 'POST', body: JSON.stringify({}) });
     window.location.reload();
   };
@@ -4419,8 +4440,9 @@ export default function B2CApp() {
   }
 
   if (user) {
+    let pageContent;
     if (isAboutPage) {
-      return (
+      pageContent = (
         <AboutUsPage
           user={user}
           onLogout={handleLogout}
@@ -4430,10 +4452,8 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
-    }
-
-    if (isPolicyPage) {
-      return (
+    } else if (isPolicyPage) {
+      pageContent = (
         <CustomerPolicyPage
           user={user}
           onLogout={handleLogout}
@@ -4445,10 +4465,8 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
-    }
-
-    if (isOrdersPage) {
-      return (
+    } else if (isOrdersPage) {
+      pageContent = (
         <CustomerOrdersPage
           user={user}
           onLogout={handleLogout}
@@ -4459,10 +4477,8 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
-    }
-
-    if (isProfilePage) {
-      return (
+    } else if (isProfilePage) {
+      pageContent = (
         <CustomerProfilePage
           user={user}
           onLogout={handleLogout}
@@ -4474,10 +4490,8 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
-    }
-
-    if (isColorPrintShop) {
-      return (
+    } else if (isColorPrintShop) {
+      pageContent = (
         <CustomerColorPrintShopPage
           user={user}
           onLogout={handleLogout}
@@ -4488,20 +4502,72 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
+    } else {
+      pageContent = (
+        <CustomerHome
+          user={user}
+          onLogout={handleLogout}
+          products={products}
+          categories={categories}
+          api={api}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     }
 
     return (
-      <CustomerHome
-        user={user}
-        onLogout={handleLogout}
-        products={products}
-        categories={categories}
-        api={api}
-        notifications={notifications}
-        unreadCount={unreadNotifications}
-        onMarkNotificationRead={markNotificationRead}
-        onMarkAllNotificationsRead={markAllNotificationsRead}
-      />
+      <>
+        {pageContent}
+        {showB2cFlash && b2cFlash && (
+          <div className="b2c-flash-overlay">
+            <div className="b2c-flash-card">
+              <button
+                type="button"
+                className="b2c-flash-close"
+                onClick={() => {
+                  sessionStorage.setItem('b2c_flash_dismissed', '1');
+                  setShowB2cFlash(false);
+                }}
+                title="Close Notice"
+              >
+                ×
+              </button>
+
+              <div className={`b2c-flash-grid ${b2cFlash.image ? 'has-image' : ''}`}>
+                {b2cFlash.image && (
+                  <div className="b2c-flash-image-wrapper">
+                    <img
+                      src={b2cFlash.image}
+                      alt="Announcement Banner"
+                      className="b2c-flash-image"
+                    />
+                  </div>
+                )}
+                
+                <div className="b2c-flash-content">
+                  <h2 className="b2c-flash-title">Notice</h2>
+                  
+                  {b2cFlash.text && (
+                    <ul className="b2c-flash-list">
+                      {b2cFlash.text.split('\n').map(l => l.trim()).filter(l => l.length > 0).map((line, idx) => {
+                        const cleanLine = line.replace(/^[•\-\*\✦\s\d+\.\)\-\s]+/, '').trim();
+                        return (
+                          <li key={idx} className="b2c-flash-item">
+                            {cleanLine}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 

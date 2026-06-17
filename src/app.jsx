@@ -2791,12 +2791,12 @@ function AdminPanel({ unreadNotifications = 0 }) {
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
-            Announcement Text
+            Announcement Text <span style={{ fontWeight: 'normal', color: 'var(--muted)', fontSize: '12px' }}>(Enter each point on a new line. They will be rendered as bullet points in the popup)</span>
             <textarea
               value={flashSettings.dealer_flash_text || ''}
               onChange={e => setFlashSettings({ ...flashSettings, dealer_flash_text: e.target.value })}
-              rows={4}
-              placeholder="Enter announcement text to show..."
+              rows={6}
+              placeholder={`• Check all spelling and grammar properly.\n• Confirm mobile number, address, email, and QR code details.\n• Share high-resolution images and logos only.`}
               style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' }}
             />
           </label>
@@ -2852,12 +2852,12 @@ function AdminPanel({ unreadNotifications = 0 }) {
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
-            Announcement Text
+            Announcement Text <span style={{ fontWeight: 'normal', color: 'var(--muted)', fontSize: '12px' }}>(Enter each point on a new line. They will be rendered as bullet points in the popup)</span>
             <textarea
               value={flashSettings.customer_flash_text || ''}
               onChange={e => setFlashSettings({ ...flashSettings, customer_flash_text: e.target.value })}
-              rows={4}
-              placeholder="Enter announcement text to show..."
+              rows={6}
+              placeholder={`• Check all spelling and grammar properly.\n• Confirm mobile number, address, email, and QR code details.\n• Share high-resolution images and logos only.`}
               style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' }}
             />
           </label>
@@ -3266,6 +3266,8 @@ function App() {
   async function logout() {
     setTransitionText('Logging out...');
     setTransitionLoading(true);
+    sessionStorage.removeItem('b2b_flash_dismissed');
+    sessionStorage.removeItem('b2c_flash_dismissed');
     const startTime = Date.now();
     try {
       await api('/logout', { method: 'POST', body: JSON.stringify({}) });
@@ -3316,36 +3318,47 @@ function App() {
       )}
 
       {showFlash && flashMessage && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(13, 20, 36, 0.62)', zIndex: 999999 }}>
-          <div className="panel" style={{ background: '#fff', borderRadius: '18px', padding: '28px', maxWidth: '600px', width: '90%', boxShadow: '0 20px 45px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--navy)', alignSelf: 'flex-start' }}>Notice</h2>
-            
-            {flashMessage.image && (
-              <img
-                src={flashMessage.image}
-                alt="Announcement Banner"
-                style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', borderRadius: '8px' }}
-              />
-            )}
-            
-            {flashMessage.text && (
-              <p style={{ margin: 0, fontSize: '15px', color: 'var(--navy)', lineHeight: '1.6', width: '100%', whiteSpace: 'pre-line' }}>
-                {flashMessage.text}
-              </p>
-            )}
+        <div className="b2b-flash-overlay">
+          <div className="b2b-flash-card">
+            <button
+              type="button"
+              className="b2b-flash-close"
+              onClick={() => {
+                sessionStorage.setItem('b2b_flash_dismissed', '1');
+                setShowFlash(false);
+              }}
+              title="Close Notice"
+            >
+              ×
+            </button>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '10px' }}>
-              <button
-                type="button"
-                className="btn primary"
-                onClick={() => {
-                  sessionStorage.setItem('b2b_flash_dismissed', '1');
-                  setShowFlash(false);
-                }}
-                style={{ padding: '10px 24px', fontSize: '14px', borderRadius: '8px', fontWeight: 'bold' }}
-              >
-                Cancel
-              </button>
+            <div className={`b2b-flash-grid ${flashMessage.image ? 'has-image' : ''}`}>
+              {flashMessage.image && (
+                <div className="b2b-flash-image-wrapper">
+                  <img
+                    src={flashMessage.image}
+                    alt="Announcement Banner"
+                    className="b2b-flash-image"
+                  />
+                </div>
+              )}
+              
+              <div className="b2b-flash-content">
+                <h2 className="b2b-flash-title">Notice</h2>
+                
+                {flashMessage.text && (
+                  <ul className="b2b-flash-list">
+                    {flashMessage.text.split('\n').map(l => l.trim()).filter(l => l.length > 0).map((line, idx) => {
+                      const cleanLine = line.replace(/^[•\-\*\✦\s\d+\.\)\-\s]+/, '').trim();
+                      return (
+                        <li key={idx} className="b2b-flash-item">
+                          {cleanLine}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         </div>

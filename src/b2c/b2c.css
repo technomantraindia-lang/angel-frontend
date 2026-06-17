@@ -4745,4 +4745,179 @@ body {
   font-weight: 500;
 }
 
+/* B2C Customizable Flash Announcement Modal */
+.b2c-flash-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(13, 20, 36, 0.75);
+  backdrop-filter: blur(12px);
+  z-index: 999999;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  animation: b2cFlashFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.b2c-flash-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: var(--b2c-shadow, 0 24px 80px rgba(13, 20, 36, 0.12));
+  width: 100%;
+  max-width: 950px; /* Increased from 850px */
+  padding: 40px 36px 36px;
+  border-top: 8px solid var(--b2c-accent, #2b5c7f); /* Premium B2C accent brand color */
+  animation: b2cFlashScaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+/* Optimize width if the popup has only text (no image) */
+.b2c-flash-card:not(:has(.has-image)) {
+  max-width: 650px;
+}
+
+.b2c-flash-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: var(--b2c-accent-soft, rgba(43, 92, 127, 0.12));
+  color: var(--b2c-accent, #2b5c7f);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(43, 92, 127, 0.15);
+}
+
+.b2c-flash-close:hover {
+  background: var(--b2c-accent, #2b5c7f);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+.b2c-flash-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .b2c-flash-grid.has-image {
+    grid-template-columns: 1.1fr 1.3fr;
+  }
+}
+
+.b2c-flash-image-wrapper {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--b2c-border, rgba(13, 20, 36, 0.08));
+  background: var(--b2c-pearl, #fffaf5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.b2c-flash-image {
+  width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+  display: block;
+}
+
+.b2c-flash-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.b2c-flash-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--b2c-navy, #0d1424);
+  letter-spacing: -0.02em;
+  border-bottom: 2px solid var(--b2c-accent-soft, rgba(43, 92, 127, 0.12));
+  padding-bottom: 8px;
+}
+
+.b2c-flash-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.b2c-flash-item {
+  position: relative;
+  padding-left: 28px;
+  font-size: 15px;
+  color: var(--b2c-ink, #162033);
+  line-height: 1.6;
+}
+
+.b2c-flash-item::before {
+  content: "✦"; /* Elegant bullet icon */
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--b2c-gold, #c9a35e); /* Accent gold color */
+  font-weight: 900;
+  font-size: 16px;
+}
+
+@media (max-width: 767px) {
+  .b2c-flash-card {
+    padding: 36px 20px 24px;
+    border-radius: 16px;
+    margin: 12px;
+  }
+  .b2c-flash-title {
+    font-size: 22px;
+    text-align: center;
+  }
+  .b2c-flash-image {
+    max-height: 250px;
+  }
+  .b2c-flash-item {
+    font-size: 14px;
+    padding-left: 24px;
+  }
+  .b2c-flash-close {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  .b2c-flash-grid {
+    gap: 20px;
+  }
+}
+
+@keyframes b2cFlashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes b2cFlashScaleIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+
 
