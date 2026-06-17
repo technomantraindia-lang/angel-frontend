@@ -3369,7 +3369,7 @@ function App() {
 
 const pathname = window.location.pathname;
 const isPortal = pathname.startsWith('/portal');
-const isB2C = ['/b2c', '/b2c-admin', '/my-orders', '/profile', '/printing-policy', '/about-us']
+const isB2C = ['/b2c', '/b2c-admin', '/my-orders', '/profile', '/printing-policy', '/about-us', '/contact-us']
   .some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
 if (isPortal) {

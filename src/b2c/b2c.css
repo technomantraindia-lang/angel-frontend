@@ -4147,6 +4147,7 @@ body {
   .b2c-about-story-layout,
   .b2c-about-values-panel,
   .b2c-about-journey-panel,
+  .b2c-consultation-grid,
   .b2c-footer-grid {
     grid-template-columns: 1fr;
   }
@@ -4271,7 +4272,8 @@ body {
   .b2c-admin-form-grid,
   .b2c-admin-inline-form,
   .b2c-admin-stats,
-  .b2c-profile-form {
+  .b2c-profile-form,
+  .b2c-form-field-row {
     grid-template-columns: 1fr;
   }
 
@@ -4917,6 +4919,24 @@ body {
 @keyframes b2cFlashScaleIn {
   from { transform: scale(0.92); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+.b2c-social-icon-link {
+  color: var(--b2c-slate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(13, 20, 36, 0.05);
+  transition: all 0.25s ease;
+}
+
+.b2c-social-icon-link:hover {
+  background: rgba(201, 163, 94, 0.16);
+  color: #946f31;
+  transform: translateY(-2px);
 }
 
 

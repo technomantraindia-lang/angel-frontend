@@ -43,6 +43,14 @@ const IconSpark = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"></path><path d="M19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16z"></path><path d="M5 16l.9 2.1L8 19l-2.1.9L5 22l-.9-2.1L2 19l2.1-.9L5 16z"></path></svg>
 );
 
+const IconInstagram = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+);
+
+const IconFacebook = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+);
+
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 const acceptedArtworkTypes = '.cdr,.zip,.png,.jpg,.jpeg';
 const defaultPolicy = {
@@ -2406,6 +2414,7 @@ function GuestHeader({ onLoginClick, currentPage = 'home' }) {
           <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
           <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
           <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+          <a href="/contact-us" className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
           <a href="/portal" className="b2c-orders-btn b2c-orders-btn-wide">Login as Dealer</a>
           <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={onLoginClick}>
             Login as Customer
@@ -2417,6 +2426,7 @@ function GuestHeader({ onLoginClick, currentPage = 'home' }) {
         <a href="/" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
         <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
         <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+        <a href="/contact-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
         <a href="/portal" onClick={() => setMenuOpen(false)} className="b2c-orders-btn b2c-orders-btn-wide">Login as Dealer</a>
         <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={() => { setMenuOpen(false); onLoginClick(); }}>
           Login as Customer
@@ -2457,6 +2467,7 @@ function CustomerHeader({
           <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
           <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
           <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+          <a href="/contact-us" className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
           <a href="/my-orders" className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
           <a href="/profile" className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
           {onOpenCart ? (
@@ -2481,6 +2492,7 @@ function CustomerHeader({
         <a href="/" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
         <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
         <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
+        <a href="/contact-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
         <a href="/my-orders" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
         <a href="/profile" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
         {onOpenCart ? (
@@ -2549,12 +2561,21 @@ function StoreFooter({ user }) {
           <p>
             Angel Enterprise creates premium kankotris, envelopes, sleeves, visiting cards, and custom print sets with elegant detailing and Konica-based production care.
           </p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <a href="https://www.instagram.com/ags_printers/?hl=en" target="_blank" rel="noreferrer" className="b2c-social-icon-link" aria-label="Instagram">
+              <IconInstagram />
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61551940682643" target="_blank" rel="noreferrer" className="b2c-social-icon-link" aria-label="Facebook">
+              <IconFacebook />
+            </a>
+          </div>
         </div>
 
         <div className="b2c-footer-column">
           <h4>Quick Links</h4>
           <a href="/">Home</a>
           <a href="/about-us">About Us</a>
+          <a href="/contact-us">Contact Us</a>
           <a href="/portal">Login as Dealer</a>
           <a href="/">Login as Customer</a>
         </div>
@@ -2571,8 +2592,10 @@ function StoreFooter({ user }) {
           <h4>Contact</h4>
           <a href="tel:8200391418">Office: 8200391418</a>
           <a href="tel:9724503723">Customer Care WhatsApp: 9724503723</a>
-          <span>F/4, First Floor, Shyamal Complex, New CG Road</span>
-          <span>Near Kotak Mahindra Bank, Chandkheda, Ahmedabad, Gujarat 382424</span>
+          <a href="mailto:print@angelprintshop.com" style={{ textTransform: 'none', color: 'inherit', textDecoration: 'none' }}>Email: print@angelprintshop.com</a>
+          <span>F/4, FIRST FLOOR, Shyamal Complex,</span>
+          <span>New CG Rd, nr. KOTAK BANK,</span>
+          <span>Nigam Nagar, Chandkheda, Ahmedabad, Gujarat 382424</span>
         </div>
 
       </div>
@@ -3893,6 +3916,174 @@ function AboutUsPage({
   );
 }
 
+function ContactUsPage({
+  user,
+  onLogout,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+}) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSuccess(true);
+      setForm({ name: '', email: '', phone: '', message: '' });
+      setTimeout(() => setSuccess(false), 5000);
+      alert('Thank you for contacting us! We will get back to you shortly.');
+    }, 1200);
+  };
+
+  return (
+    <div className="b2c-store-shell">
+      {user ? (
+        <CustomerHeader
+          user={user}
+          onLogout={onLogout}
+          currentPage="contact"
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkNotificationRead={onMarkNotificationRead}
+          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        />
+      ) : (
+        <GuestHeader onLoginClick={() => { window.location.href = '/'; }} currentPage="contact" />
+      )}
+
+      <main className="b2c-store-main" style={{ padding: '40px 24px 80px', width: 'min(1520px, calc(100% - 20px))', maxWidth: 'none', margin: '0 auto' }}>
+        <section className="b2c-consultation-section">
+          <div className="b2c-consultation-grid">
+            <div className="b2c-consultation-info" style={{ padding: '54px', background: 'var(--b2c-pearl)' }}>
+              <h2 style={{ fontSize: '36px', fontWeight: '800', color: 'var(--b2c-navy)', margin: '0 0 32px' }}>Contact Us</h2>
+              
+              <div className="b2c-contact-info-list" style={{ gap: '24px' }}>
+                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-4.35-6-11a6 6 0 0 1 12 0c0 6.65-6 11-6 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                  </span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Our Address</strong>
+                    <span style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '15px', lineHeight: '1.6', marginTop: '4px', fontWeight: '600' }}>
+                      F/4, FIRST FLOOR, Shyamal Complex,<br />
+                      New CG Rd, nr. KOTAK BANK,<br />
+                      Nigam Nagar, Chandkheda, Ahmedabad,<br />
+                      Gujarat 382424
+                    </span>
+                  </div>
+                </div>
+
+                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  </span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Phone Number</strong>
+                    <a href="tel:8200391418" style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '16px', fontWeight: 'bold', textDecoration: 'none', marginTop: '4px' }}>8200391418</a>
+                    <a href="tel:9724503723" style={{ display: 'block', color: 'var(--b2c-slate)', fontSize: '13px', textDecoration: 'none', marginTop: '2px' }}>WhatsApp: 9724503723</a>
+                  </div>
+                </div>
+
+                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                  </span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Email Address</strong>
+                    <a href="mailto:print@angelprintshop.com" style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', marginTop: '4px' }}>print@angelprintshop.com</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="b2c-consultation-form-card" style={{ padding: '54px' }}>
+              <form className="b2c-consultation-form" onSubmit={handleSubmit} style={{ gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Enter your name"
+                    className="b2c-input-styled"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    className="b2c-input-styled"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className="b2c-input-styled"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Message</label>
+                  <textarea
+                    name="message"
+                    value={form.message}
+                    onChange={handleChange}
+                    placeholder="How can we help you?"
+                    className="b2c-textarea-styled"
+                    style={{ minHeight: '120px' }}
+                    required
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  className="b2c-btn-primary"
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.25s ease' }}
+                  disabled={loading}
+                >
+                  {loading ? 'Sending Message...' : 'Send Message'}
+                </button>
+
+                {success && (
+                  <div style={{ color: 'var(--b2c-gold)', fontSize: '13px', fontWeight: 'bold', textAlign: 'center', marginTop: '10px' }}>
+                    Message sent successfully!
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <StoreFooter user={user} />
+    </div>
+  );
+}
+
 function GuestExperience({
   mode,
   setMode,
@@ -4174,6 +4365,7 @@ export default function B2CApp() {
   const isProfilePage = pathname.startsWith('/profile');
   const isPolicyPage = pathname.startsWith('/printing-policy');
   const isAboutPage = pathname.startsWith('/about-us');
+  const isContactPage = pathname.startsWith('/contact-us');
   const isColorPrintShop = pathname.startsWith('/b2c/color-print');
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState('login');
@@ -4250,7 +4442,7 @@ export default function B2CApp() {
   }
 
   async function loadCatalog() {
-    if (isAdminModule || isOrdersPage || isProfilePage || isPolicyPage || isAboutPage) return;
+    if (isAdminModule || isOrdersPage || isProfilePage || isPolicyPage || isAboutPage || isContactPage) return;
 
     try {
       const [productData, categoryData] = await Promise.all([
@@ -4452,6 +4644,17 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
+    } else if (isContactPage) {
+      pageContent = (
+        <ContactUsPage
+          user={user}
+          onLogout={handleLogout}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+        />
+      );
     } else if (isPolicyPage) {
       pageContent = (
         <CustomerPolicyPage
@@ -4573,6 +4776,10 @@ export default function B2CApp() {
 
   if (isAboutPage) {
     return <AboutUsPage user={null} onLogout={null} />;
+  }
+
+  if (isContactPage) {
+    return <ContactUsPage user={null} onLogout={null} />;
   }
 
   if (isPolicyPage) {
