@@ -436,6 +436,64 @@ function B2CAdminPanel({
   const [editingColorPrintProductId, setEditingColorPrintProductId] = useState(null);
   const [colorPrintProductSubmitting, setColorPrintProductSubmitting] = useState(false);
 
+  const [searchB2CProduct, setSearchB2CProduct] = useState('');
+  const [selectedB2CProductCategory, setSelectedB2CProductCategory] = useState('All');
+  const [searchColorPrintProduct, setSearchColorPrintProduct] = useState('');
+  const [searchB2COrder, setSearchB2COrder] = useState('');
+  const [searchCustomer, setSearchCustomer] = useState('');
+  const [productFormStep, setProductFormStep] = useState(1);
+  const [searchCancelledB2COrder, setSearchCancelledB2COrder] = useState('');
+
+  const filteredB2CProducts = useMemo(() => {
+    return products.filter(p => {
+      const categoryMatch = selectedB2CProductCategory === 'All' || p.category === selectedB2CProductCategory;
+      const searchMatch = (p.name || '').toLowerCase().includes(searchB2CProduct.toLowerCase()) ||
+                          (p.category || '').toLowerCase().includes(searchB2CProduct.toLowerCase());
+      return categoryMatch && searchMatch;
+    });
+  }, [products, searchB2CProduct, selectedB2CProductCategory]);
+
+  const filteredColorPrintProducts = useMemo(() => {
+    return colorPrintProducts.filter(p => 
+      (p.name || '').toLowerCase().includes(searchColorPrintProduct.toLowerCase()) ||
+      (p.category || '').toLowerCase().includes(searchColorPrintProduct.toLowerCase())
+    );
+  }, [colorPrintProducts, searchColorPrintProduct]);
+
+  const filteredB2COrders = useMemo(() => {
+    return orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      const q = searchB2COrder.toLowerCase();
+      const orderNumberMatch = (o.order_number || '').toLowerCase().includes(q);
+      const contactNameMatch = (o.customer?.name || o.contact_name || '').toLowerCase().includes(q);
+      const contactEmailMatch = (o.contact_email || '').toLowerCase().includes(q);
+      const contactPhoneMatch = (o.contact_phone || '').toLowerCase().includes(q);
+      const itemsMatch = (o.items || []).some(item => (item.product_name || '').toLowerCase().includes(q));
+      return orderNumberMatch || contactNameMatch || contactEmailMatch || contactPhoneMatch || itemsMatch;
+    });
+  }, [orders, searchB2COrder]);
+
+  const filteredCancelledB2COrders = useMemo(() => {
+    return orders.filter(o => {
+      if (o.status !== 'cancelled') return false;
+      const q = searchCancelledB2COrder.toLowerCase();
+      const orderNumberMatch = (o.order_number || '').toLowerCase().includes(q);
+      const contactNameMatch = (o.customer?.name || o.contact_name || '').toLowerCase().includes(q);
+      const contactEmailMatch = (o.contact_email || '').toLowerCase().includes(q);
+      const contactPhoneMatch = (o.contact_phone || '').toLowerCase().includes(q);
+      const itemsMatch = (o.items || []).some(item => (item.product_name || '').toLowerCase().includes(q));
+      return orderNumberMatch || contactNameMatch || contactEmailMatch || contactPhoneMatch || itemsMatch;
+    });
+  }, [orders, searchCancelledB2COrder]);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => 
+      (c.name || '').toLowerCase().includes(searchCustomer.toLowerCase()) ||
+      (c.email || '').toLowerCase().includes(searchCustomer.toLowerCase()) ||
+      (c.phone || '').toLowerCase().includes(searchCustomer.toLowerCase())
+    );
+  }, [customers, searchCustomer]);
+
   const newImagePreviews = useMemo(
     () => newImages.map((file, index) => ({
       id: `${file.name}-${file.size}-${index}`,
@@ -476,6 +534,7 @@ function B2CAdminPanel({
     setRemovedImageIds([]);
     setNewImages([]);
     setSamplePdfFile(null);
+    setProductFormStep(1);
   };
 
   const loadAdminData = async () => {
@@ -571,6 +630,7 @@ function B2CAdminPanel({
     setRemovedImageIds([]);
     setNewImages([]);
     setSamplePdfFile(null);
+    setProductFormStep(2);
     setTab('products');
     setNotice(`Editing ${product.name}.`);
   };
@@ -805,7 +865,7 @@ function B2CAdminPanel({
       sort_order: product.sort_order || 0,
       is_active: product.is_active
     });
-    setTab('products');
+    setTab('color_print');
     setNotice(`Editing Color Print product ${product.name}. Scroll up/down to see form.`);
   };
 
@@ -987,7 +1047,7 @@ function B2CAdminPanel({
       ...customers.map((customer) => ([
         customer.name || '',
         customer.email || '',
-        customer.phone || '',
+        customer.phone ? `\t${customer.phone}` : '',
         String(customer.orders_count || 0),
         customer.created_at ? new Date(customer.created_at).toLocaleDateString('en-IN') : '',
       ])),
@@ -1034,7 +1094,9 @@ function B2CAdminPanel({
               : [
                   ['dashboard', 'Dashboard'],
                   ['products', 'Products'],
+                  ['color_print', 'Customization Color Print'],
                   ['orders', 'Orders'],
+                  ['cancelled_orders', 'Cancelled Orders'],
                   ['customers', 'Customers'],
                   ['policy', 'Printing Policy'],
                 ]
@@ -1161,239 +1223,299 @@ function B2CAdminPanel({
               </div>
 
               <form className="b2c-admin-product-form" onSubmit={submitProduct}>
-                <div className="b2c-admin-form-grid">
-                  <label>
-                    Category
-                    <select
-                      value={productForm.b2c_category_id}
-                      onChange={(event) => handleProductField('b2c_category_id', event.target.value)}
-                      required
-                    >
-                      <option value="">Select category</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Product Name
-                    <input
-                      type="text"
-                      value={productForm.name}
-                      onChange={(event) => handleProductField('name', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Minimum Product Number
-                    <input
-                      type="number"
-                      min="1"
-                      value={productForm.print_copy}
-                      onChange={(event) => handleProductField('print_copy', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Quantity Increase Step
-                    <input
-                      type="number"
-                      min="1"
-                      value={productForm.quantity_step}
-                      onChange={(event) => handleProductField('quantity_step', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Front Price
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={productForm.amount}
-                      onChange={(event) => handleProductField('amount', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Print Side Availability
-                    <select
-                      value={productForm.print_side_mode}
-                      onChange={(event) => handleProductField('print_side_mode', event.target.value)}
-                      required
-                    >
-                      <option value="front_only">Front Only</option>
-                      <option value="front_back_only">Front & Back Only</option>
-                      <option value="both">Both Options</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    Front & Back Price
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={productForm.front_back_amount}
-                      onChange={(event) => handleProductField('front_back_amount', event.target.value)}
-                      disabled={productForm.print_side_mode === 'front_only'}
-                      placeholder={productForm.print_side_mode === 'front_only' ? 'Enable print side first' : 'Enter front & back price'}
-                    />
-                  </label>
-
-                  {/* GSM Options removed */}
-
-                  <label className="b2c-admin-form-wide">
-                    Short Description
-                    <input
-                      type="text"
-                      value={productForm.short_description}
-                      onChange={(event) => handleProductField('short_description', event.target.value)}
-                      placeholder="Visible in product cards"
-                    />
-                  </label>
-
-                  <label className="b2c-admin-form-wide">
-                    Description
-                    <textarea
-                      value={productForm.description}
-                      onChange={(event) => handleProductField('description', event.target.value)}
-                      placeholder="Full product details for the customer modal"
-                    />
-                  </label>
-
-                  <label className="b2c-admin-form-wide">
-                    Product Photos (up to 5)
-                    <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleNewImages} />
-                    <span className="b2c-admin-field-help">
-                      {totalSelectedImages}/5 images selected. Products are shown to customers automatically after saving.
-                    </span>
-                  </label>
-
-                  <label className="b2c-admin-form-wide">
-                    Sample PDF
-                    <input type="file" accept="application/pdf" onChange={handleSamplePdfChange} />
-                    <span className="b2c-admin-field-help">
-                      Customers can open this PDF as a product sample.
-                    </span>
-                  </label>
-                </div>
-
-                {visibleExistingImages.length > 0 && (
-                  <div className="b2c-admin-upload-block">
-                    <strong>Current Images</strong>
-                    <div className="b2c-admin-image-grid">
-                      {visibleExistingImages.map((image) => (
-                        <div key={image.id} className="b2c-admin-image-card">
-                          <img src={image.file_url} alt="Product" />
-                          <button type="button" onClick={() => setRemovedImageIds((prev) => [...prev, image.id])}>
-                            Remove
-                          </button>
-                        </div>
-                      ))}
+                {!editingProductId && productFormStep === 1 ? (
+                  <div className="b2c-admin-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                    <label>
+                      Category
+                      <select
+                        value={productForm.b2c_category_id}
+                        onChange={(event) => handleProductField('b2c_category_id', event.target.value)}
+                        required
+                      >
+                        <option value="">Select category</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>{category.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="b2c-modal-actions" style={{ justifyContent: 'flex-start', borderTop: 'none', padding: '0', marginTop: '16px' }}>
+                      <button
+                        type="button"
+                        className="b2c-btn-primary"
+                        disabled={!productForm.b2c_category_id}
+                        onClick={() => setProductFormStep(2)}
+                      >
+                        Next
+                      </button>
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="b2c-admin-form-grid">
+                      <label>
+                        Category
+                        <select
+                          value={productForm.b2c_category_id}
+                          onChange={(event) => handleProductField('b2c_category_id', event.target.value)}
+                          required
+                        >
+                          <option value="">Select category</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        Product Name
+                        <input
+                          type="text"
+                          value={productForm.name}
+                          onChange={(event) => handleProductField('name', event.target.value)}
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        Minimum Product Number
+                        <input
+                          type="number"
+                          min="1"
+                          value={productForm.print_copy}
+                          onChange={(event) => handleProductField('print_copy', event.target.value)}
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        Quantity Increase Step
+                        <input
+                          type="number"
+                          min="1"
+                          value={productForm.quantity_step}
+                          onChange={(event) => handleProductField('quantity_step', event.target.value)}
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        Front Price
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={productForm.amount}
+                          onChange={(event) => handleProductField('amount', event.target.value)}
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        Print Side Availability
+                        <select
+                          value={productForm.print_side_mode}
+                          onChange={(event) => handleProductField('print_side_mode', event.target.value)}
+                          required
+                        >
+                          <option value="front_only">Front Only</option>
+                          <option value="front_back_only">Front & Back Only</option>
+                          <option value="both">Both Options</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        Front & Back Price
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={productForm.front_back_amount}
+                          onChange={(event) => handleProductField('front_back_amount', event.target.value)}
+                          disabled={productForm.print_side_mode === 'front_only'}
+                          placeholder={productForm.print_side_mode === 'front_only' ? 'Enable print side first' : 'Enter front & back price'}
+                        />
+                      </label>
+
+                      {/* GSM Options removed */}
+
+                      <label className="b2c-admin-form-wide">
+                        Short Description
+                        <input
+                          type="text"
+                          value={productForm.short_description}
+                          onChange={(event) => handleProductField('short_description', event.target.value)}
+                          placeholder="Visible in product cards"
+                        />
+                      </label>
+
+                      <label className="b2c-admin-form-wide">
+                        Description
+                        <textarea
+                          value={productForm.description}
+                          onChange={(event) => handleProductField('description', event.target.value)}
+                          placeholder="Full product details for the customer modal"
+                        />
+                      </label>
+
+                      <label className="b2c-admin-form-wide">
+                        Product Photos (up to 5)
+                        <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleNewImages} />
+                        <span className="b2c-admin-field-help">
+                          {totalSelectedImages}/5 images selected. Products are shown to customers automatically after saving.
+                        </span>
+                      </label>
+
+                      <label className="b2c-admin-form-wide">
+                        Sample PDF
+                        <input type="file" accept="application/pdf" onChange={handleSamplePdfChange} />
+                        <span className="b2c-admin-field-help">
+                          Customers can open this PDF as a product sample.
+                        </span>
+                      </label>
+                    </div>
+
+                    {visibleExistingImages.length > 0 && (
+                      <div className="b2c-admin-upload-block">
+                        <strong>Current Images</strong>
+                        <div className="b2c-admin-image-grid">
+                          {visibleExistingImages.map((image) => (
+                            <div key={image.id} className="b2c-admin-image-card">
+                              <img src={image.file_url} alt="Product" />
+                              <button type="button" onClick={() => setRemovedImageIds((prev) => [...prev, image.id])}>
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {newImages.length > 0 && (
+                      <div className="b2c-admin-upload-block">
+                        <strong>New Images Ready</strong>
+                        <div className="b2c-admin-preview-list">
+                          {newImagePreviews.map((preview, index) => (
+                            <div key={preview.id} className="b2c-admin-preview-card">
+                              <div className="b2c-admin-preview-thumb">
+                                <img src={preview.url} alt={preview.name} />
+                              </div>
+                              <div className="b2c-admin-preview-copy">
+                                <strong>{preview.name}</strong>
+                                <span>New image selected</span>
+                              </div>
+                              <button type="button" className="b2c-admin-preview-remove" onClick={() => handleRemoveNewImage(index)}>
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(samplePdfFile || editingProduct?.sample_pdf_url) ? (
+                      <div className="b2c-admin-upload-block">
+                        <strong>Sample PDF Preview</strong>
+                        <div className="b2c-admin-preview-list">
+                          {editingProduct?.sample_pdf_url && !productForm.remove_sample_pdf && !samplePdfFile && (
+                            <div className="b2c-admin-preview-card pdf">
+                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
+                              <div className="b2c-admin-preview-copy">
+                                <strong>Current sample PDF</strong>
+                                <span>Customers can open this file right now</span>
+                              </div>
+                              <div className="b2c-admin-preview-actions">
+                                <a
+                                  href={editingProduct.sample_pdf_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  View
+                                </a>
+                                <button type="button" className="b2c-admin-preview-remove" onClick={() => handleProductField('remove_sample_pdf', true)}>
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {editingProduct?.sample_pdf_url && productForm.remove_sample_pdf && !samplePdfFile && (
+                            <div className="b2c-admin-preview-card pdf pending">
+                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
+                              <div className="b2c-admin-preview-copy">
+                                <strong>Current PDF will be removed</strong>
+                                <span>Save the product to remove this sample PDF</span>
+                              </div>
+                              <button type="button" className="b2c-admin-preview-undo" onClick={() => handleProductField('remove_sample_pdf', false)}>
+                                Undo
+                              </button>
+                            </div>
+                          )}
+
+                          {samplePdfFile && (
+                            <div className="b2c-admin-preview-card pdf">
+                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
+                              <div className="b2c-admin-preview-copy">
+                                <strong>{samplePdfFile.name}</strong>
+                                <span>New sample PDF selected</span>
+                              </div>
+                              <button type="button" className="b2c-admin-preview-remove" onClick={() => setSamplePdfFile(null)}>
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="b2c-modal-actions" style={{ display: 'flex', gap: '12px' }}>
+                      {!editingProductId && (
+                        <button
+                          type="button"
+                          className="b2c-btn-secondary"
+                          onClick={() => setProductFormStep(1)}
+                        >
+                          Back
+                        </button>
+                      )}
+                      <button className="b2c-btn-primary" type="submit" disabled={productSubmitting}>
+                        {productSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Create Product'}
+                      </button>
+                    </div>
+                  </>
                 )}
-
-                {newImages.length > 0 && (
-                  <div className="b2c-admin-upload-block">
-                    <strong>New Images Ready</strong>
-                    <div className="b2c-admin-preview-list">
-                      {newImagePreviews.map((preview, index) => (
-                        <div key={preview.id} className="b2c-admin-preview-card">
-                          <div className="b2c-admin-preview-thumb">
-                            <img src={preview.url} alt={preview.name} />
-                          </div>
-                          <div className="b2c-admin-preview-copy">
-                            <strong>{preview.name}</strong>
-                            <span>New image selected</span>
-                          </div>
-                          <button type="button" className="b2c-admin-preview-remove" onClick={() => handleRemoveNewImage(index)}>
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(samplePdfFile || editingProduct?.sample_pdf_url) ? (
-                  <div className="b2c-admin-upload-block">
-                    <strong>Sample PDF Preview</strong>
-                    <div className="b2c-admin-preview-list">
-                      {editingProduct?.sample_pdf_url && !productForm.remove_sample_pdf && !samplePdfFile && (
-                        <div className="b2c-admin-preview-card pdf">
-                          <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                          <div className="b2c-admin-preview-copy">
-                            <strong>Current sample PDF</strong>
-                            <span>Customers can open this file right now</span>
-                          </div>
-                          <div className="b2c-admin-preview-actions">
-                            <a
-                              href={editingProduct.sample_pdf_url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              View
-                            </a>
-                            <button type="button" className="b2c-admin-preview-remove" onClick={() => handleProductField('remove_sample_pdf', true)}>
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {editingProduct?.sample_pdf_url && productForm.remove_sample_pdf && !samplePdfFile && (
-                        <div className="b2c-admin-preview-card pdf pending">
-                          <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                          <div className="b2c-admin-preview-copy">
-                            <strong>Current PDF will be removed</strong>
-                            <span>Save the product to remove this sample PDF</span>
-                          </div>
-                          <button type="button" className="b2c-admin-preview-undo" onClick={() => handleProductField('remove_sample_pdf', false)}>
-                            Undo
-                          </button>
-                        </div>
-                      )}
-
-                      {samplePdfFile && (
-                        <div className="b2c-admin-preview-card pdf">
-                          <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                          <div className="b2c-admin-preview-copy">
-                            <strong>{samplePdfFile.name}</strong>
-                            <span>New sample PDF selected</span>
-                          </div>
-                          <button type="button" className="b2c-admin-preview-remove" onClick={() => setSamplePdfFile(null)}>
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="b2c-modal-actions">
-                  <button className="b2c-btn-primary" type="submit" disabled={productSubmitting}>
-                    {productSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Create Product'}
-                  </button>
-                </div>
               </form>
             </section>
 
             <section className="b2c-admin-card">
-              <div className="b2c-admin-card-head">
+              <div className="b2c-admin-card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                   <span className="b2c-pill subtle">Catalog</span>
                   <h2>Customer products</h2>
                 </div>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <select
+                    value={selectedB2CProductCategory}
+                    onChange={(e) => setSelectedB2CProductCategory(e.target.value)}
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px', background: '#fff', outline: 'none' }}
+                  >
+                    <option value="All">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <div style={{ position: 'relative', minWidth: '280px' }}>
+                    <input
+                      type="text"
+                      placeholder="Search standard products..."
+                      value={searchB2CProduct}
+                      onChange={(e) => setSearchB2CProduct(e.target.value)}
+                      style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px' }}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {products.length === 0 ? (
+              {filteredB2CProducts.length === 0 ? (
                 <div className="b2c-admin-empty">No Customer products added yet.</div>
               ) : (
                 <div className="b2c-admin-table-wrap">
@@ -1411,7 +1533,7 @@ function B2CAdminPanel({
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((product) => (
+                      {filteredB2CProducts.map((product) => (
                         <tr key={product.id}>
                           <td>
                             <strong>{product.name}</strong>
@@ -1446,169 +1568,103 @@ function B2CAdminPanel({
                 </div>
               )}
             </section>
+          </>
+        )}
 
-            {/* Customer Color Print Separator Heading */}
-            <div style={{ margin: '40px 0 20px 0', borderTop: '2px solid var(--line)', paddingTop: '20px' }}>
-              <span className="b2c-pill">Customization Color Print</span>
-              <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--navy)', marginTop: '8px' }}>Customer Color Print Management</h2>
-            </div>
-
-            {/* Category management for Customer Color Print */}
-            <section className="b2c-admin-card">
-              <div className="b2c-admin-card-head">
-                <div>
-                  <span className="b2c-pill subtle">Color Print Categories</span>
-                  <h2>Manage Customer Color Print Categories</h2>
-                </div>
-              </div>
-
-              <form className="b2c-admin-inline-form" onSubmit={handleAddColorPrintCategory}>
-                <input
-                  type="text"
-                  value={colorPrintCategoryName}
-                  onChange={(event) => setColorPrintCategoryName(event.target.value)}
-                  placeholder="Add new color print category"
-                />
-                <button className="b2c-btn-primary" type="submit" disabled={colorPrintCategoryLoading}>
-                  {colorPrintCategoryLoading ? 'Adding...' : 'Add Category'}
-                </button>
-              </form>
-
-              {colorPrintCategories.length > 0 && (
-                <div className="b2c-admin-chip-list">
-                  {colorPrintCategories.map((category) => (
-                    <div key={category.id} className="b2c-admin-chip">
-                      <span>{category.name}</span>
-                      <button type="button" onClick={() => handleDeleteColorPrintCategory(category)}>Remove</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Product Adding for Customer Color Print */}
-            <section className="b2c-admin-card">
-              <div className="b2c-admin-card-head">
-                <div>
-                  <span className="b2c-pill subtle">{editingColorPrintProductId ? 'Edit Color Print Product' : 'Add Color Print Product'}</span>
-                  <h2>{editingColorPrintProductId ? 'Update Customer Color Print Product' : 'Create Customer Color Print Product'}</h2>
-                </div>
-                {editingColorPrintProductId && (
-                  <button className="b2c-btn-secondary" type="button" onClick={() => resetColorPrintProductForm()}>
-                    Cancel Edit
-                  </button>
-                )}
-              </div>
-
-              <form className="b2c-admin-product-form" onSubmit={submitColorPrintProduct}>
-                <div className="b2c-admin-form-grid">
-                  <label>
-                    Category
-                    <select
-                      value={colorPrintProductForm.category}
-                      onChange={(event) => handleColorPrintProductField('category', event.target.value)}
-                      required
-                    >
-                      <option value="">Select category</option>
-                      {colorPrintCategories.map((category) => (
-                        <option key={category.id} value={category.name}>{category.name}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Product Name
-                    <input
-                      type="text"
-                      value={colorPrintProductForm.name}
-                      onChange={(event) => handleColorPrintProductField('name', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Base Print Copies
-                    <input
-                      type="number"
-                      min="1"
-                      value={colorPrintProductForm.print_copy}
-                      onChange={(event) => handleColorPrintProductField('print_copy', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Front Only Base Amount (₹)
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={colorPrintProductForm.amount}
-                      onChange={(event) => handleColorPrintProductField('amount', event.target.value)}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Front & Back Base Amount (₹) <span style={{fontWeight:'normal', fontSize:'12px', color:'var(--muted)'}}>(Optional)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={colorPrintProductForm.front_back_amount || ''}
-                      onChange={(event) => handleColorPrintProductField('front_back_amount', event.target.value)}
-                      placeholder="Leave blank if not supported"
-                    />
-                  </label>
-
-                  <label>
-                    Sort Order
-                    <input
-                      type="number"
-                      value={colorPrintProductForm.sort_order}
-                      onChange={(event) => handleColorPrintProductField('sort_order', event.target.value)}
-                    />
-                  </label>
-
-                  <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
-                    <input 
-                      type="checkbox" 
-                      checked={colorPrintProductForm.is_active} 
-                      onChange={(event) => handleColorPrintProductField('is_active', event.target.checked)} 
-                      style={{ width: 'auto', cursor: 'pointer' }}
-                    />
-                    <span>Product is Active & visible to customers</span>
-                  </label>
-                </div>
+        {tab === 'color_print' && (
+          <div className="admin-products" style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '110px' }}>
+              
+              {/* Product Adding/Editing form for Customer Color Print */}
+              <form className="panel product-form" onSubmit={submitColorPrintProduct} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)', position: 'static' }}>
+                <h2>{editingColorPrintProductId ? 'Edit Color Print Product' : 'Add Color Print Product'}</h2>
+                <label>Category
+                  <select
+                    value={colorPrintProductForm.category}
+                    onChange={(event) => handleColorPrintProductField('category', event.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px 14px', fontSize: '15px', border: '1.5px solid var(--line)', borderRadius: '8px', background: '#ffffff', color: 'var(--navy)' }}
+                  >
+                    <option value="">Select category</option>
+                    {colorPrintCategories.map((category) => (
+                      <option key={category.id} value={category.name}>{category.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>Product Name
+                  <input
+                    type="text"
+                    value={colorPrintProductForm.name}
+                    onChange={(event) => handleColorPrintProductField('name', event.target.value)}
+                    required
+                  />
+                </label>
+                <label>Base Print Copies
+                  <input
+                    type="number"
+                    min="1"
+                    value={colorPrintProductForm.print_copy}
+                    onChange={(event) => handleColorPrintProductField('print_copy', event.target.value)}
+                    required
+                  />
+                </label>
+                <label>Front Only Base Amount (₹)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={colorPrintProductForm.amount}
+                    onChange={(event) => handleColorPrintProductField('amount', event.target.value)}
+                    required
+                  />
+                </label>
+                <label>Front & Back Base Amount (₹) <span style={{fontWeight:'normal', fontSize:'12px', color:'var(--muted)'}}>(Optional, leave blank if not supported)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={colorPrintProductForm.front_back_amount || ''}
+                    onChange={(event) => handleColorPrintProductField('front_back_amount', event.target.value)}
+                    placeholder="Leave blank if not supported"
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
+                  <input 
+                    type="checkbox" 
+                    checked={colorPrintProductForm.is_active} 
+                    onChange={(event) => handleColorPrintProductField('is_active', event.target.checked)} 
+                    style={{ width: 'auto', cursor: 'pointer' }}
+                  />
+                  <span>Product is Active & visible to customers</span>
+                </label>
 
                 {/* Tier Pricing Section */}
-                <div style={{ marginTop: '20px', borderTop: '1px solid var(--line)', paddingTop: '15px' }} className="full">
+                <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '15px' }} className="full">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy)' }}>Pricing Tiers (Optional)</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)' }}>Pricing Tiers (Optional)</span>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" className="b2c-btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => addColorPrintTier('front')}>+ Add Front Tier</button>
-                      <button type="button" className="b2c-btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => addColorPrintTier('both')}>+ Add Front & Back Tier</button>
+                      <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addColorPrintTier('front')}>+ Add Front Tier</button>
+                      <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addColorPrintTier('both')}>+ Add Front&Back Tier</button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '-4px', marginBottom: '12px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px', marginBottom: '12px' }}>
                     Define custom discount percentages for print copy ranges.
                   </p>
-                  
                   {(colorPrintProductForm.pricing_tiers || []).map((tier, index) => {
                     const isBoth = tier.print_side === 'both';
                     const baseAmountForTier = isBoth ? colorPrintProductForm.front_back_amount : colorPrintProductForm.amount;
                     return (
-                      <div key={index} style={{ marginBottom: '12px', padding: '12px', background: isBoth ? '#f0f9ff' : '#f8fafc', borderRadius: '8px', border: `1px solid ${isBoth ? '#bae6fd' : 'var(--line)'}` }}>
+                      <div key={index} style={{ marginBottom: '12px', padding: '10px', background: isBoth ? '#f0f9ff' : '#f8fafc', borderRadius: '8px', border: `1px solid ${isBoth ? '#bae6fd' : 'var(--line)'}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: isBoth ? 'var(--blue)' : 'var(--navy)' }}>{isBoth ? 'Front & Back Tier' : 'Front Only Tier'}</span>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr auto', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr auto', gap: '6px', alignItems: 'center' }}>
                           <input
                             type="number"
                             placeholder="Min"
                             value={tier.min || ''}
                             onChange={e => updateColorPrintTier(index, 'min', e.target.value === '' ? '' : Number(e.target.value))}
-                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
                             required
                           />
                           <input
@@ -1616,7 +1672,7 @@ function B2CAdminPanel({
                             placeholder="Max"
                             value={tier.max || ''}
                             onChange={e => updateColorPrintTier(index, 'max', e.target.value === '' ? '' : Number(e.target.value))}
-                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
                           />
                           <input
                             type="number"
@@ -1625,13 +1681,13 @@ function B2CAdminPanel({
                             placeholder="Discount %"
                             value={tier.discount || ''}
                             onChange={e => updateColorPrintTier(index, 'discount', e.target.value === '' ? '' : Number(e.target.value))}
-                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
                             required
                           />
                           <button
                             type="button"
                             onClick={() => removeColorPrintTier(index)}
-                            style={{ padding: '6px 10px', background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+                            style={{ padding: '6px 8px', background: 'var(--red-bg)', color: 'var(--red)', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '12px' }}
                           >
                             ×
                           </button>
@@ -1649,98 +1705,158 @@ function B2CAdminPanel({
                   })}
                 </div>
 
-                <div className="b2c-modal-actions" style={{ marginTop: '20px' }}>
-                  <button className="b2c-btn-primary" type="submit" disabled={colorPrintProductSubmitting}>
-                    {colorPrintProductSubmitting ? 'Saving...' : editingColorPrintProductId ? 'Update Product' : 'Create Product'}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+                  <button className="btn primary" style={{ flex: 1, padding: '10px' }} disabled={colorPrintProductSubmitting}>
+                    {colorPrintProductSubmitting ? 'Saving...' : editingColorPrintProductId ? 'Update' : 'Create Product'}
                   </button>
+                  {editingColorPrintProductId && (
+                    <button type="button" className="btn ghost" onClick={resetColorPrintProductForm} style={{ flex: 1, padding: '10px' }}>Cancel</button>
+                  )}
                 </div>
               </form>
-            </section>
+
+              {/* Category management for Customer Color Print */}
+              <form className="panel product-form" onSubmit={handleAddColorPrintCategory} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)', position: 'static' }}>
+                <h2>Add Category</h2>
+                <label>Category Name
+                  <input
+                    type="text"
+                    value={colorPrintCategoryName}
+                    onChange={(event) => setColorPrintCategoryName(event.target.value)}
+                    placeholder="e.g. Wedding Cards"
+                    required
+                  />
+                </label>
+                <button className="btn primary full" type="submit" disabled={colorPrintCategoryLoading} style={{ marginTop: '10px' }}>
+                  {colorPrintCategoryLoading ? 'Adding Category...' : 'Add Category'}
+                </button>
+
+                <div style={{ marginTop: '20px', borderTop: '1.5px solid var(--line)', paddingTop: '15px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)', display: 'block', marginBottom: '8px' }}>Existing Categories</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
+                    {colorPrintCategories.map(c => (
+                      <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--navy)' }}>{c.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteColorPrintCategory(c)}
+                          style={{
+                            background: 'var(--red-bg)',
+                            color: 'var(--red)',
+                            border: '1px solid #fca5a5',
+                            borderRadius: '6px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </form>
+
+            </div>
 
             {/* Catalog list table for Customer Color Print */}
-            <section className="b2c-admin-card">
-              <div className="b2c-admin-card-head">
-                <div>
-                  <span className="b2c-pill subtle">Catalog</span>
-                  <h2>Customer Color Print Products</h2>
+            <section className="panel grow" style={{ background: '#fff', borderRadius: '12px', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0 }}>Color Print Product Chart & Price list</h2>
+                <div style={{ position: 'relative', minWidth: '280px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search color print products..."
+                    value={searchColorPrintProduct}
+                    onChange={(e) => setSearchColorPrintProduct(e.target.value)}
+                    style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '14px' }}
+                  />
                 </div>
               </div>
-
-              {colorPrintProducts.length === 0 ? (
-                <div className="b2c-admin-empty">No Customer Color Print products added yet.</div>
-              ) : (
-                <div className="b2c-admin-table-wrap">
-                  <table className="b2c-admin-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Base Pricing</th>
-                        <th>Print Copies & Tiers</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {colorPrintProducts.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <strong>{product.name}</strong>
-                          </td>
-                          <td>{product.category}</td>
-                          <td>
-                            <div className="b2c-admin-table-sub">Front: {money(product.amount)}</div>
-                            {Number(product.front_back_amount) > 0 && (
-                              <div className="b2c-admin-table-sub">Front & Back: {money(product.front_back_amount)}</div>
-                            )}
-                          </td>
-                          <td>
-                            <div className="b2c-admin-table-sub">Base Copies: {product.print_copy}</div>
-                            {product.pricing_tiers && product.pricing_tiers.length > 0 ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--blue)' }}>Tiers defined:</span>
-                                {product.pricing_tiers.map((t, idx) => (
-                                  <span key={idx} style={{ fontSize: '11px', color: 'var(--ink)' }}>
-                                    • {t.print_side === 'both' ? 'F&B' : 'Front'}: {t.min}{t.max ? ` to ${t.max}` : '+'} copies = <strong>{t.discount}% discount</strong>
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>No discount tiers</span>
-                            )}
-                          </td>
-                          <td><span className={`b2c-status-pill ${product.is_active ? 'active' : 'inactive'}`}>{product.is_active ? 'Active' : 'Hidden'}</span></td>
-                          <td className="b2c-admin-table-actions">
-                            <button type="button" onClick={() => startEditColorPrintProduct(product)}>Edit</button>
-                            <button type="button" onClick={() => handleDeleteColorPrintProduct(product)}>Delete</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Product Name</th>
+                    <th>Print Copies & Tiers</th>
+                    <th>Base Amount (₹)</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredColorPrintProducts.map(p => (
+                    <tr key={p.id}>
+                      <td style={{ color: 'var(--muted)', fontWeight: '600' }}>{p.category}</td>
+                      <td>
+                        <strong style={{ color: 'var(--navy)' }}>{p.name}</strong>
+                      </td>
+                      <td>
+                        <div className="b2c-admin-table-sub">Base Copies: {p.print_copy}</div>
+                        {p.pricing_tiers && p.pricing_tiers.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--blue)' }}>Tiers defined:</span>
+                            {p.pricing_tiers.map((t, idx) => (
+                              <span key={idx} style={{ fontSize: '11px', color: 'var(--ink)' }}>
+                                📄 {t.print_side === 'both' ? 'F&B' : 'Front'}: {t.min}{t.max ? ` to ${t.max}` : '+'} copies = <strong>{t.discount}% discount</strong>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>No discount tiers</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="b2c-admin-table-sub">Front: <strong>{money(p.amount)}</strong></div>
+                        {Number(p.front_back_amount) > 0 && (
+                          <div className="b2c-admin-table-sub">Front & Back: <strong>{money(p.front_back_amount)}</strong></div>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <button style={{ background: '#f0f4f8', color: 'var(--navy)' }} onClick={() => { startEditColorPrintProduct(p); setTab('color_print'); }}>Edit / Tiers</button>
+                          {p.is_active ? (
+                            <button style={{ background: '#fee2e2', color: '#ef4444', borderColor: '#fca5a5' }} onClick={() => handleDeleteColorPrintProduct(p)}>Delete</button>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--red)', background: 'var(--red-bg)', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>Deleted/Inactive</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </section>
-          </>
+          </div>
         )}
 
         {tab === 'orders' && (
           <section className="b2c-admin-card">
-            <div className="b2c-admin-card-head">
+            <div className="b2c-admin-card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <span className="b2c-pill subtle">Orders</span>
                 <h2>{isStaffModule ? 'Customer assigned order queue' : 'Customer orders'}</h2>
               </div>
+              <div style={{ position: 'relative', minWidth: '350px' }}>
+                <input
+                  type="text"
+                  placeholder="Search customer orders..."
+                  value={searchB2COrder}
+                  onChange={(e) => setSearchB2COrder(e.target.value)}
+                  style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px' }}
+                />
+              </div>
             </div>
 
-            {orders.length === 0 ? (
+            {filteredB2COrders.length === 0 ? (
               <div className="b2c-admin-empty">{isStaffModule ? 'No Customer jobs available right now.' : 'No customer orders yet.'}</div>
             ) : (
               <div className="b2c-admin-table-wrap">
                 <table className="b2c-admin-table">
                   <thead>
                     <tr>
-                      <th>Order</th>
+                      <th style={{ width: '160px', minWidth: '160px' }}>Order</th>
                       <th>Customer</th>
                       <th>Items</th>
                       <th>Artwork</th>
@@ -1753,24 +1869,42 @@ function B2CAdminPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order) => (
+                    {filteredB2COrders.map((order) => (
                       <tr key={order.id}>
-                        <td>
+                        <td style={{ width: '160px', minWidth: '160px' }}>
                           <strong>{order.order_number}</strong>
                           <div className="b2c-admin-table-sub">{order.contact_phone}</div>
-                          <button type="button" className="b2c-admin-view-btn" onClick={() => setSelectedOrderDetails(order)}>
-                            View Details
-                          </button>
-                          {!isStaffModule && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
                             <button
                               type="button"
                               className="b2c-admin-view-btn"
-                              style={{ marginLeft: '6px', color: 'var(--b2c-error)' }}
-                              onClick={() => handleDeleteOrder(order.id)}
+                              style={{ margin: 0, padding: '8px 12px', fontSize: '12px', textAlign: 'center', display: 'block', width: '100%', boxSizing: 'border-box' }}
+                              onClick={() => setSelectedOrderDetails(order)}
                             >
-                              Remove
+                              View Details
                             </button>
-                          )}
+                            {order.status === 'completed' && (
+                              <a
+                                href={`/customer/orders/${order.id}/receipt`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="b2c-admin-view-btn"
+                                style={{ margin: 0, padding: '8px 12px', fontSize: '12px', textAlign: 'center', display: 'block', width: '100%', boxSizing: 'border-box', color: 'var(--b2c-primary)', textDecoration: 'none' }}
+                              >
+                                View Receipt
+                              </a>
+                            )}
+                            {!isStaffModule && (
+                              <button
+                                type="button"
+                                className="b2c-admin-view-btn"
+                                style={{ margin: 0, padding: '8px 12px', fontSize: '12px', textAlign: 'center', display: 'block', width: '100%', boxSizing: 'border-box', color: 'var(--b2c-error)' }}
+                                onClick={() => handleOrderStatus(order.id, 'cancelled')}
+                              >
+                                Cancel Order
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <strong>{order.customer?.name || order.contact_name}</strong>
@@ -1893,19 +2027,159 @@ function B2CAdminPanel({
           </section>
         )}
 
+        {tab === 'cancelled_orders' && !isStaffModule && (
+          <section className="b2c-admin-card">
+            <div className="b2c-admin-card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <span className="b2c-pill subtle">Cancelled Orders</span>
+                <h2>Cancelled customer orders</h2>
+              </div>
+              <div style={{ position: 'relative', minWidth: '350px' }}>
+                <input
+                  type="text"
+                  placeholder="Search cancelled customer orders..."
+                  value={searchCancelledB2COrder}
+                  onChange={(e) => setSearchCancelledB2COrder(e.target.value)}
+                  style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px' }}
+                />
+              </div>
+            </div>
+
+            {filteredCancelledB2COrders.length === 0 ? (
+              <div className="b2c-admin-empty">No cancelled orders found.</div>
+            ) : (
+              <div className="b2c-admin-table-wrap">
+                <table className="b2c-admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '160px', minWidth: '160px' }}>Order</th>
+                      <th>Customer</th>
+                      <th>Items</th>
+                      <th>Artwork</th>
+                      <th>Total</th>
+                      <th>Order Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCancelledB2COrders.map((order) => (
+                      <tr key={order.id}>
+                        <td style={{ width: '160px', minWidth: '160px' }}>
+                          <strong>{order.order_number}</strong>
+                          <div className="b2c-admin-table-sub">{order.contact_phone}</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                            <button
+                              type="button"
+                              className="b2c-admin-view-btn"
+                              style={{ margin: 0, padding: '8px 12px', fontSize: '12px', textAlign: 'center', display: 'block', width: '100%', boxSizing: 'border-box' }}
+                              onClick={() => setSelectedOrderDetails(order)}
+                            >
+                              View Details
+                            </button>
+                            <button
+                              type="button"
+                              className="b2c-admin-view-btn"
+                              style={{ margin: 0, padding: '8px 12px', fontSize: '12px', textAlign: 'center', display: 'block', width: '100%', boxSizing: 'border-box', color: 'var(--b2c-error)' }}
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              Remove Order
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <strong>{order.customer?.name || order.contact_name}</strong>
+                          <div className="b2c-admin-table-sub">{order.contact_email}</div>
+                          <div className="b2c-admin-table-sub">{order.contact_phone}</div>
+                          <div className="b2c-admin-table-sub">{order.customer?.address || 'No address provided'}</div>
+                          {order.customer_note ? (
+                            <div className="b2c-admin-table-sub">Message: {order.customer_note}</div>
+                          ) : null}
+                        </td>
+                        <td>
+                          <div className="b2c-admin-list">
+                            {(order.items || []).map((item) => (
+                              <div key={item.id}>
+                                <span>
+                                  {item.product_name} x {item.quantity}
+                                  {!item.b2c_product_id && (
+                                    <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px', display: 'inline-block' }}>Customize Color Print</span>
+                                  )}
+                                </span>
+                                <div className="b2c-admin-table-sub">
+                                  {printSideLabels[item.print_side] || item.print_side}
+                                  {item.finish ? ` | ${finishLabels[item.finish] || item.finish}` : ''}
+                                </div>
+                                {item.design_serial_number && (
+                                  <div className="b2c-admin-table-sub">Design Serial No: {item.design_serial_number}</div>
+                                )}
+                                {item.custom_text && (
+                                  <div className="b2c-admin-table-sub">Customer text: {item.custom_text}</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="b2c-admin-list">
+                            {(order.items || []).some((item) => item.file_path) ? (
+                              (order.items || []).map((item) => (
+                                <div key={`${order.id}-${item.id}-file`}>
+                                  {item.file_path ? (
+                                    <a
+                                      href={`/storage/${item.file_path}`}
+                                      download={item.original_filename || item.product_name}
+                                      className="b2c-card-link-btn b2c-card-link-btn-inline"
+                                    >
+                                      {item.original_filename || `${item.product_name} file`}
+                                    </a>
+                                  ) : (
+                                    <span className="b2c-admin-table-sub">{item.product_name}: No file</span>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="b2c-admin-table-sub">No sample files uploaded</div>
+                            )}
+                          </div>
+                        </td>
+                        <td>{money(order.grand_total)}</td>
+                        <td>
+                          <span className={`b2c-status-pill ${order.status}`}>{order.status}</span>
+                        </td>
+                        <td>{new Date(order.created_at).toLocaleDateString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
         {tab === 'customers' && (
           <section className="b2c-admin-card">
-            <div className="b2c-admin-card-head">
+            <div className="b2c-admin-card-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <span className="b2c-pill subtle">Customers</span>
                 <h2>Registered customers</h2>
               </div>
-              <button type="button" className="b2c-btn-secondary b2c-btn-inline" onClick={handleExportCustomers}>
-                Export CSV
-              </button>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', flex: '1', justifyContent: 'flex-end' }}>
+                <div style={{ position: 'relative', minWidth: '280px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search customers..."
+                    value={searchCustomer}
+                    onChange={(e) => setSearchCustomer(e.target.value)}
+                    style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px' }}
+                  />
+                </div>
+                <button type="button" className="b2c-btn-secondary b2c-btn-inline" onClick={handleExportCustomers} style={{ margin: 0 }}>
+                  Export CSV
+                </button>
+              </div>
             </div>
 
-            {customers.length === 0 ? (
+            {filteredCustomers.length === 0 ? (
               <div className="b2c-admin-empty">No registered customers yet.</div>
             ) : (
               <div className="b2c-admin-table-wrap">
@@ -1921,7 +2195,7 @@ function B2CAdminPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.map((customer) => (
+                    {filteredCustomers.map((customer) => (
                       <tr key={customer.id}>
                         <td>{customer.name}</td>
                         <td>{customer.email}</td>
@@ -2009,6 +2283,19 @@ function B2CAdminPanel({
                   <div><strong>Total:</strong> <span>{money(selectedOrderDetails.grand_total)}</span></div>
                   <div><strong>Assigned Staff:</strong> <span>{selectedOrderDetails.assigned_staff?.name || 'Unassigned'}</span></div>
                   <div><strong>Deadline:</strong> <span>{selectedOrderDetails.deadline_at ? new Date(selectedOrderDetails.deadline_at).toLocaleString('en-IN') : 'No deadline set'}</span></div>
+                  {selectedOrderDetails.status === 'completed' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <a
+                        href={`/customer/orders/${selectedOrderDetails.id}/receipt`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="b2c-btn-secondary"
+                        style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', padding: '10px 0', boxSizing: 'border-box' }}
+                      >
+                        View Receipt
+                      </a>
+                    </div>
+                  )}
                 </div>
                 {selectedOrderDetails.customer_note && (
                   <div className="b2c-order-note-box">
@@ -3110,9 +3397,22 @@ function CustomerOrdersPage({
                     ))}
                   </div>
 
-                  <div className="b2c-order-card-bottom">
-                    <span>Order Total</span>
-                    <strong>{money(order.grand_total)}</strong>
+                  <div className="b2c-order-card-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span>Order Total</span>
+                      <strong style={{ marginLeft: '8px' }}>{money(order.grand_total)}</strong>
+                    </div>
+                    {order.receipt_shared && (
+                      <a
+                        href={`/customer/orders/${order.id}/receipt`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="b2c-btn-secondary"
+                        style={{ padding: '6px 12px', fontSize: '13px', textDecoration: 'none' }}
+                      >
+                        Download Receipt
+                      </a>
+                    )}
                   </div>
                 </article>
               ))}
@@ -4011,6 +4311,12 @@ export default function B2CApp() {
   useEffect(() => {
     loadNotifications();
   }, [user?.id, user?.role, isAdminModule]);
+
+  useEffect(() => {
+    if (user) {
+      window.scrollTo(0, 0);
+    }
+  }, [user?.id]);
 
   const markNotificationRead = async (notificationId) => {
     const baseUrl = isAdminModule ? '/portal/api/notifications' : '/api/b2c/notifications';

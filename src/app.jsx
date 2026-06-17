@@ -242,12 +242,12 @@ function AuthPage({ onLogin }) {
         <label className={mode === 'login' || mode === 'forgot' ? 'full' : ''}>
           {mode === 'forgot' ? 'New Password' : 'Password'}
           <div style={{ position: 'relative', width: '100%' }}>
-            <input 
-              type={showPassword ? "text" : "password"} 
-              name="password" 
-              value={form.password} 
-              onChange={update} 
-              required 
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={update}
+              required
               style={{ paddingRight: '44px', width: '100%' }}
             />
             <button
@@ -278,12 +278,12 @@ function AuthPage({ onLogin }) {
           <label className={mode === 'forgot' ? 'full' : ''}>
             {mode === 'forgot' ? 'Confirm New Password' : 'Password Confirmation'}
             <div style={{ position: 'relative', width: '100%' }}>
-              <input 
-                type={showConfirmPassword ? "text" : "password"} 
-                name="password_confirmation" 
-                value={form.password_confirmation} 
-                onChange={update} 
-                required 
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="password_confirmation"
+                value={form.password_confirmation}
+                onChange={update}
+                required
                 style={{ paddingRight: '44px', width: '100%' }}
               />
               <button
@@ -483,7 +483,7 @@ const getCategoryTheme = (name) => {
   if (norm.includes('black') || norm.includes('white') || norm.includes('b&w') || norm.includes('mono')) {
     return PRESET_THEMES[7];
   }
-  
+
   let hash = 0;
   for (let i = 0; i < norm.length; i++) {
     hash = norm.charCodeAt(i) + ((hash << 5) - hash);
@@ -494,21 +494,21 @@ const getCategoryTheme = (name) => {
 
 const printLedger = (title, subtitle, transactions) => {
   const win = window.open('', '_blank');
-  
+
   const rows = transactions.map(tx => {
     const isCredit = tx.type === 'credit';
     const date = new Date(tx.created_at).toLocaleString('en-IN');
     const typeLabel = tx.type.toUpperCase();
     const typeColor = isCredit ? '#15803d' : '#b91c1c';
     const amountSign = isCredit ? '+' : '-';
-    
+
     let productsHtml = '—';
     if (tx.order && tx.order.items && tx.order.items.length > 0) {
-      productsHtml = tx.order.items.map(item => 
+      productsHtml = tx.order.items.map(item =>
         `<div>${item.product_name} <small style="color: #64748b;">(${item.print_copy * item.packs} copies)</small></div>`
       ).join('');
     }
-    
+
     return `
       <tr>
         <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #475569;">${date}</td>
@@ -868,15 +868,15 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                           const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
                           const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
                           const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
-                          
+
                           return (
                             <tr key={product.id}>
                               <td data-label="Product Name">
                                 <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
                               </td>
                               <td data-label="Print Side">
-                                <select 
-                                  value={currentSide} 
+                                <select
+                                  value={currentSide}
                                   onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
                                   style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)' }}
                                 >
@@ -889,9 +889,9 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                               </td>
                               <td data-label="Select Copies">
                                 <div className="copies-adjuster">
-                                  <button 
-                                    type="button" 
-                                    className="adjust-btn" 
+                                  <button
+                                    type="button"
+                                    className="adjust-btn"
                                     onClick={() => {
                                       const val = Math.max(1, currentCopies - 1);
                                       setChosenCopies(prev => ({ ...prev, [product.id]: val }));
@@ -908,9 +908,9 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                                       setChosenCopies(prev => ({ ...prev, [product.id]: val }));
                                     }}
                                   />
-                                  <button 
-                                    type="button" 
-                                    className="adjust-btn" 
+                                  <button
+                                    type="button"
+                                    className="adjust-btn"
                                     onClick={() => {
                                       const val = currentCopies + 1;
                                       setChosenCopies(prev => ({ ...prev, [product.id]: val }));
@@ -925,8 +925,8 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                                 <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
                               </td>
                               <td data-label="Action" style={{ textAlign: 'right' }}>
-                                <button 
-                                  className="btn primary" 
+                                <button
+                                  className="btn primary"
                                   onClick={() => addToCart(product, currentCopies, currentSide, '')}
                                   style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
                                 >
@@ -958,7 +958,7 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
             {!cart.length && <div className="empty">Add products from the price list.</div>}
             {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`}>
               <button className="remove" onClick={() => removeCart(item.id, item.print_copy, item.print_side, item.gsm)}>×</button>
-              <strong>{item.name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
+              <strong>{item.name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
               <small>{item.print_copy} copies · {money(item.amount)} per set{item.gsm ? ` · ${item.gsm}` : ''}</small>
               <label>Packs<input type="number" min="1" value={item.packs} onChange={e => updateCart(item.id, item.print_copy, item.print_side, item.gsm, { packs: Math.max(1, Number(e.target.value) || 1) })} /></label>
               <b>{money(Number(item.amount) * item.packs)}</b>
@@ -975,7 +975,7 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
               <button className="btn ghost" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => setCartStep(1)}>← Back</button>
             </div>
             {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ borderBottom: '1px solid var(--line)', padding: '18px 24px', display: 'block', background: '#fff' }}>
-              <strong style={{ display: 'block', marginBottom: '4px' }}>{item.name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
+              <strong style={{ display: 'block', marginBottom: '4px' }}>{item.name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
               <small style={{ display: 'block', marginBottom: '12px' }}>{item.print_copy} copies · {item.packs} set(s) · {money(Number(item.amount) * item.packs)}{item.gsm ? ` · ${item.gsm}` : ''}</small>
               <label htmlFor={`file-upload-${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ display: 'block', padding: '16px 12px', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', fontWeight: 'bold', marginBottom: '6px' }}>📁 Choose Artwork File (.cdr, .jpg, .jpeg, .png, .zip)</span>
@@ -1079,7 +1079,7 @@ function WalletLedgerLog({ transactions }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {tx.order.items.map(item => (
                             <span key={item.id} style={{ fontSize: '13px', fontWeight: '750', color: 'var(--navy)' }}>
-                              {item.product_name} <small style={{fontWeight:'bold', color:'var(--blue)'}}>({item.print_side === 'both' ? 'F&B' : 'Front'})</small> <small style={{ color: 'var(--muted)', fontWeight: 'normal' }}>({item.print_copy * item.packs} copies{item.gsm ? ` · ${item.gsm}` : ''})</small>
+                              {item.product_name} <small style={{ fontWeight: 'bold', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'F&B' : 'Front'})</small> <small style={{ color: 'var(--muted)', fontWeight: 'normal' }}>({item.print_copy * item.packs} copies{item.gsm ? ` · ${item.gsm}` : ''})</small>
                             </span>
                           ))}
                         </div>
@@ -1347,10 +1347,10 @@ function OrderHistory({ orders }) {
           {order.items?.map(item => (
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
               <div>
-                      <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
-                      <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
-                      </span>
+                <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
+                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
+                  ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
+                </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <span style={{ fontWeight: 'bold', color: 'var(--blue)' }}>{money(item.line_total)}</span>
@@ -1425,6 +1425,92 @@ function AdminPanel({ unreadNotifications = 0 }) {
   const [inlineCategoryName, setInlineCategoryName] = useState('');
   const [inlineCategoryLoading, setInlineCategoryLoading] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+
+  const [searchDealer, setSearchDealer] = useState('');
+  const [searchHoldDealer, setSearchHoldDealer] = useState('');
+  const [searchProduct, setSearchProduct] = useState('');
+  const [selectedProductCategory, setSelectedProductCategory] = useState('All');
+  const [searchOrder, setSearchOrder] = useState('');
+  const [searchStaff, setSearchStaff] = useState('');
+  const [searchCancelledOrder, setSearchCancelledOrder] = useState('');
+
+  const handleExportDealers = () => {
+    const rows = [
+      ['Name', 'Email', 'Phone', 'Company Name', 'Approval Status', 'Wallet Balance'],
+      ...dealers.map((d) => ([
+        d.name || '',
+        d.email || '',
+        d.phone ? `\t${d.phone}` : '',
+        d.company_name || '',
+        d.approval_status || '',
+        String(d.wallet_balance || 0),
+      ])),
+    ];
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    downloadTextFile(csv, `b2b-dealers-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8');
+  };
+
+  const filteredDealers = useMemo(() => {
+    return dealers.filter(d => 
+      (d.name || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
+      (d.email || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
+      (d.phone || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
+      (d.company_name || '').toLowerCase().includes(searchDealer.toLowerCase())
+    );
+  }, [dealers, searchDealer]);
+
+  const filteredHoldDealers = useMemo(() => {
+    return holdDealers.filter(d => 
+      (d.name || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
+      (d.email || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
+      (d.phone || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
+      (d.company_name || '').toLowerCase().includes(searchHoldDealer.toLowerCase())
+    );
+  }, [holdDealers, searchHoldDealer]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const categoryMatch = selectedProductCategory === 'All' || p.category === selectedProductCategory;
+      const searchMatch = (p.name || '').toLowerCase().includes(searchProduct.toLowerCase()) ||
+                          (p.category || '').toLowerCase().includes(searchProduct.toLowerCase());
+      return categoryMatch && searchMatch;
+    });
+  }, [products, searchProduct, selectedProductCategory]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      const q = searchOrder.toLowerCase();
+      const orderNumberMatch = (o.order_number || '').toLowerCase().includes(q);
+      const dealerCompanyMatch = (o.dealer?.company_name || '').toLowerCase().includes(q);
+      const dealerNameMatch = (o.dealer?.name || '').toLowerCase().includes(q);
+      const dealerPhoneMatch = (o.dealer?.phone || '').toLowerCase().includes(q);
+      const itemsMatch = (o.items || []).some(item => (item.product_name || '').toLowerCase().includes(q));
+      return orderNumberMatch || dealerCompanyMatch || dealerNameMatch || dealerPhoneMatch || itemsMatch;
+    });
+  }, [orders, searchOrder]);
+
+  const filteredCancelledOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (o.status !== 'cancelled') return false;
+      const q = searchCancelledOrder.toLowerCase();
+      const orderNumberMatch = (o.order_number || '').toLowerCase().includes(q);
+      const dealerCompanyMatch = (o.dealer?.company_name || '').toLowerCase().includes(q);
+      const dealerNameMatch = (o.dealer?.name || '').toLowerCase().includes(q);
+      const dealerPhoneMatch = (o.dealer?.phone || '').toLowerCase().includes(q);
+      const itemsMatch = (o.items || []).some(item => (item.product_name || '').toLowerCase().includes(q));
+      return orderNumberMatch || dealerCompanyMatch || dealerNameMatch || dealerPhoneMatch || itemsMatch;
+    });
+  }, [orders, searchCancelledOrder]);
+
+  const filteredStaff = useMemo(() => {
+    return staff.filter(s => 
+      (s.name || '').toLowerCase().includes(searchStaff.toLowerCase()) ||
+      (s.email || '').toLowerCase().includes(searchStaff.toLowerCase())
+    );
+  }, [staff, searchStaff]);
 
   async function addStaff(e) {
     e.preventDefault();
@@ -1580,10 +1666,10 @@ function AdminPanel({ unreadNotifications = 0 }) {
         body: JSON.stringify({ name: inlineCategoryName.trim() })
       });
       setNotice(`Category "${res.name}" added successfully.`);
-      
+
       const updatedCategories = await api('/categories');
       setCategories(updatedCategories);
-      
+
       setProductForm(prev => ({ ...prev, category: res.name }));
       setShowInlineCategoryForm(false);
       setInlineCategoryName('');
@@ -1747,6 +1833,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
     { key: 'rejected_dealers', label: 'Reject Dealer' },
     { key: 'products', label: 'Products' },
     { key: 'orders', label: 'Orders', count: Number(stats.new_orders || 0) },
+    { key: 'cancelled_orders', label: 'Cancelled Orders' },
     { key: 'staff', label: 'Manage Staff' },
   ];
   return <main className="portal admin">
@@ -1869,13 +1956,36 @@ function AdminPanel({ unreadNotifications = 0 }) {
     )}
 
     {tab === 'dealers' && <section className="panel" style={{ padding: '20px' }}>
-      <div className="panel-head" style={{ borderBottom: 'none', padding: '0 0 20px 0' }}><h2>Dealer Approval & Wallet Management</h2></div>
+      <div className="panel-head" style={{ borderBottom: 'none', padding: '0 0 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2>Dealer Approval & Wallet Management</h2>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', minWidth: '300px' }}>
+            <input
+              type="text"
+              placeholder="Search dealers..."
+              value={searchDealer}
+              onChange={(e) => setSearchDealer(e.target.value)}
+              style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '15px' }}
+            />
+          </div>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={handleExportDealers}
+            style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' }}
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
       <table className="admin-table">
         <thead>
           <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
         </thead>
         <tbody>
-          {dealers.map(d => <tr key={d.id}>
+          {filteredDealers.map(d => <tr key={d.id}>
             <td>
               <div style={{ fontWeight: '600', color: 'var(--navy)' }}>{d.name}</div>
               <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{d.email} · {d.phone}</small>
@@ -1896,23 +2006,34 @@ function AdminPanel({ unreadNotifications = 0 }) {
     </section>}
 
     {tab === 'rejected_dealers' && <section className="panel" style={{ padding: '20px' }}>
-      <div className="panel-head" style={{ borderBottom: 'none', padding: '0 0 20px 0' }}>
-        <h2>Reject Dealer Review</h2>
-        <p style={{ marginTop: '5px' }}>Dealers in this list are currently on hold or rejected. You can either approve them to restore access, or perform a final rejection on dealers that are on hold.</p>
+      <div className="panel-head" style={{ borderBottom: 'none', padding: '0 0 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2>Reject Dealer Review</h2>
+          <p style={{ marginTop: '5px' }}>Dealers in this list are currently on hold or rejected. You can either approve them to restore access, or perform a final rejection on dealers that are on hold.</p>
+        </div>
+        <div style={{ position: 'relative', minWidth: '300px' }}>
+          <input
+            type="text"
+            placeholder="Search hold/rejected dealers..."
+            value={searchHoldDealer}
+            onChange={(e) => setSearchHoldDealer(e.target.value)}
+            style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '15px' }}
+          />
+        </div>
       </div>
       <table className="admin-table">
         <thead>
           <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
         </thead>
         <tbody>
-          {!holdDealers.length ? (
+          {!filteredHoldDealers.length ? (
             <tr>
               <td colSpan="5" style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>
                 No dealers on hold or rejected to review.
               </td>
             </tr>
           ) : (
-            holdDealers.map(d => <tr key={d.id}>
+            filteredHoldDealers.map(d => <tr key={d.id}>
               <td>
                 <div style={{ fontWeight: '600', color: 'var(--navy)' }}>{d.name}</div>
                 <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{d.email} · {d.phone}</small>
@@ -1997,145 +2118,168 @@ function AdminPanel({ unreadNotifications = 0 }) {
               </div>
             </div>
           )}
-        <label>Product Name<input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></label>
-        <label>Base Print Copies<input type="number" value={productForm.print_copy} onChange={e => setProductForm({ ...productForm, print_copy: Number(e.target.value) })} required /></label>
-        <label>Front Only Base Amount (₹)<input type="number" step="0.01" value={productForm.amount} onChange={e => setProductForm({ ...productForm, amount: e.target.value })} required /></label>
-        <label>Front & Back Base Amount (₹) <span style={{fontWeight:'normal', fontSize:'12px', color:'var(--muted)'}}>(Optional, leave blank if not supported)</span><input type="number" step="0.01" value={productForm.front_back_amount || ''} onChange={e => setProductForm({ ...productForm, front_back_amount: e.target.value })} /></label>
-        <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
-          <input 
-            type="checkbox" 
-            checked={productForm.is_active} 
-            onChange={e => setProductForm({ ...productForm, is_active: e.target.checked })} 
-            style={{ width: 'auto', cursor: 'pointer' }}
-          />
-          <span>Product is Active & visible to dealers</span>
-        </label>
+          <label>Product Name<input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></label>
+          <label>Base Print Copies<input type="number" value={productForm.print_copy} onChange={e => setProductForm({ ...productForm, print_copy: Number(e.target.value) })} required /></label>
+          <label>Front Only Base Amount (₹)<input type="number" step="0.01" value={productForm.amount} onChange={e => setProductForm({ ...productForm, amount: e.target.value })} required /></label>
+          <label>Front & Back Base Amount (₹) <span style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--muted)' }}>(Optional, leave blank if not supported)</span><input type="number" step="0.01" value={productForm.front_back_amount || ''} onChange={e => setProductForm({ ...productForm, front_back_amount: e.target.value })} /></label>
+          <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }} className="full">
+            <input
+              type="checkbox"
+              checked={productForm.is_active}
+              onChange={e => setProductForm({ ...productForm, is_active: e.target.checked })}
+              style={{ width: 'auto', cursor: 'pointer' }}
+            />
+            <span>Product is Active & visible to dealers</span>
+          </label>
 
-        {/* Tier Pricing Section */}
-        <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '15px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)' }}>Pricing Tiers (Optional)</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addTier('front')}>+ Add Front Tier</button>
-              <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addTier('both')}>+ Add Front&Back Tier</button>
+          {/* Tier Pricing Section */}
+          <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '15px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)' }}>Pricing Tiers (Optional)</span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addTier('front')}>+ Add Front Tier</button>
+                <button type="button" className="btn ghost" style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px' }} onClick={() => addTier('both')}>+ Add Front&Back Tier</button>
+              </div>
             </div>
-          </div>
-          <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px', marginBottom: '12px' }}>
-            Define custom discount percentages for print copy ranges.
-          </p>
-          {(productForm.pricing_tiers || []).map((tier, index) => {
-            const isBoth = tier.print_side === 'both';
-            const baseAmountForTier = isBoth ? productForm.front_back_amount : productForm.amount;
-            return (
-              <div key={index} style={{ marginBottom: '12px', padding: '10px', background: isBoth ? '#f0f9ff' : '#f8fafc', borderRadius: '8px', border: `1px solid ${isBoth ? '#bae6fd' : 'var(--line)'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: isBoth ? 'var(--blue)' : 'var(--navy)' }}>{isBoth ? 'Front & Back Tier' : 'Front Only Tier'}</span>
+            <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px', marginBottom: '12px' }}>
+              Define custom discount percentages for print copy ranges.
+            </p>
+            {(productForm.pricing_tiers || []).map((tier, index) => {
+              const isBoth = tier.print_side === 'both';
+              const baseAmountForTier = isBoth ? productForm.front_back_amount : productForm.amount;
+              return (
+                <div key={index} style={{ marginBottom: '12px', padding: '10px', background: isBoth ? '#f0f9ff' : '#f8fafc', borderRadius: '8px', border: `1px solid ${isBoth ? '#bae6fd' : 'var(--line)'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: isBoth ? 'var(--blue)' : 'var(--navy)' }}>{isBoth ? 'Front & Back Tier' : 'Front Only Tier'}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr auto', gap: '6px', alignItems: 'center' }}>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={tier.min || ''}
+                      onChange={e => updateTier(index, 'min', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={tier.max || ''}
+                      onChange={e => updateTier(index, 'max', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Discount %"
+                      value={tier.discount || ''}
+                      onChange={e => updateTier(index, 'discount', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeTier(index)}
+                      style={{ padding: '6px 8px', background: 'var(--red-bg)', color: 'var(--red)', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '12px' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {Number(baseAmountForTier) > 0 && (
+                    <div style={{ fontSize: '11px', color: 'var(--green)', fontWeight: 'bold', marginTop: '4px', paddingLeft: '4px' }}>
+                      💡 {money(Math.round(Number(baseAmountForTier) * (1 - (Number(tier.discount) || 0) / 100)))} per copy
+                      {Number(tier.min) > 0 && ` (Total: ${money(Math.round(Number(baseAmountForTier) * Number(tier.min) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.min} copies`}
+                      {Number(tier.max) > 0 && ` to ${money(Math.round(Number(baseAmountForTier) * Number(tier.max) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.max} copies`}
+                      {Number(tier.min) > 0 && ')'}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr auto', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={tier.min || ''}
-                    onChange={e => updateTier(index, 'min', e.target.value === '' ? '' : Number(e.target.value))}
-                    style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={tier.max || ''}
-                    onChange={e => updateTier(index, 'max', e.target.value === '' ? '' : Number(e.target.value))}
-                    style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="Discount %"
-                    value={tier.discount || ''}
-                    onChange={e => updateTier(index, 'discount', e.target.value === '' ? '' : Number(e.target.value))}
-                    style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '6px' }}
-                    required
-                  />
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+            <button className="btn primary" style={{ flex: 1, padding: '10px' }} disabled={productForm.category === '__NEW__'}>{editingProductId ? 'Update' : 'Add Product'}</button>
+            {editingProductId && (
+              <button type="button" className="btn ghost" onClick={cancelEdit} style={{ flex: 1, padding: '10px' }}>Cancel</button>
+            )}
+          </div>
+        </form>
+
+        <form className="panel product-form" onSubmit={addCategory} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)', position: 'static' }}>
+          <h2>Add Category</h2>
+          <label>Category Name
+            <input
+              value={newCategoryName}
+              onChange={e => setNewCategoryName(e.target.value)}
+              placeholder="e.g. Visiting Cards"
+              required
+            />
+          </label>
+          <button className="btn primary full" type="submit" disabled={categoryLoading} style={{ marginTop: '10px' }}>
+            {categoryLoading ? 'Adding Category...' : 'Add Category'}
+          </button>
+
+          <div style={{ marginTop: '20px', borderTop: '1.5px solid var(--line)', paddingTop: '15px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)', display: 'block', marginBottom: '8px' }}>Existing Categories</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
+              {categories.map(c => (
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--navy)' }}>{c.name}</span>
                   <button
                     type="button"
-                    onClick={() => removeTier(index)}
-                    style={{ padding: '6px 8px', background: 'var(--red-bg)', color: 'var(--red)', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '12px' }}
+                    onClick={() => handleDeleteCategory(c)}
+                    style={{
+                      background: 'var(--red-bg)',
+                      color: 'var(--red)',
+                      border: '1px solid #fca5a5',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
                   >
-                    ×
+                    Delete
                   </button>
                 </div>
-                {Number(baseAmountForTier) > 0 && (
-                  <div style={{ fontSize: '11px', color: 'var(--green)', fontWeight: 'bold', marginTop: '4px', paddingLeft: '4px' }}>
-                    💡 {money(Math.round(Number(baseAmountForTier) * (1 - (Number(tier.discount) || 0) / 100)))} per copy
-                    {Number(tier.min) > 0 && ` (Total: ${money(Math.round(Number(baseAmountForTier) * Number(tier.min) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.min} copies`}
-                    {Number(tier.max) > 0 && ` to ${money(Math.round(Number(baseAmountForTier) * Number(tier.max) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.max} copies`}
-                    {Number(tier.min) > 0 && ')'}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
-          <button className="btn primary" style={{ flex: 1, padding: '10px' }} disabled={productForm.category === '__NEW__'}>{editingProductId ? 'Update' : 'Add Product'}</button>
-          {editingProductId && (
-            <button type="button" className="btn ghost" onClick={cancelEdit} style={{ flex: 1, padding: '10px' }}>Cancel</button>
-          )}
-        </div>
-      </form>
-
-      <form className="panel product-form" onSubmit={addCategory} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)', position: 'static' }}>
-        <h2>Add Category</h2>
-        <label>Category Name
-          <input
-            value={newCategoryName}
-            onChange={e => setNewCategoryName(e.target.value)}
-            placeholder="e.g. Visiting Cards"
-            required
-          />
-        </label>
-        <button className="btn primary full" type="submit" disabled={categoryLoading} style={{ marginTop: '10px' }}>
-          {categoryLoading ? 'Adding Category...' : 'Add Category'}
-        </button>
-
-        <div style={{ marginTop: '20px', borderTop: '1.5px solid var(--line)', paddingTop: '15px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)', display: 'block', marginBottom: '8px' }}>Existing Categories</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
-            {categories.map(c => (
-              <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--line)' }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--navy)' }}>{c.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteCategory(c)}
-                  style={{
-                    background: 'var(--red-bg)',
-                    color: 'var(--red)',
-                    border: '1px solid #fca5a5',
-                    borderRadius: '6px',
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        </form>
+      </div>
+      <section className="panel grow" style={{ background: '#fff', borderRadius: '12px', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0 }}>Product Chart & Price list</h2>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <select
+              value={selectedProductCategory}
+              onChange={(e) => setSelectedProductCategory(e.target.value)}
+              style={{ padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '14px', background: '#fff', outline: 'none' }}
+            >
+              <option value="All">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+            <div style={{ position: 'relative', minWidth: '280px' }}>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchProduct}
+                onChange={(e) => setSearchProduct(e.target.value)}
+                style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '14px' }}
+              />
+            </div>
           </div>
         </div>
-      </form>
-    </div>
-      <section className="panel grow" style={{ background: '#fff', borderRadius: '12px', padding: '24px' }}>
-        <h2>Product Chart & Price list</h2>
         <table className="admin-table">
           <thead>
             <tr><th>Category</th><th>Product Name</th><th>Print Copies & Tiers</th><th>Base Amount (₹)</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
           </thead>
           <tbody>
-            {products.map(p => <tr key={p.id}>
+            {filteredProducts.map(p => <tr key={p.id}>
               <td style={{ color: 'var(--muted)', fontWeight: '600' }}>{p.category}</td>
               <td>
                 <strong style={{ color: 'var(--navy)' }}>{p.name}</strong>
@@ -2172,12 +2316,23 @@ function AdminPanel({ unreadNotifications = 0 }) {
     </div>}
 
     {tab === 'orders' && <div style={{ display: 'grid', gap: '24px' }}>
-      <div style={{ padding: '10px 0' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--navy)', margin: 0 }}>All Orders & Artwork Files</h2>
-        <p style={{ margin: '8px 0 0 0', color: 'var(--muted)', fontSize: '16px' }}>Track jobs, download dealer artwork, assign staff, and add extra work charges.</p>
+      <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--navy)', margin: 0 }}>All Orders & Artwork Files</h2>
+          <p style={{ margin: '8px 0 0 0', color: 'var(--muted)', fontSize: '16px' }}>Track jobs, download dealer artwork, assign staff, and add extra work charges.</p>
+        </div>
+        <div style={{ position: 'relative', minWidth: '350px' }}>
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={searchOrder}
+            onChange={(e) => setSearchOrder(e.target.value)}
+            style={{ width: '100%', padding: '12px 18px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '15px' }}
+          />
+        </div>
       </div>
       <div style={{ display: 'grid', gap: '24px' }}>
-        {orders.map(o => (
+        {filteredOrders.map(o => (
           <article key={o.id} className="panel" style={{ background: '#fff', padding: '24px', display: 'block' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', borderBottom: '1px solid var(--line)', paddingBottom: '15px', marginBottom: '15px' }}>
               <div>
@@ -2199,7 +2354,11 @@ function AdminPanel({ unreadNotifications = 0 }) {
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--navy)' }}>{money(o.grand_total)}</div>
                 <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setSelectedOrderDetails(o)}>View Details</button>
                 <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => addCharge(o)}>+ Add Extra Work</button>
-                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--red)', borderColor: '#fca5a5', background: 'var(--red-bg)' }} onClick={() => deleteOrder(o.id)}>Remove Order</button>
+                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--red)', borderColor: '#fca5a5', background: 'var(--red-bg)' }} onClick={() => {
+                  if (window.confirm("Are you sure you want to cancel this order? Money will be refunded to the dealer's wallet.")) {
+                    updateOrderStatus(o.id, 'cancelled');
+                  }
+                }}>Cancel Order</button>
               </div>
             </div>
 
@@ -2209,7 +2368,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
                 {o.items?.map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
                     <div>
-                      <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{fontWeight:'normal', color:'var(--blue)'}}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
+                      <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
                       <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
                         ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
                       </span>
@@ -2338,6 +2497,70 @@ function AdminPanel({ unreadNotifications = 0 }) {
       </div>
     </div>}
 
+    {tab === 'cancelled_orders' && <div style={{ display: 'grid', gap: '24px' }}>
+      <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--navy)', margin: 0 }}>Cancelled Orders</h2>
+          <p style={{ margin: '8px 0 0 0', color: 'var(--muted)', fontSize: '16px' }}>View and permanently delete cancelled B2B orders.</p>
+        </div>
+        <div style={{ position: 'relative', minWidth: '350px' }}>
+          <input
+            type="text"
+            placeholder="Search cancelled orders..."
+            value={searchCancelledOrder}
+            onChange={(e) => setSearchCancelledOrder(e.target.value)}
+            style={{ width: '100%', padding: '12px 18px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '15px' }}
+          />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: '24px' }}>
+        {filteredCancelledOrders.length === 0 ? (
+          <div className="panel" style={{ padding: '24px', background: '#fff', textAlign: 'center', color: 'var(--muted)' }}>
+            No cancelled orders found.
+          </div>
+        ) : filteredCancelledOrders.map(o => (
+          <article key={o.id} className="panel" style={{ background: '#fff', padding: '24px', display: 'block' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', borderBottom: '1px solid var(--line)', paddingBottom: '15px', marginBottom: '15px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: '18px', color: 'var(--navy)' }}>{o.order_number}</strong>
+                  <StatusBadge status={o.status} />
+                </div>
+                <small style={{ display: 'block', color: 'var(--muted)', fontSize: '13px', marginTop: '6px' }}>
+                  Dealer: <strong style={{ color: 'var(--navy)' }}>{o.dealer?.company_name || 'Demo Dealer'}</strong> ({o.dealer?.name || 'N/A'}) · Phone: {o.dealer?.phone || 'N/A'}
+                </small>
+                <small style={{ display: 'block', color: 'var(--muted)', fontSize: '13px', marginTop: '4px' }}>
+                  Ordered: <strong>{new Date(o.created_at).toLocaleString('en-IN')}</strong>
+                </small>
+              </div>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--navy)' }}>{money(o.grand_total)}</div>
+                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setSelectedOrderDetails(o)}>View Details</button>
+                <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--red)', borderColor: '#fca5a5', background: 'var(--red-bg)' }} onClick={() => deleteOrder(o.id)}>Remove Order</button>
+              </div>
+            </div>
+
+            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Products</div>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                {o.items?.map(item => (
+                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
+                    <div>
+                      <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
+                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
+                      </span>
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--blue)' }}>{money(item.line_total)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>}
+
     <B2BOrderDetailsModal
       order={selectedOrderDetails}
       onClose={() => setSelectedOrderDetails(null)}
@@ -2349,34 +2572,34 @@ function AdminPanel({ unreadNotifications = 0 }) {
       <form className="panel product-form" onSubmit={addStaff} style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid var(--line)' }}>
         <h2>{editingStaffId ? 'Edit Printing Staff' : 'Create Printing Staff'}</h2>
         <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '20px' }}>
-          {editingStaffId 
-            ? 'Update name, email, or reset password for this staff member.' 
+          {editingStaffId
+            ? 'Update name, email, or reset password for this staff member.'
             : 'Register credentials for printing queue staff members. They can login using their Email & Password.'}
         </p>
         <label>Full Name
-          <input 
-            value={staffForm.name} 
-            onChange={e => setStaffForm({ ...staffForm, name: e.target.value })} 
-            placeholder="e.g. John Doe" 
-            required 
+          <input
+            value={staffForm.name}
+            onChange={e => setStaffForm({ ...staffForm, name: e.target.value })}
+            placeholder="e.g. John Doe"
+            required
           />
         </label>
         <label>Email ID (acts as Login ID)
-          <input 
+          <input
             type="email"
-            value={staffForm.email} 
-            onChange={e => setStaffForm({ ...staffForm, email: e.target.value })} 
-            placeholder="e.g. staff@example.com" 
-            required 
+            value={staffForm.email}
+            onChange={e => setStaffForm({ ...staffForm, email: e.target.value })}
+            placeholder="e.g. staff@example.com"
+            required
           />
         </label>
         <label>Password {editingStaffId && <em style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--muted)' }}>(Leave blank to keep unchanged)</em>}
-          <input 
+          <input
             type="text"
-            value={staffForm.password} 
-            onChange={e => setStaffForm({ ...staffForm, password: e.target.value })} 
-            placeholder={editingStaffId ? "Leave empty to keep current" : "Min 8 characters"} 
-            required={!editingStaffId} 
+            value={staffForm.password}
+            onChange={e => setStaffForm({ ...staffForm, password: e.target.value })}
+            placeholder={editingStaffId ? "Leave empty to keep current" : "Min 8 characters"}
+            required={!editingStaffId}
           />
         </label>
         <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
@@ -2389,8 +2612,21 @@ function AdminPanel({ unreadNotifications = 0 }) {
         </div>
       </form>
       <section className="panel grow" style={{ background: '#fff', borderRadius: '12px', padding: '24px' }}>
-        <h2>Existing Printing Staff</h2>
-        <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '20px' }}>Active printing staff accounts that can access the queue system.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'block' }}>
+            <h2 style={{ margin: 0 }}>Existing Printing Staff</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '4px 0 0 0' }}>Active printing staff accounts that can access the queue system.</p>
+          </div>
+          <div style={{ position: 'relative', minWidth: '250px' }}>
+            <input
+              type="text"
+              placeholder="Search staff..."
+              value={searchStaff}
+              onChange={(e) => setSearchStaff(e.target.value)}
+              style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '14px' }}
+            />
+          </div>
+        </div>
         <table className="admin-table">
           <thead>
             <tr>
@@ -2401,14 +2637,14 @@ function AdminPanel({ unreadNotifications = 0 }) {
             </tr>
           </thead>
           <tbody>
-            {!staff.length ? (
+            {!filteredStaff.length ? (
               <tr>
                 <td colSpan="4" style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>
                   No printing staff accounts registered yet.
                 </td>
               </tr>
             ) : (
-              staff.map(s => (
+              filteredStaff.map(s => (
                 <tr key={s.id}>
                   <td><strong style={{ color: 'var(--navy)' }}>{s.name}</strong></td>
                   <td style={{ color: 'var(--muted)' }}>{s.email}</td>
@@ -2557,6 +2793,7 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
   const [error, setError] = useState('');
   const [activeModule, setActiveModule] = useState('b2b');
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [searchStaffJob, setSearchStaffJob] = useState('');
   const staffNavItems = [
     { key: 'b2b', label: 'Dealer Jobs' },
     { key: 'b2c', label: 'Customer Jobs' },
@@ -2571,7 +2808,25 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
     }
   }
 
-  useEffect(() => { load(activeModule); }, [activeModule]);
+  useEffect(() => {
+    setSearchStaffJob('');
+    load(activeModule);
+  }, [activeModule]);
+
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(job => {
+      const q = searchStaffJob.toLowerCase();
+      const orderNumberMatch = (job.order_number || '').toLowerCase().includes(q);
+      const clientNameMatch = activeModule === 'b2c'
+        ? (job.customer?.name || job.contact_name || '').toLowerCase().includes(q)
+        : (job.dealer?.company_name || job.dealer?.name || '').toLowerCase().includes(q);
+      const phoneMatch = activeModule === 'b2c'
+        ? (job.contact_phone || '').toLowerCase().includes(q)
+        : (job.dealer?.phone || '').toLowerCase().includes(q);
+      const itemsMatch = (job.items || []).some(item => (item.product_name || '').toLowerCase().includes(q));
+      return orderNumberMatch || clientNameMatch || phoneMatch || itemsMatch;
+    });
+  }, [jobs, searchStaffJob, activeModule]);
 
   async function status(orderId, statusVal) {
     try {
@@ -2595,14 +2850,25 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
           <h2>{activeModule === 'b2c' ? 'Customer Printing Job Queue' : 'Dealer Printing Job Queue'}</h2>
           <p>Switch between Dealer and Customer jobs from here.</p>
         </div>
-        <PortalNavMenu items={staffNavItems} activeKey={activeModule} onChange={setActiveModule} badgeCount={unreadNotifications} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', minWidth: '280px' }}>
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              value={searchStaffJob}
+              onChange={(e) => setSearchStaffJob(e.target.value)}
+              style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--line)', fontSize: '14px' }}
+            />
+          </div>
+          <PortalNavMenu items={staffNavItems} activeKey={activeModule} onChange={setActiveModule} badgeCount={unreadNotifications} />
+        </div>
       </div>
 
-      {!jobs.length ? (
+      {!filteredJobs.length ? (
         <div style={{ padding: '24px', color: 'var(--muted)' }}>
-          No {activeModule === 'b2c' ? 'customer' : 'dealer'} jobs available right now.
+          No matching {activeModule === 'b2c' ? 'customer' : 'dealer'} jobs found.
         </div>
-      ) : jobs.map((job, index) => (
+      ) : filteredJobs.map((job, index) => (
         <article className="job" key={`${activeModule}-${job.id}`} style={{ display: 'grid', gridTemplateColumns: '58px 1fr auto auto', gap: '20px', alignItems: 'center', padding: '20px', margin: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#fff' }}>
           <div className="seq">#{index + 1}</div>
           <div className="job-detail" style={{ display: 'block' }}>
@@ -2683,7 +2949,7 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
 }
 
 function App() {
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -2695,18 +2961,18 @@ function App() {
     const handleAnchorClick = (e) => {
       const anchor = e.target.closest('a');
       if (!anchor) return;
-      
+
       const href = anchor.getAttribute('href');
       if (anchor.target === '_blank') return;
-      
+
       const isSwitching = href && (
-        href === '/portal' || 
-        href.startsWith('/portal/') || 
-        href === '/b2c-admin' || 
+        href === '/portal' ||
+        href.startsWith('/portal/') ||
+        href === '/b2c-admin' ||
         href.startsWith('/b2c-admin/') ||
         href === '/'
       );
-      
+
       if (isSwitching) {
         e.preventDefault();
         setTransitionText(href === '/' ? 'Returning to Home...' : 'Switching Modules...');
@@ -2716,20 +2982,20 @@ function App() {
         }, 1000);
       }
     };
-    
+
     document.addEventListener('click', handleAnchorClick);
     return () => document.removeEventListener('click', handleAnchorClick);
   }, []);
 
-  async function getUser() { 
-    try { 
-      const data = await api('/me'); 
-      setUser(data.user); 
-    } catch { 
-      setUser(null); 
-    } finally { 
-      setLoading(false); 
-    } 
+  async function getUser() {
+    try {
+      const data = await api('/me');
+      setUser(data.user);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { getUser(); }, []);
@@ -2765,19 +3031,19 @@ function App() {
     await loadNotifications();
   }
 
-  async function logout() { 
+  async function logout() {
     setTransitionText('Logging out...');
     setTransitionLoading(true);
     const startTime = Date.now();
     try {
-      await api('/logout', { method: 'POST', body: JSON.stringify({}) }); 
+      await api('/logout', { method: 'POST', body: JSON.stringify({}) });
     } catch (e) {
       console.error(e);
     }
     const elapsed = Date.now() - startTime;
     const remaining = Math.max(0, 1000 - elapsed);
     setTimeout(() => {
-      window.location.reload(); 
+      window.location.reload();
     }, remaining);
   }
 
@@ -2812,7 +3078,7 @@ function App() {
       ) : (
         <StaffModulePanel unreadNotifications={unreadNotifications} />
       )}
-      
+
       {showProfile && user && (user.role === 'dealer' || user.role === 'admin') && (
         <ProfileModal user={user} onClose={() => setShowProfile(false)} refreshUser={getUser} />
       )}
