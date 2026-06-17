@@ -1426,6 +1426,77 @@ function AdminPanel({ unreadNotifications = 0 }) {
   const [inlineCategoryLoading, setInlineCategoryLoading] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
+  const [flashSettings, setFlashSettings] = useState({
+    dealer_flash_text: '',
+    dealer_flash_image: null,
+    dealer_flash_image_raw: '',
+    dealer_flash_active: false,
+    customer_flash_text: '',
+    customer_flash_image: null,
+    customer_flash_image_raw: '',
+    customer_flash_active: false,
+  });
+  const [flashLoading, setFlashLoading] = useState(false);
+  const [dealerImageFile, setDealerImageFile] = useState(null);
+  const [customerImageFile, setCustomerImageFile] = useState(null);
+
+  async function loadFlashSettings() {
+    try {
+      const data = await api('/admin/flash-messages');
+      setFlashSettings(data);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  useEffect(() => {
+    if (tab === 'flash_messages') {
+      loadFlashSettings();
+      setDealerImageFile(null);
+      setCustomerImageFile(null);
+    }
+  }, [tab]);
+
+  async function saveFlashSettings(e) {
+    e.preventDefault();
+    setError(''); setNotice('');
+    setFlashLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('dealer_flash_text', flashSettings.dealer_flash_text || '');
+      fd.append('dealer_flash_active', flashSettings.dealer_flash_active ? '1' : '0');
+      fd.append('customer_flash_text', flashSettings.customer_flash_text || '');
+      fd.append('customer_flash_active', flashSettings.customer_flash_active ? '1' : '0');
+
+      if (dealerImageFile) {
+        fd.append('dealer_flash_image_file', dealerImageFile);
+      }
+      if (customerImageFile) {
+        fd.append('customer_flash_image_file', customerImageFile);
+      }
+
+      if (!flashSettings.dealer_flash_image && flashSettings.dealer_flash_image_raw) {
+        fd.append('clear_dealer_image', '1');
+      }
+      if (!flashSettings.customer_flash_image && flashSettings.customer_flash_image_raw) {
+        fd.append('clear_customer_image', '1');
+      }
+
+      const res = await api('/admin/flash-messages', {
+        method: 'POST',
+        body: fd
+      });
+      setNotice(res.message || 'Settings updated successfully.');
+      loadFlashSettings();
+      setDealerImageFile(null);
+      setCustomerImageFile(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setFlashLoading(false);
+    }
+  }
+
   const [searchDealer, setSearchDealer] = useState('');
   const [searchHoldDealer, setSearchHoldDealer] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
@@ -1835,6 +1906,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
     { key: 'orders', label: 'Orders', count: Number(stats.new_orders || 0) },
     { key: 'cancelled_orders', label: 'Cancelled Orders' },
     { key: 'staff', label: 'Manage Staff' },
+    { key: 'flash_messages', label: 'Flash Messages' },
   ];
   return <main className="portal admin">
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '32px', gap: '16px' }}>
@@ -2697,6 +2769,148 @@ function AdminPanel({ unreadNotifications = 0 }) {
       </section>
     </div>}
 
+    {tab === 'flash_messages' && (
+      <div className="admin-flash-messages" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', background: '#fff', borderRadius: '12px', padding: '28px', border: '1px solid var(--line)' }}>
+        <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid var(--line)', paddingBottom: '16px', marginBottom: '12px' }}>
+          <h2 style={{ margin: 0, fontSize: '24px', color: 'var(--navy)' }}>Custom Flash Messages</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '14px', margin: '4px 0 0' }}>Configure custom pop-up announcements (images and text) shown to Dealers and Customers after login.</p>
+        </div>
+
+        {/* Dealer B2B Settings */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#f8fafc' }}>
+          <h3 style={{ margin: 0, color: 'var(--navy)', borderBottom: '1.5px solid var(--line)', paddingBottom: '8px' }}>Dealer Portal (B2B) Announcement</h3>
+          
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            <input
+              type="checkbox"
+              checked={flashSettings.dealer_flash_active}
+              onChange={e => setFlashSettings({ ...flashSettings, dealer_flash_active: e.target.checked })}
+              style={{ width: '18px', height: '18px' }}
+            />
+            Show announcement to Dealers
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
+            Announcement Text
+            <textarea
+              value={flashSettings.dealer_flash_text || ''}
+              onChange={e => setFlashSettings({ ...flashSettings, dealer_flash_text: e.target.value })}
+              rows={4}
+              placeholder="Enter announcement text to show..."
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
+            Banner Image (Optional)
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  setDealerImageFile(e.target.files[0]);
+                }
+              }}
+              style={{ fontSize: '14px' }}
+            />
+          </label>
+
+          {/* Image Preview / Clear B2B Image */}
+          {(dealerImageFile || flashSettings.dealer_flash_image) && (
+            <div style={{ position: 'relative', width: '100%', height: '150px', borderRadius: '8px', border: '1px solid var(--line)', overflow: 'hidden', background: '#fff' }}>
+              <img
+                src={dealerImageFile ? URL.createObjectURL(dealerImageFile) : flashSettings.dealer_flash_image}
+                alt="Dealer Banner Preview"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setDealerImageFile(null);
+                  setFlashSettings({ ...flashSettings, dealer_flash_image: null });
+                }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Customer B2C Settings */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#f8fafc' }}>
+          <h3 style={{ margin: 0, color: 'var(--navy)', borderBottom: '1.5px solid var(--line)', paddingBottom: '8px' }}>Customer Portal (B2C) Announcement</h3>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            <input
+              type="checkbox"
+              checked={flashSettings.customer_flash_active}
+              onChange={e => setFlashSettings({ ...flashSettings, customer_flash_active: e.target.checked })}
+              style={{ width: '18px', height: '18px' }}
+            />
+            Show announcement to Customers
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
+            Announcement Text
+            <textarea
+              value={flashSettings.customer_flash_text || ''}
+              onChange={e => setFlashSettings({ ...flashSettings, customer_flash_text: e.target.value })}
+              rows={4}
+              placeholder="Enter announcement text to show..."
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
+            Banner Image (Optional)
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  setCustomerImageFile(e.target.files[0]);
+                }
+              }}
+              style={{ fontSize: '14px' }}
+            />
+          </label>
+
+          {/* Image Preview / Clear B2C Image */}
+          {(customerImageFile || flashSettings.customer_flash_image) && (
+            <div style={{ position: 'relative', width: '100%', height: '150px', borderRadius: '8px', border: '1px solid var(--line)', overflow: 'hidden', background: '#fff' }}>
+              <img
+                src={customerImageFile ? URL.createObjectURL(customerImageFile) : flashSettings.customer_flash_image}
+                alt="Customer Banner Preview"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerImageFile(null);
+                  setFlashSettings({ ...flashSettings, customer_flash_image: null });
+                }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+          <button
+            onClick={saveFlashSettings}
+            className="btn primary"
+            disabled={flashLoading}
+            style={{ padding: '12px 32px', fontSize: '15px', fontWeight: 'bold', borderRadius: '8px' }}
+          >
+            {flashLoading ? 'Saving Settings...' : 'Save Announcement Settings'}
+          </button>
+        </div>
+      </div>
+    )}
+
     {selectedDealerLedger && (
       <div className="modal-overlay" onClick={() => setSelectedDealerLedger(null)}>
         <div className="modal-content panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '850px', width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -2956,6 +3170,24 @@ function App() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [transitionLoading, setTransitionLoading] = useState(false);
   const [transitionText, setTransitionText] = useState('Loading...');
+  const [flashMessage, setFlashMessage] = useState(null);
+  const [showFlash, setShowFlash] = useState(false);
+
+  useEffect(() => {
+    if (user && user.role === 'dealer') {
+      const dismissed = sessionStorage.getItem('b2b_flash_dismissed');
+      if (!dismissed) {
+        api('/flash-message')
+          .then(data => {
+            if (data && data.active) {
+              setFlashMessage(data);
+              setShowFlash(true);
+            }
+          })
+          .catch(err => console.error(err));
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleAnchorClick = (e) => {
@@ -3081,6 +3313,42 @@ function App() {
 
       {showProfile && user && (user.role === 'dealer' || user.role === 'admin') && (
         <ProfileModal user={user} onClose={() => setShowProfile(false)} refreshUser={getUser} />
+      )}
+
+      {showFlash && flashMessage && (
+        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(13, 20, 36, 0.62)', zIndex: 999999 }}>
+          <div className="panel" style={{ background: '#fff', borderRadius: '18px', padding: '28px', maxWidth: '600px', width: '90%', boxShadow: '0 20px 45px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--navy)', alignSelf: 'flex-start' }}>Notice</h2>
+            
+            {flashMessage.image && (
+              <img
+                src={flashMessage.image}
+                alt="Announcement Banner"
+                style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', borderRadius: '8px' }}
+              />
+            )}
+            
+            {flashMessage.text && (
+              <p style={{ margin: 0, fontSize: '15px', color: 'var(--navy)', lineHeight: '1.6', width: '100%', whiteSpace: 'pre-line' }}>
+                {flashMessage.text}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  sessionStorage.setItem('b2b_flash_dismissed', '1');
+                  setShowFlash(false);
+                }}
+                style={{ padding: '10px 24px', fontSize: '14px', borderRadius: '8px', fontWeight: 'bold' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
