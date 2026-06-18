@@ -2590,10 +2590,10 @@ function StoreFooter({ user }) {
 
         <div className="b2c-footer-column">
           <h4>Contact</h4>
-          <a href="tel:8200391418">Office: 8200391418</a>
-          <a href="tel:9724503723">Customer Care WhatsApp: 9724503723</a>
+          <a href="tel:8200391418">Office No.: 8200391418</a>
+          <a href="https://wa.me/919724503723" target="_blank" rel="noopener noreferrer">Customer Care WhatsApp: 9724503723</a>
           <a href="mailto:print@angelprintshop.com" style={{ textTransform: 'none', color: 'inherit', textDecoration: 'none' }}>Email: print@angelprintshop.com</a>
-          <span>F/4, FIRST FLOOR, Shyamal Complex,</span>
+          <span>Address: F/4, FIRST FLOOR, Shyamal Complex,</span>
           <span>New CG Rd, nr. KOTAK BANK,</span>
           <span>Nigam Nagar, Chandkheda, Ahmedabad, Gujarat 382424</span>
         </div>
@@ -3960,55 +3960,60 @@ function ContactUsPage({
         <GuestHeader onLoginClick={() => { window.location.href = '/'; }} currentPage="contact" />
       )}
 
-      <main className="b2c-store-main" style={{ padding: '40px 24px 80px', width: 'min(1520px, calc(100% - 20px))', maxWidth: 'none', margin: '0 auto' }}>
+      <main className="b2c-store-main">
         <section className="b2c-consultation-section">
           <div className="b2c-consultation-grid">
-            <div className="b2c-consultation-info" style={{ padding: '54px', background: 'var(--b2c-pearl)' }}>
-              <h2 style={{ fontSize: '36px', fontWeight: '800', color: 'var(--b2c-navy)', margin: '0 0 32px' }}>Contact Us</h2>
+            <div className="b2c-consultation-info">
+              <h2>Contact Us</h2>
               
-              <div className="b2c-contact-info-list" style={{ gap: '24px' }}>
-                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+              <div className="b2c-contact-info-list">
+                <a 
+                  href="https://maps.google.com/?q=Angel+Enterprise,+F/4,+FIRST+FLOOR,+Shyamal+Complex,+New+CG+Rd,+nr.+KOTAK+BANK,+Nigam+Nagar,+Chandkheda,+Ahmedabad,+Gujarat+382424"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="b2c-contact-card"
+                >
+                  <span className="b2c-contact-icon-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-4.35-6-11a6 6 0 0 1 12 0c0 6.65-6 11-6 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
                   </span>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Our Address</strong>
-                    <span style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '15px', lineHeight: '1.6', marginTop: '4px', fontWeight: '600' }}>
+                  <div className="b2c-contact-details">
+                    <strong className="b2c-contact-label">Our Address</strong>
+                    <span className="b2c-contact-value">
                       F/4, FIRST FLOOR, Shyamal Complex,<br />
                       New CG Rd, nr. KOTAK BANK,<br />
                       Nigam Nagar, Chandkheda, Ahmedabad,<br />
                       Gujarat 382424
                     </span>
                   </div>
-                </div>
+                </a>
 
-                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+                <div className="b2c-contact-card">
+                  <span className="b2c-contact-icon-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                   </span>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Phone Number</strong>
-                    <a href="tel:8200391418" style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '16px', fontWeight: 'bold', textDecoration: 'none', marginTop: '4px' }}>8200391418</a>
-                    <a href="tel:9724503723" style={{ display: 'block', color: 'var(--b2c-slate)', fontSize: '13px', textDecoration: 'none', marginTop: '2px' }}>WhatsApp: 9724503723</a>
+                  <div className="b2c-contact-details">
+                    <strong className="b2c-contact-label">Phone Number</strong>
+                    <a href="tel:8200391418" className="b2c-contact-link">8200391418</a>
+                    <a href="https://wa.me/919724503723" target="_blank" rel="noopener noreferrer" className="b2c-contact-sublink">WhatsApp: 9724503723</a>
                   </div>
                 </div>
 
-                <div className="b2c-contact-info-item" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                  <span style={{ minWidth: '40px', minHeight: '40px', borderRadius: '10px', background: 'rgba(201,163,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#946f31' }}>
+                <div className="b2c-contact-card">
+                  <span className="b2c-contact-icon-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                   </span>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--b2c-slate)' }}>Email Address</strong>
-                    <a href="mailto:print@angelprintshop.com" style={{ display: 'block', color: 'var(--b2c-navy)', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', marginTop: '4px' }}>print@angelprintshop.com</a>
+                  <div className="b2c-contact-details">
+                    <strong className="b2c-contact-label">Email Address</strong>
+                    <a href="mailto:print@angelprintshop.com" className="b2c-contact-link">print@angelprintshop.com</a>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="b2c-consultation-form-card" style={{ padding: '54px' }}>
-              <form className="b2c-consultation-form" onSubmit={handleSubmit} style={{ gap: '20px' }}>
+            <div className="b2c-consultation-form-card">
+              <form className="b2c-consultation-form" onSubmit={handleSubmit}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Full Name</label>
+                  <label>Full Name</label>
                   <input
                     type="text"
                     name="name"
@@ -4021,7 +4026,7 @@ function ContactUsPage({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Email Address</label>
+                  <label>Email Address</label>
                   <input
                     type="email"
                     name="email"
@@ -4034,7 +4039,7 @@ function ContactUsPage({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Phone Number</label>
+                  <label>Phone Number</label>
                   <input
                     type="tel"
                     name="phone"
@@ -4047,7 +4052,7 @@ function ContactUsPage({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-navy)', marginBottom: '8px' }}>Message</label>
+                  <label>Message</label>
                   <textarea
                     name="message"
                     value={form.message}
@@ -4062,7 +4067,6 @@ function ContactUsPage({
                 <button
                   type="submit"
                   className="b2c-btn-primary"
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.25s ease' }}
                   disabled={loading}
                 >
                   {loading ? 'Sending Message...' : 'Send Message'}
