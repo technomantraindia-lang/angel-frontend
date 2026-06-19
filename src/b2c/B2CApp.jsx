@@ -3952,16 +3952,38 @@ function ContactUsPage({
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          access_key: "f39964c2-274f-4f6a-bcbc-4770694ce78f",
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          message: form.message,
+          subject: "New Contact Form Submission from " + form.name
+        })
+      });
+      const data = await response.json();
+      if (response.status === 200 || data.success) {
+        setSuccess(true);
+        setForm({ name: '', email: '', phone: '', message: '' });
+      } else {
+        alert(data.message || "Failed to submit form.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit form. Please check your network connection.");
+    } finally {
       setLoading(false);
-      setSuccess(true);
-      setForm({ name: '', email: '', phone: '', message: '' });
-      setTimeout(() => setSuccess(false), 5000);
-      alert('Thank you for contacting us! We will get back to you shortly.');
-    }, 1200);
+    }
   };
 
   return (
@@ -4104,6 +4126,24 @@ function ContactUsPage({
       </main>
 
       <StoreFooter user={user} />
+
+      {success && (
+        <div className="b2c-modal-overlay" onClick={() => setSuccess(false)}>
+          <div className="b2c-modal-card" style={{ maxWidth: '440px', width: '90%', padding: '40px 24px', textAlign: 'center', margin: 'auto' }} onClick={e => e.stopPropagation()}>
+            <button className="b2c-modal-close" onClick={() => setSuccess(false)}>×</button>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(21, 128, 61, 0.1)', color: 'var(--b2c-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '32px' }}>
+              ✓
+            </div>
+            <h3 style={{ fontSize: '22px', color: 'var(--b2c-navy)', marginBottom: '8px', fontWeight: '800' }}>Submitted Successfully!</h3>
+            <p style={{ color: 'var(--b2c-slate)', fontSize: '14px', lineHeight: '1.5', marginBottom: '24px' }}>
+              Thank you for reaching out. Your request has been successfully received, and we will get back to you shortly.
+            </p>
+            <button className="b2c-btn-primary" onClick={() => setSuccess(false)}>
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
