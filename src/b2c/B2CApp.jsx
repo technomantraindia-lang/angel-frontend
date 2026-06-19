@@ -5,6 +5,8 @@ import carouselTwo from '../carousle 2.png';
 import carouselThree from '../carousle 3.png';
 import carouselFour from '../carousle 4.png';
 import machineImage from '../machine.png';
+import newBrocher from '../new brocher.png';
+import newWedding from '../new weeding .png';
 const heroBanner = '/b2c-hero-banner.png';
 
 const IconEmail = () => (
@@ -171,11 +173,25 @@ const processSteps = [
 
 const heroSlides = [
   {
-    image: heroBanner,
-    alt: 'Premium printing banner showing luxury cards and envelopes',
-    eyebrow: 'Signature Printing',
-    title: 'Luxury invitations and print sets with elegant finishing.',
-    description: 'From wedding kankotris to premium sleeves and visiting cards, every order is shaped for rich texture, clean detailing, and refined presentation.',
+    image: carouselFour,
+    alt: 'Angel Enterprise premium print showcase banner',
+    eyebrow: 'Production Studio',
+    title: 'Elegant print presentation backed by strong machine performance.',
+    description: 'From customer approval to final output, we keep every premium print order clean, refined, and production-ready.',
+  },
+  {
+    image: newBrocher,
+    alt: 'Premium brochures and corporate letterhead prints',
+    eyebrow: 'Business Essentials',
+    title: 'Brochure, Letterhead & Invoice Book Printing',
+    description: 'We print premium brochures, letterheads, invoice books, and other business stationery.',
+  },
+  {
+    image: newWedding,
+    alt: 'Luxury wedding invitation cards',
+    eyebrow: 'Wedding Collections',
+    title: 'Premium Wedding Cards & Luxury Invitations',
+    description: 'Create beautiful memories with premium paper, hot foil stamping, and classic wax seals.',
   },
   {
     image: carouselTwo,
@@ -183,20 +199,6 @@ const heroSlides = [
     eyebrow: 'Crafted Details',
     title: 'Foiling, textures, and layered print details that feel memorable.',
     description: 'We build statement pieces for celebrations and brand moments with careful layout, rich paper feel, and consistent Konica print output.',
-  },
-  {
-    image: carouselThree,
-    alt: 'Premium print collection arranged for stationery and invitation display',
-    eyebrow: 'Konica Quality',
-    title: 'Sharp colors, polished finish, and dependable production care.',
-    description: 'Our Customer workflow is made for customers who want premium print quality, thoughtful support, and a beautifully finished final product.',
-  },
-  {
-    image: carouselFour,
-    alt: 'Angel Enterprise premium print showcase banner',
-    eyebrow: 'Production Studio',
-    title: 'Elegant print presentation backed by strong machine performance.',
-    description: 'From customer approval to final output, we keep every premium print order clean, refined, and production-ready.',
   },
 ];
 
@@ -242,7 +244,7 @@ const aboutShowcaseCards = [
     description: 'Visiting cards and brand stationery with sharp typography, balanced layouts, and a more polished first impression.',
   },
   {
-    title: 'Packaging & Envelopes',
+    title: 'Envelopes',
     eyebrow: 'Finishing',
     image: '/luxury_envelope.png',
     description: 'Luxury envelopes, sleeves, and finishing-led pieces prepared with clean approval flow before production starts.',
@@ -2590,13 +2592,30 @@ function StoreFooter({ user }) {
 
         <div className="b2c-footer-column">
           <h4>Contact</h4>
-          <a href="tel:8200391418">Office No.: 8200391418</a>
-          <a href="https://wa.me/919724503723" target="_blank" rel="noopener noreferrer">Customer Care WhatsApp: 9724503723</a>
-          <a href="mailto:print@angelprintshop.com" style={{ textTransform: 'none', color: 'inherit', textDecoration: 'none' }}>Email: print@angelprintshop.com</a>
-          <span>Address: F/4, First Floor, Shyamal Complex,</span>
-          <span>New CG Road, Near Kotak Bank,</span>
-          <span>Nigam Nagar, Chandkheda,</span>
-          <span>Ahmedabad, Gujarat – 382424</span>
+          <div className="b2c-footer-contact-list">
+            <div className="b2c-footer-contact-item">
+              <span className="b2c-footer-contact-icon"><IconPhone /></span>
+              <div className="b2c-footer-contact-text">
+                <a href="tel:8200391418">Office No.: 8200391418</a>
+                <a href="https://wa.me/919724503723" target="_blank" rel="noopener noreferrer">WhatsApp: 9724503723</a>
+              </div>
+            </div>
+            <div className="b2c-footer-contact-item">
+              <span className="b2c-footer-contact-icon"><IconEmail /></span>
+              <div className="b2c-footer-contact-text">
+                <a href="mailto:print@angelprintshop.com">Email: print@angelprintshop.com</a>
+              </div>
+            </div>
+            <div className="b2c-footer-contact-item alignment-top">
+              <span className="b2c-footer-contact-icon"><IconMapPin /></span>
+              <div className="b2c-footer-contact-text address-block">
+                <span>F/4, First Floor, Shyamal Complex,</span>
+                <span>New CG Road, Near Kotak Bank,</span>
+                <span>Nigam Nagar, Chandkheda,</span>
+                <span>Ahmedabad, Gujarat – 382424</span>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

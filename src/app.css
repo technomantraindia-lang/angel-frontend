@@ -1647,8 +1647,8 @@ button {
 }
 
 .header-logo {
-  height: 60px;
-  max-width: 180px;
+  height: 72px;
+  max-width: 200px;
   object-fit: contain;
   border-radius: var(--radius-sm);
   background: transparent;
