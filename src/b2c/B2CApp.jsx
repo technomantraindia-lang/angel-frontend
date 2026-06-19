@@ -2593,9 +2593,10 @@ function StoreFooter({ user }) {
           <a href="tel:8200391418">Office No.: 8200391418</a>
           <a href="https://wa.me/919724503723" target="_blank" rel="noopener noreferrer">Customer Care WhatsApp: 9724503723</a>
           <a href="mailto:print@angelprintshop.com" style={{ textTransform: 'none', color: 'inherit', textDecoration: 'none' }}>Email: print@angelprintshop.com</a>
-          <span>Address: F/4, FIRST FLOOR, Shyamal Complex,</span>
-          <span>New CG Rd, nr. KOTAK BANK,</span>
-          <span>Nigam Nagar, Chandkheda, Ahmedabad, Gujarat 382424</span>
+          <span>Address: F/4, First Floor, Shyamal Complex,</span>
+          <span>New CG Road, Near Kotak Bank,</span>
+          <span>Nigam Nagar, Chandkheda,</span>
+          <span>Ahmedabad, Gujarat – 382424</span>
         </div>
 
       </div>
@@ -3968,7 +3969,7 @@ function ContactUsPage({
               
               <div className="b2c-contact-info-list">
                 <a 
-                  href="https://maps.google.com/?q=Angel+Enterprise,+F/4,+FIRST+FLOOR,+Shyamal+Complex,+New+CG+Rd,+nr.+KOTAK+BANK,+Nigam+Nagar,+Chandkheda,+Ahmedabad,+Gujarat+382424"
+                  href="https://maps.google.com/?q=Angel+Enterprise,+F/4,+First+Floor,+Shyamal+Complex,+New+CG+Road,+Near+Kotak+Bank,+Nigam+Nagar,+Chandkheda,+Ahmedabad,+Gujarat+–+382424"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="b2c-contact-card"
@@ -3979,10 +3980,10 @@ function ContactUsPage({
                   <div className="b2c-contact-details">
                     <strong className="b2c-contact-label">Our Address</strong>
                     <span className="b2c-contact-value">
-                      F/4, FIRST FLOOR, Shyamal Complex,<br />
-                      New CG Rd, nr. KOTAK BANK,<br />
-                      Nigam Nagar, Chandkheda, Ahmedabad,<br />
-                      Gujarat 382424
+                      F/4, First Floor, Shyamal Complex,<br />
+                      New CG Road, Near Kotak Bank,<br />
+                      Nigam Nagar, Chandkheda,<br />
+                      Ahmedabad, Gujarat – 382424
                     </span>
                   </div>
                 </a>
