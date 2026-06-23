@@ -1253,8 +1253,8 @@ function B2CAdminPanel({
               ? [['orders', 'Customer Orders']]
               : [
                   ['dashboard', 'Dashboard'],
-                  ['add_product', 'Add Product'],
-                  ['products', 'Products'],
+                  ['add_product', 'Add Products'],
+                  ['products', 'Product Catalog'],
                   ['color_print', 'Customization Color Print'],
                   ['orders', 'Orders'],
                   ['cancelled_orders', 'Cancelled Orders'],
@@ -1415,255 +1415,393 @@ function B2CAdminPanel({
                   </div>
                 ) : (
                   <>
-                    <div className="b2c-admin-form-grid">
-                      <label>
-                        Category
-                        <select
-                          value={productForm.b2c_category_id}
-                          onChange={(event) => handleProductField('b2c_category_id', event.target.value)}
-                          required
-                        >
-                          <option value="">Select category</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>{category.name}</option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label>
-                        Product Name
-                        <input
-                          type="text"
-                          value={productForm.name}
-                          onChange={(event) => handleProductField('name', event.target.value)}
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        Print Side Availability
-                        <select
-                          value={productForm.print_side_mode}
-                          onChange={(event) => handleProductField('print_side_mode', event.target.value)}
-                          required
-                        >
-                          <option value="front_only">Front Only</option>
-                          <option value="front_back_only">Front & Back Only</option>
-                          <option value="both">Both Options</option>
-                        </select>
-                      </label>
-
-                      <label className="b2c-admin-form-wide">
-                        Short Description
-                        <input
-                          type="text"
-                          value={productForm.short_description}
-                          onChange={(event) => handleProductField('short_description', event.target.value)}
-                          placeholder="Visible in product cards"
-                        />
-                      </label>
-
-                      <label className="b2c-admin-form-wide">
-                        Description
-                        <textarea
-                          value={productForm.description}
-                          onChange={(event) => handleProductField('description', event.target.value)}
-                          placeholder="Full product details for the customer modal"
-                        />
-                      </label>
-
-                      <div className="b2c-admin-form-wide">
-                        <div className="b2c-admin-tier-head">
-                          <div>
-                            <strong>Quantity Base Pricing</strong>
-                            <span>Enter total base price for each quantity. Customer side will show the per-unit price automatically.</span>
+                    <div className="b2c-admin-form-container">
+                      {/* Left Column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        {/* Card 1: Product Basics */}
+                        <div className="b2c-admin-card-redesigned">
+                          <div className="b2c-admin-card-redesigned-head">
+                            <h3>
+                              <span className="badge">1</span> Product Basics
+                            </h3>
                           </div>
-                          <button type="button" className="b2c-btn-secondary" onClick={addProductPricingTier}>
-                            Add Quantity Row
+                          <div className="b2c-admin-grid-inputs two-cols">
+                            <label>
+                              Category
+                              <select
+                                value={productForm.b2c_category_id}
+                                onChange={(event) => handleProductField('b2c_category_id', event.target.value)}
+                                required
+                              >
+                                <option value="">Select category</option>
+                                {categories.map((category) => (
+                                  <option key={category.id} value={category.id}>{category.name}</option>
+                                ))}
+                              </select>
+                            </label>
+
+                            <label>
+                              Product Name
+                              <input
+                                type="text"
+                                value={productForm.name}
+                                onChange={(event) => handleProductField('name', event.target.value)}
+                                required
+                              />
+                            </label>
+
+                            <label style={{ gridColumn: 'span 2' }}>
+                              Print Side Availability
+                              <select
+                                value={productForm.print_side_mode}
+                                onChange={(event) => handleProductField('print_side_mode', event.target.value)}
+                                required
+                              >
+                                <option value="front_only">Front Only</option>
+                                <option value="front_back_only">Front & Back Only</option>
+                                <option value="both">Both Options</option>
+                              </select>
+                            </label>
+
+                            <label style={{ gridColumn: 'span 2' }}>
+                              Short Description
+                              <input
+                                type="text"
+                                value={productForm.short_description}
+                                onChange={(event) => handleProductField('short_description', event.target.value)}
+                                placeholder="Visible in product cards"
+                              />
+                            </label>
+
+                            <label style={{ gridColumn: 'span 2' }}>
+                              Description
+                              <textarea
+                                value={productForm.description}
+                                onChange={(event) => handleProductField('description', event.target.value)}
+                                placeholder="Full product details for the customer modal"
+                                style={{ minHeight: '120px' }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Card 2: Pricing Tiers */}
+                        <div className="b2c-admin-card-redesigned">
+                          <div className="b2c-admin-card-redesigned-head" style={{ borderBottom: 'none', marginBottom: '0', paddingBottom: '0' }}>
+                            <div>
+                              <h3 style={{ marginBottom: '4px' }}>
+                                <span className="badge">2</span> Base Pricing Tiers
+                              </h3>
+                              <p style={{ margin: '0', fontSize: '12.5px', color: 'var(--b2c-slate)' }}>
+                                Enter total base price for each quantity tier. Customers see per-unit price automatically.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              className="b2c-btn-secondary"
+                              onClick={addProductPricingTier}
+                              style={{ padding: '8px 16px', fontSize: '13px' }}
+                            >
+                              + Add Tier Row
+                            </button>
+                          </div>
+
+                          <div style={{ marginTop: '16px', overflowX: 'auto' }}>
+                            <table className="b2c-admin-tier-table">
+                              <thead>
+                                <tr>
+                                  <th style={{ width: '25%' }}>Quantity</th>
+                                  <th style={{ width: '35%' }}>Front Base Price</th>
+                                  {productForm.print_side_mode !== 'front_only' && (
+                                    <th style={{ width: '35%' }}>Front & Back Base Price</th>
+                                  )}
+                                  <th style={{ width: '5%', textAlign: 'center' }}>Remove</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(productForm.pricing_tiers || []).map((tier, index) => {
+                                  const quantity = Number(tier.quantity || 0);
+                                  const frontPrice = Number(tier.price || 0);
+                                  const frontBackPrice = Number(tier.front_back_price || 0);
+                                  const frontUnitPrice = quantity > 0 ? roundMoneyValue(frontPrice / quantity) : 0;
+                                  const frontBackUnitPrice = quantity > 0 ? roundMoneyValue(frontBackPrice / quantity) : 0;
+
+                                  return (
+                                    <tr key={`b2c-tier-${index}`}>
+                                      <td>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={tier.quantity}
+                                          onChange={(event) => updateProductPricingTier(index, 'quantity', event.target.value)}
+                                          placeholder="e.g. 100"
+                                          required
+                                        />
+                                      </td>
+                                      <td>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={tier.price}
+                                            onChange={(event) => updateProductPricingTier(index, 'price', event.target.value)}
+                                            placeholder="₹"
+                                            required
+                                          />
+                                          <span style={{ fontSize: '11px', color: 'var(--b2c-success)', fontWeight: '600' }}>
+                                            Per unit: {money(frontUnitPrice)}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      {productForm.print_side_mode !== 'front_only' && (
+                                        <td>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={tier.front_back_price}
+                                              onChange={(event) => updateProductPricingTier(index, 'front_back_price', event.target.value)}
+                                              placeholder="₹"
+                                              required
+                                            />
+                                            <span style={{ fontSize: '11px', color: 'var(--b2c-success)', fontWeight: '600' }}>
+                                              Per unit: {money(frontBackUnitPrice)}
+                                            </span>
+                                          </div>
+                                        </td>
+                                      )}
+                                      <td style={{ textAlign: 'center' }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => removeProductPricingTier(index)}
+                                          style={{
+                                            border: 'none',
+                                            background: 'rgba(220, 38, 38, 0.06)',
+                                            color: 'var(--b2c-error)',
+                                            width: '32px',
+                                            height: '32px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s',
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'var(--b2c-error)';
+                                            e.currentTarget.style.color = '#fff';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'rgba(220, 38, 38, 0.06)';
+                                            e.currentTarget.style.color = 'var(--b2c-error)';
+                                          }}
+                                        >
+                                          ✕
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                            {(!productForm.pricing_tiers || productForm.pricing_tiers.length === 0) && (
+                              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--b2c-slate)', fontSize: '13px' }}>
+                                No pricing tiers added yet. Click "+ Add Tier Row" to add.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        {/* Card 3: Media & Files */}
+                        <div className="b2c-admin-card-redesigned">
+                          <div className="b2c-admin-card-redesigned-head">
+                            <h3>
+                              <span className="badge">3</span> Media & Attachments
+                            </h3>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Product Photos */}
+                            <div>
+                              <label style={{ fontWeight: '700', fontSize: '13px', color: 'var(--b2c-navy)', display: 'block', marginBottom: '8px' }}>
+                                Product Photos (up to 5)
+                              </label>
+                              <label htmlFor="admin-image-upload" className="b2c-admin-media-item" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ fontWeight: '800', color: 'var(--b2c-navy)', fontSize: '14px' }}>Choose images...</span>
+                                <span style={{ fontSize: '11px', color: 'var(--b2c-slate)' }}>
+                                  {totalSelectedImages}/5 images selected.
+                                </span>
+                                <input
+                                  id="admin-image-upload"
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp"
+                                  multiple
+                                  onChange={handleNewImages}
+                                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                                />
+                              </label>
+
+                              {visibleExistingImages.length > 0 && (
+                                <div style={{ marginTop: '16px' }}>
+                                  <strong style={{ fontSize: '12px', color: 'var(--b2c-navy)', display: 'block', marginBottom: '8px' }}>
+                                    Current Images
+                                  </strong>
+                                  <div className="b2c-admin-media-grid">
+                                    {visibleExistingImages.map((image) => (
+                                      <div key={image.id} className="b2c-admin-media-card-redesigned">
+                                        <img src={image.file_url} alt="Product" />
+                                        <button
+                                          type="button"
+                                          className="remove-btn"
+                                          onClick={() => setRemovedImageIds((prev) => [...prev, image.id])}
+                                          title="Remove image"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {newImages.length > 0 && (
+                                <div style={{ marginTop: '16px' }}>
+                                  <strong style={{ fontSize: '12px', color: 'var(--b2c-navy)', display: 'block', marginBottom: '8px' }}>
+                                    New Images Selected
+                                  </strong>
+                                  <div className="b2c-admin-media-grid">
+                                    {newImagePreviews.map((preview, index) => (
+                                      <div key={preview.id} className="b2c-admin-media-card-redesigned">
+                                        <img src={preview.url} alt={preview.name} />
+                                        <button
+                                          type="button"
+                                          className="remove-btn"
+                                          onClick={() => handleRemoveNewImage(index)}
+                                          title="Remove image"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Sample PDF */}
+                            <div style={{ borderTop: '1px solid rgba(13, 20, 36, 0.06)', paddingTop: '16px' }}>
+                              <label style={{ fontWeight: '700', fontSize: '13px', color: 'var(--b2c-navy)', display: 'block', marginBottom: '8px' }}>
+                                Sample PDF Document
+                              </label>
+                              <label htmlFor="admin-pdf-upload" className="b2c-admin-media-item" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ fontWeight: '800', color: 'var(--b2c-navy)', fontSize: '14px' }}>Choose PDF...</span>
+                                <span style={{ fontSize: '11px', color: 'var(--b2c-slate)' }}>
+                                  PDF sample for customer reference.
+                                </span>
+                                <input
+                                  id="admin-pdf-upload"
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={handleSamplePdfChange}
+                                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                                />
+                              </label>
+
+                              {(samplePdfFile || editingProduct?.sample_pdf_url) && (
+                                <div style={{ marginTop: '12px' }}>
+                                  {editingProduct?.sample_pdf_url && !productForm.remove_sample_pdf && !samplePdfFile && (
+                                    <div className="b2c-admin-pdf-preview-box">
+                                      <div className="b2c-admin-pdf-icon-badge">PDF</div>
+                                      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <strong style={{ fontSize: '12px', color: 'var(--b2c-navy)' }}>Current PDF</strong>
+                                        <span style={{ fontSize: '10px', color: 'var(--b2c-slate)' }}>Active on storefront</span>
+                                      </div>
+                                      <a
+                                        href={editingProduct.sample_pdf_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-accent)', textDecoration: 'none', marginRight: '8px' }}
+                                      >
+                                        View
+                                      </a>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleProductField('remove_sample_pdf', true)}
+                                        style={{ border: 'none', background: 'transparent', color: 'var(--b2c-error)', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  {editingProduct?.sample_pdf_url && productForm.remove_sample_pdf && !samplePdfFile && (
+                                    <div className="b2c-admin-pdf-preview-box" style={{ background: 'rgba(220, 38, 38, 0.05)', border: '1px solid rgba(220, 38, 38, 0.15)' }}>
+                                      <div className="b2c-admin-pdf-icon-badge" style={{ background: 'var(--b2c-error)' }}>PDF</div>
+                                      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <strong style={{ fontSize: '12px', color: 'var(--b2c-error)' }}>Will be removed</strong>
+                                        <span style={{ fontSize: '10px', color: 'var(--b2c-slate)' }}>Save product to apply changes</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleProductField('remove_sample_pdf', false)}
+                                        style={{ border: 'none', background: 'transparent', color: 'var(--b2c-slate)', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                      >
+                                        Undo
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  {samplePdfFile && (
+                                    <div className="b2c-admin-pdf-preview-box">
+                                      <div className="b2c-admin-pdf-icon-badge">PDF</div>
+                                      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <strong style={{ fontSize: '12px', color: 'var(--b2c-navy)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '150px' }}>
+                                          {samplePdfFile.name}
+                                        </strong>
+                                        <span style={{ fontSize: '10px', color: 'var(--b2c-slate)' }}>New sample PDF</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setSamplePdfFile(null)}
+                                        style={{ border: 'none', background: 'transparent', color: 'var(--b2c-error)', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer Actions */}
+                      <div className="b2c-admin-form-footer">
+                        {!editingProductId && (
+                          <button
+                            type="button"
+                            className="b2c-btn-secondary"
+                            onClick={() => setProductFormStep(1)}
+                            style={{ padding: '12px 24px' }}
+                          >
+                            Back
                           </button>
-                        </div>
-
-                        <div className="b2c-admin-tier-list">
-                          {(productForm.pricing_tiers || []).map((tier, index) => {
-                            const quantity = Number(tier.quantity || 0);
-                            const frontPrice = Number(tier.price || 0);
-                            const frontBackPrice = Number(tier.front_back_price || 0);
-                            const frontUnitPrice = quantity > 0 ? roundMoneyValue(frontPrice / quantity) : 0;
-                            const frontBackUnitPrice = quantity > 0 ? roundMoneyValue(frontBackPrice / quantity) : 0;
-
-                            return (
-                              <div key={`b2c-tier-${index}`} className="b2c-admin-tier-row">
-                                <label>
-                                  Quantity
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={tier.quantity}
-                                    onChange={(event) => updateProductPricingTier(index, 'quantity', event.target.value)}
-                                    required
-                                  />
-                                </label>
-
-                                <label>
-                                  Front Base Price
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={tier.price}
-                                    onChange={(event) => updateProductPricingTier(index, 'price', event.target.value)}
-                                    required
-                                  />
-                                  <span className="b2c-admin-field-help">Per unit: {money(frontUnitPrice)}</span>
-                                </label>
-
-                                {productForm.print_side_mode !== 'front_only' && (
-                                  <label>
-                                    Front & Back Base Price
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={tier.front_back_price}
-                                      onChange={(event) => updateProductPricingTier(index, 'front_back_price', event.target.value)}
-                                      required
-                                    />
-                                    <span className="b2c-admin-field-help">Per unit: {money(frontBackUnitPrice)}</span>
-                                  </label>
-                                )}
-
-                                <button type="button" className="b2c-admin-tier-remove" onClick={() => removeProductPricingTier(index)}>
-                                  Remove
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <label className="b2c-admin-form-wide">
-                        Product Photos (up to 5)
-                        <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleNewImages} />
-                        <span className="b2c-admin-field-help">
-                          {totalSelectedImages}/5 images selected. Products are shown to customers automatically after saving.
-                        </span>
-                      </label>
-
-                      <label className="b2c-admin-form-wide">
-                        Sample PDF
-                        <input type="file" accept="application/pdf" onChange={handleSamplePdfChange} />
-                        <span className="b2c-admin-field-help">
-                          Customers can open this PDF as a product sample.
-                        </span>
-                      </label>
-                    </div>
-
-                    {visibleExistingImages.length > 0 && (
-                      <div className="b2c-admin-upload-block">
-                        <strong>Current Images</strong>
-                        <div className="b2c-admin-image-grid">
-                          {visibleExistingImages.map((image) => (
-                            <div key={image.id} className="b2c-admin-image-card">
-                              <img src={image.file_url} alt="Product" />
-                              <button type="button" onClick={() => setRemovedImageIds((prev) => [...prev, image.id])}>
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {newImages.length > 0 && (
-                      <div className="b2c-admin-upload-block">
-                        <strong>New Images Ready</strong>
-                        <div className="b2c-admin-preview-list">
-                          {newImagePreviews.map((preview, index) => (
-                            <div key={preview.id} className="b2c-admin-preview-card">
-                              <div className="b2c-admin-preview-thumb">
-                                <img src={preview.url} alt={preview.name} />
-                              </div>
-                              <div className="b2c-admin-preview-copy">
-                                <strong>{preview.name}</strong>
-                                <span>New image selected</span>
-                              </div>
-                              <button type="button" className="b2c-admin-preview-remove" onClick={() => handleRemoveNewImage(index)}>
-                                ✕
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {(samplePdfFile || editingProduct?.sample_pdf_url) ? (
-                      <div className="b2c-admin-upload-block">
-                        <strong>Sample PDF Preview</strong>
-                        <div className="b2c-admin-preview-list">
-                          {editingProduct?.sample_pdf_url && !productForm.remove_sample_pdf && !samplePdfFile && (
-                            <div className="b2c-admin-preview-card pdf">
-                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                              <div className="b2c-admin-preview-copy">
-                                <strong>Current sample PDF</strong>
-                                <span>Customers can open this file right now</span>
-                              </div>
-                              <div className="b2c-admin-preview-actions">
-                                <a
-                                  href={editingProduct.sample_pdf_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  View
-                                </a>
-                                <button type="button" className="b2c-admin-preview-remove" onClick={() => handleProductField('remove_sample_pdf', true)}>
-                                  ✕
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {editingProduct?.sample_pdf_url && productForm.remove_sample_pdf && !samplePdfFile && (
-                            <div className="b2c-admin-preview-card pdf pending">
-                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                              <div className="b2c-admin-preview-copy">
-                                <strong>Current PDF will be removed</strong>
-                                <span>Save the product to remove this sample PDF</span>
-                              </div>
-                              <button type="button" className="b2c-admin-preview-undo" onClick={() => handleProductField('remove_sample_pdf', false)}>
-                                Undo
-                              </button>
-                            </div>
-                          )}
-
-                          {samplePdfFile && (
-                            <div className="b2c-admin-preview-card pdf">
-                              <div className="b2c-admin-preview-thumb pdf">PDF</div>
-                              <div className="b2c-admin-preview-copy">
-                                <strong>{samplePdfFile.name}</strong>
-                                <span>New sample PDF selected</span>
-                              </div>
-                              <button type="button" className="b2c-admin-preview-remove" onClick={() => setSamplePdfFile(null)}>
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="b2c-modal-actions" style={{ display: 'flex', gap: '12px' }}>
-                      {!editingProductId && (
+                        )}
                         <button
-                          type="button"
-                          className="b2c-btn-secondary"
-                          onClick={() => setProductFormStep(1)}
+                          className="b2c-btn-primary"
+                          type="submit"
+                          disabled={productSubmitting}
+                          style={{ padding: '12px 30px' }}
                         >
-                          Back
+                          {productSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Create Product'}
                         </button>
-                      )}
-                      <button className="b2c-btn-primary" type="submit" disabled={productSubmitting}>
-                        {productSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Create Product'}
-                      </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -1679,7 +1817,7 @@ function B2CAdminPanel({
                   <span className="b2c-pill subtle">Catalog</span>
                   <h2>Customer products</h2>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     className="b2c-btn-secondary"
@@ -1690,20 +1828,10 @@ function B2CAdminPanel({
                   >
                     Add New Product
                   </button>
-                  <select
-                    value={selectedB2CProductCategory}
-                    onChange={(e) => setSelectedB2CProductCategory(e.target.value)}
-                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px', background: '#fff', outline: 'none' }}
-                  >
-                    <option value="All">All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
                   <div style={{ position: 'relative', minWidth: '280px' }}>
                     <input
                       type="text"
-                      placeholder="Search standard products..."
+                      placeholder="Search products by name or category..."
                       value={searchB2CProduct}
                       onChange={(e) => setSearchB2CProduct(e.target.value)}
                       style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1.5px solid var(--b2c-border)', fontSize: '14px' }}
@@ -1712,55 +1840,116 @@ function B2CAdminPanel({
                 </div>
               </div>
 
+              {/* Category Chips/Tabs Filter */}
+              <div className="b2c-categories-tabs" style={{ marginBottom: '24px', paddingBottom: '12px', borderBottom: '1px solid rgba(13,20,36,0.05)' }}>
+                <button
+                  type="button"
+                  className={`b2c-filter-tab ${selectedB2CProductCategory === 'All' ? 'active' : ''}`}
+                  onClick={() => setSelectedB2CProductCategory('All')}
+                >
+                  All Categories ({products.length})
+                </button>
+                {categories.map((cat) => {
+                  const count = products.filter(p => p.category === cat.name).length;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className={`b2c-filter-tab ${selectedB2CProductCategory === cat.name ? 'active' : ''}`}
+                      onClick={() => setSelectedB2CProductCategory(cat.name)}
+                    >
+                      {cat.name} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
               {filteredB2CProducts.length === 0 ? (
-                <div className="b2c-admin-empty">No Customer products added yet.</div>
+                <div className="b2c-admin-empty">No products found matching the criteria.</div>
               ) : (
-                <div className="b2c-admin-table-wrap">
-                  <table className="b2c-admin-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Print Side</th>
-                        <th>Quantity Pricing</th>
-                        <th>Photos</th>
-                        <th>PDF</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredB2CProducts.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <strong>{product.name}</strong>
-                            <div className="b2c-admin-table-sub">{product.short_description || 'No short description'}</div>
-                          </td>
-                          <td>{product.category}</td>
-                          <td>
-                            <div className="b2c-admin-table-sub">Mode: {(product.print_side_mode || 'front_only').replaceAll('_', ' ')}</div>
-                          </td>
-                          <td>
-                            <div className="b2c-admin-tier-summary">
-                              {getStandardProductPricingTiers(product).map((tier) => (
-                                <div key={`${product.id}-${tier.quantity}`} className="b2c-admin-table-sub">
-                                  {tier.quantity} qty: {money(tier.price)} ({money(getStandardUnitPrice(product, tier.quantity, 'front'))}/unit)
-                                  {product.print_side_mode !== 'front_only' && tier.front_back_price !== null ? ` | F&B ${money(tier.front_back_price)} (${money(getStandardUnitPrice(product, tier.quantity, 'front_back'))}/unit)` : ''}
-                                </div>
-                              ))}
+                <div className="b2c-admin-catalog-grid">
+                  {filteredB2CProducts.map((product) => {
+                    const firstImage = product.images && product.images[0]?.file_url;
+                    const tiers = getStandardProductPricingTiers(product);
+                    const printableMode = (product.print_side_mode || 'front_only').replaceAll('_', ' ');
+
+                    return (
+                      <div key={product.id} className="b2c-admin-product-card">
+                        <div className="b2c-admin-product-card-media">
+                          <span className="b2c-admin-product-card-badge">
+                            {product.category || 'Standard'}
+                          </span>
+                          <span className={`b2c-admin-product-card-status ${product.is_active ? 'active' : 'inactive'}`}>
+                            {product.is_active ? 'Active' : 'Hidden'}
+                          </span>
+                          {firstImage ? (
+                            <img src={firstImage} alt={product.name} />
+                          ) : (
+                            <div className="b2c-admin-product-card-media-placeholder">
+                              No Image Uploaded
                             </div>
-                          </td>
-                          <td>{product.images?.length || 0}/5</td>
-                          <td>{product.sample_pdf_url ? 'Available' : 'No PDF'}</td>
-                          <td><span className={`b2c-status-pill ${product.is_active ? 'active' : 'inactive'}`}>{product.is_active ? 'Active' : 'Hidden'}</span></td>
-                          <td className="b2c-admin-table-actions">
-                            <button type="button" onClick={() => startEditProduct(product)}>Edit</button>
-                            <button type="button" onClick={() => handleDeleteProduct(product)}>Delete</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          )}
+                        </div>
+
+                        <div className="b2c-admin-product-card-body">
+                          <h3 className="b2c-admin-product-card-title">{product.name}</h3>
+                          <p className="b2c-admin-product-card-desc">
+                            {product.short_description || 'No short description provided.'}
+                          </p>
+
+                          <div className="b2c-admin-product-card-meta">
+                            <span>
+                              <strong>Print:</strong> {printableMode}
+                            </span>
+                            {product.sample_pdf_url && (
+                              <span style={{ color: 'var(--b2c-accent)' }}>
+                                📄 PDF Sample
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="b2c-admin-product-card-tiers">
+                            <span className="b2c-admin-product-card-tiers-title">Pricing Tiers</span>
+                            {tiers.slice(0, 3).map((tier) => (
+                              <div key={`${product.id}-${tier.quantity}`} className="b2c-admin-product-card-tier-item">
+                                <span className="b2c-admin-product-card-tier-qty">{tier.quantity} Copies</span>
+                                <span className="b2c-admin-product-card-tier-price">
+                                  {money(tier.price)} ({money(getStandardUnitPrice(product, tier.quantity, 'front'))}/unit)
+                                  {product.print_side_mode !== 'front_only' && tier.front_back_price !== null && (
+                                    <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--b2c-slate)', textAlign: 'right', fontWeight: 'normal' }}>
+                                      F&B: {money(tier.front_back_price)} ({money(getStandardUnitPrice(product, tier.quantity, 'front_back'))}/unit)
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                            {tiers.length > 3 && (
+                              <div style={{ fontSize: '11px', color: 'var(--b2c-slate)', textAlign: 'center', marginTop: '4px' }}>
+                                + {tiers.length - 3} more tiers
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="b2c-admin-product-card-actions">
+                          <button
+                            type="button"
+                            className="edit-btn"
+                            onClick={() => startEditProduct(product)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="delete-btn"
+                            onClick={() => handleDeleteProduct(product)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -2619,9 +2808,9 @@ function GuestHeader({ onLoginClick, currentPage = 'home' }) {
           <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
           <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
           <a href="/contact-us" className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
-          <a href="/portal" className="b2c-orders-btn b2c-orders-btn-wide">Login as Dealer</a>
+          <a href="/portal" className="b2c-orders-btn b2c-orders-btn-wide">Dealer Login</a>
           <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={onLoginClick}>
-            Login as Customer
+            Customer Login
           </button>
         </div>
       </header>
@@ -2632,9 +2821,9 @@ function GuestHeader({ onLoginClick, currentPage = 'home' }) {
         <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
         <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
         <a href="/contact-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
-        <a href="/portal" onClick={() => setMenuOpen(false)} className="b2c-orders-btn b2c-orders-btn-wide">Login as Dealer</a>
+        <a href="/portal" onClick={() => setMenuOpen(false)} className="b2c-orders-btn b2c-orders-btn-wide">Dealer Login</a>
         <button type="button" className="b2c-btn-primary b2c-header-login-btn" onClick={() => { setMenuOpen(false); onLoginClick(); }}>
-          Login as Customer
+          Customer Login
         </button>
       </B2CHeaderDrawer>
     </>
@@ -2783,8 +2972,8 @@ function StoreFooter({ user }) {
           <a href="/">Home</a>
           <a href="/about-us">About Us</a>
           <a href="/contact-us">Contact Us</a>
-          <a href="/portal">Login as Dealer</a>
-          <a href="/">Login as Customer</a>
+          <a href="/portal">Dealer Login</a>
+          <a href="/">Customer Login</a>
         </div>
 
         <div className="b2c-footer-column">
@@ -2887,25 +3076,20 @@ function CustomerHome({
   unreadCount = 0,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
+  cart,
+  setCart,
+  isCartOpen,
+  setIsCartOpen,
+  handleRemoveFromCart,
+  handleCartFileChange,
+  handleSendCartInquiry,
+  inquiryLoading,
 }) {
   const productCards = useMemo(() => buildProductCards(products), [products]);
 
   // Search & Filter state
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Cart state
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`b2c_cart_${user.id}`);
-      return saved
-        ? JSON.parse(saved).map((item) => ({ ...item, file: null }))
-        : [];
-    } catch {
-      return [];
-    }
-  });
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Modal customization state
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -2914,15 +3098,6 @@ function CustomerHome({
   const [designSerialNumber, setDesignSerialNumber] = useState('');
   const [customText, setCustomText] = useState('');
   const [artworkFile, setArtworkFile] = useState(null);
-  const [inquiryLoading, setInquiryLoading] = useState(false);
-
-  // Save cart to local storage
-  useEffect(() => {
-    localStorage.setItem(
-      `b2c_cart_${user.id}`,
-      JSON.stringify(cart.map(({ file, ...item }) => item))
-    );
-  }, [cart, user.id]);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -3045,61 +3220,6 @@ function CustomerHome({
     setIsCartOpen(true);
   };
 
-  const handleRemoveFromCart = (cartId) => {
-    setCart(cart.filter(item => item.cartId !== cartId));
-  };
-
-  const handleCartFileChange = (cartId, file) => {
-    setCart((current) =>
-      current.map((item) => (
-        item.cartId === cartId
-          ? { ...item, file: file || null }
-          : item
-      ))
-    );
-  };
-
-  const handleSendCartInquiry = async () => {
-    if (!user.phone || !user.email || !user.address) {
-      alert('Please complete your profile with phone, email, and address before placing an order.');
-      window.location.href = '/profile';
-      return;
-    }
-
-    setInquiryLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('items_json', JSON.stringify(
-        cart.map((item) => ({
-          product_id: item.product.id,
-          quantity: item.quantity,
-          print_side: item.details.printSide,
-          gsm: null,
-          design_serial_number: item.details.designSerialNumber || null,
-          custom_text: item.details.customText || null,
-        }))
-      ));
-
-      cart.forEach((item, index) => {
-        if (item.file) {
-          formData.append(`files[${index}]`, item.file);
-        }
-      });
-
-      const response = await api('/api/b2c/orders', {
-        method: 'POST',
-        body: formData,
-      });
-      setCart([]);
-      setIsCartOpen(false);
-      alert(`Order ${response.order?.order_number || ''} submitted successfully.`);
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setInquiryLoading(false);
-    }
-  };
-
   // Testimonials
   const testimonials = [
     { name: 'Aarav Mehta', role: 'Wedding Groom', text: 'The Royal Kankotri with wax seal styling was the highlight of our wedding invitations. Our guests were blown away by the premium texture!' },
@@ -3128,7 +3248,7 @@ function CustomerHome({
         onLogout={onLogout}
         currentPage="home"
         cartCount={cart.length}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={() => { window.location.href = '/cart'; }}
         notifications={notifications}
         unreadCount={unreadCount}
         onMarkNotificationRead={onMarkNotificationRead}
@@ -4417,9 +4537,9 @@ function GuestExperience({
               Our goal is to give every customer beautiful printing, smooth service, and a polished final result for every special occasion.
             </p>
             <div className="b2c-guest-hero-actions">
-              <a href="/portal" className="b2c-btn-secondary b2c-btn-inline">Login as Dealer</a>
+              <a href="/portal" className="b2c-btn-secondary b2c-btn-inline">Dealer Login</a>
               <button type="button" className="b2c-btn-primary b2c-btn-inline" onClick={openCustomerLogin}>
-                Login as Customer <IconArrowRight />
+                Customer Login <IconArrowRight />
               </button>
             </div>
           </div>
@@ -4604,23 +4724,12 @@ function CustomerProductsPage({
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   openCustomerLogin,
+  cart = [],
 }) {
   const queryParams = new URLSearchParams(window.location.search);
   const initialCategory = queryParams.get('category') || 'All';
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    if (user) {
-      try {
-        const saved = localStorage.getItem(`b2c_cart_${user.id}`);
-        if (saved) {
-          setCartCount(JSON.parse(saved).length);
-        }
-      } catch {}
-    }
-  }, [user]);
 
   const productCards = useMemo(() => buildProductCards(products), [products]);
 
@@ -4649,8 +4758,8 @@ function CustomerProductsPage({
           user={user}
           onLogout={onLogout}
           currentPage="products"
-          cartCount={cartCount}
-          onOpenCart={() => { window.location.href = '/?cart=open'; }}
+          cartCount={cart.length}
+          onOpenCart={() => { window.location.href = '/cart'; }}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkNotificationRead={onMarkNotificationRead}
@@ -4750,19 +4859,14 @@ function CustomerProductDetailsPage({
   onMarkAllNotificationsRead,
   openCustomerLogin,
   productId,
+  cart = [],
+  setCart,
+  handleRemoveFromCart,
+  handleCartFileChange,
+  handleSendCartInquiry,
+  inquiryLoading,
 }) {
-  const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    if (user) {
-      try {
-        const saved = localStorage.getItem(`b2c_cart_${user.id}`);
-        if (saved) {
-          setCartCount(JSON.parse(saved).length);
-        }
-      } catch {}
-    }
-  }, [user]);
+  const [cartStep, setCartStep] = useState(1);
 
   const product = useMemo(() => {
     if (!products.length || !productId) return null;
@@ -4776,6 +4880,14 @@ function CustomerProductDetailsPage({
   const [artworkFile, setArtworkFile] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
+
+  const printSideLabels = {
+    front: 'Front Only',
+    both: 'Front & Back',
+    front_back: 'Front & Back',
+    single: 'Front Only',
+    double: 'Front & Back',
+  };
 
   useEffect(() => {
     if (product) {
@@ -4793,6 +4905,64 @@ function CustomerProductDetailsPage({
       setQuantity(availableQuantities[0]);
     }
   }, [product, selectedPrintSide, quantity]);
+
+  // Sync page options to cart item if it exists (bi-directional sync 1)
+  useEffect(() => {
+    if (!product || !cart.length) return;
+    
+    // Find the cart item for this product
+    const matchingIndex = cart.findIndex(item => item.product.id === product.id);
+    if (matchingIndex !== -1) {
+      const updatedCart = [...cart];
+      const item = updatedCart[matchingIndex];
+      
+      const finalQuantity = Number(quantity);
+      const finalTotal = getStandardTierTotal(product, finalQuantity, selectedPrintSide);
+      const finalUnitPrice = getStandardUnitPrice(product, finalQuantity, selectedPrintSide);
+      
+      // Only set cart if there is a difference to avoid loop
+      const diff = item.quantity !== finalQuantity || 
+                   item.details.printSide !== selectedPrintSide || 
+                   item.details.customText !== customText || 
+                   item.details.designSerialNumber !== designSerialNumber.trim();
+                   
+      if (diff) {
+        updatedCart[matchingIndex] = {
+          ...item,
+          quantity: finalQuantity,
+          total: finalTotal,
+          details: {
+            ...item.details,
+            costPerCopy: finalUnitPrice,
+            printSide: selectedPrintSide,
+            customText,
+            designSerialNumber: designSerialNumber.trim()
+          }
+        };
+        setCart(updatedCart);
+      }
+    }
+  }, [quantity, selectedPrintSide, customText, designSerialNumber, product, cart, setCart]);
+
+  // Sync cart item changes back to page options (bi-directional sync 2)
+  useEffect(() => {
+    if (!product) return;
+    const cartItem = cart.find(item => item.product.id === product.id);
+    if (cartItem) {
+      if (Number(quantity) !== Number(cartItem.quantity)) {
+        setQuantity(cartItem.quantity);
+      }
+      if (selectedPrintSide !== cartItem.details.printSide) {
+        setSelectedPrintSide(cartItem.details.printSide);
+      }
+      if (customText !== cartItem.details.customText) {
+        setCustomText(cartItem.details.customText || '');
+      }
+      if (designSerialNumber !== cartItem.details.designSerialNumber) {
+        setDesignSerialNumber(cartItem.details.designSerialNumber || '');
+      }
+    }
+  }, [cart, product]);
 
   if (!products.length) {
     return (
@@ -4864,32 +5034,32 @@ function CustomerProductDetailsPage({
     const baseUnitPrice = getStandardUnitPrice(product, finalQuantity, selectedPrintSide);
     const totalPrice = getStandardTierTotal(product, finalQuantity, selectedPrintSide);
 
-    try {
-      const saved = localStorage.getItem(`b2c_cart_${user.id}`);
-      const currentCart = saved ? JSON.parse(saved) : [];
-      const cartItem = {
-        cartId: `${product.id}-${Date.now()}`,
-        product: product,
-        quantity: finalQuantity,
-        total: totalPrice,
-        details: {
-          costPerCopy: baseUnitPrice,
-          discountPercent: 0,
-          customText,
-          printSide: selectedPrintSide,
-          gsm: null,
-          gsmPrice: 0,
-          designSerialNumber: designSerialNumber.trim(),
-        },
-      };
-      
-      currentCart.push(cartItem);
-      localStorage.setItem(`b2c_cart_${user.id}`, JSON.stringify(currentCart));
-      window.location.href = '/?cart=open';
-    } catch (e) {
-      alert('Failed to add product to cart: ' + e.message);
+    const exists = cart.some(item => item.product.id === product.id);
+    if (exists) {
+      alert("This product is already in your cart. You can configure its options directly on this page or inside the cart sidebar.");
       setAddingToCart(false);
+      return;
     }
+
+    const cartItem = {
+      cartId: `${product.id}-${Date.now()}`,
+      product: product,
+      quantity: finalQuantity,
+      total: totalPrice,
+      details: {
+        costPerCopy: baseUnitPrice,
+        discountPercent: 0,
+        customText,
+        printSide: selectedPrintSide,
+        gsm: null,
+        gsmPrice: 0,
+        designSerialNumber: designSerialNumber.trim(),
+      },
+      file: null,
+    };
+    
+    setCart([...cart, cartItem]);
+    setAddingToCart(false);
   };
 
   return (
@@ -4899,8 +5069,8 @@ function CustomerProductDetailsPage({
           user={user}
           onLogout={onLogout}
           currentPage="products"
-          cartCount={cartCount}
-          onOpenCart={() => { window.location.href = '/?cart=open'; }}
+          cartCount={cart.length}
+          onOpenCart={() => { window.location.href = '/cart'; }}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkNotificationRead={onMarkNotificationRead}
@@ -4910,182 +5080,576 @@ function CustomerProductDetailsPage({
         <GuestHeader onLoginClick={openCustomerLogin} currentPage="products" />
       )}
 
-      <main className="b2c-store-main b2c-detail-main">
-        <nav className="b2c-breadcrumbs">
-          <a href="/">Home</a>
-          <span className="b2c-breadcrumb-sep">/</span>
-          <a href="/products">Products</a>
-          <span className="b2c-breadcrumb-sep">/</span>
-          <a href={`/products?category=${encodeURIComponent(product.category)}`}>{product.category}</a>
-          <span className="b2c-breadcrumb-sep">/</span>
-          <span className="b2c-breadcrumb-active">{product.name}</span>
-        </nav>
+      <main className="b2c-store-main b2c-detail-main shop-layout" style={{ maxWidth: '1650px', width: '100%', margin: '0 auto', padding: '30px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', flex: 1, minWidth: 0 }}>
+          <nav className="b2c-breadcrumbs">
+            <a href="/">Home</a>
+            <span className="b2c-breadcrumb-sep">/</span>
+            <a href="/products">Products</a>
+            <span className="b2c-breadcrumb-sep">/</span>
+            <a href={`/products?category=${encodeURIComponent(product.category)}`}>{product.category}</a>
+            <span className="b2c-breadcrumb-sep">/</span>
+            <span className="b2c-breadcrumb-active">{product.name}</span>
+          </nav>
 
-        <div className="b2c-detail-container">
-          <div className="b2c-modal-preview-panel">
-            <div className="b2c-modal-preview-stage" style={{ position: 'relative' }}>
-              <img
-                src={selectedProductImages[activeImageIndex]}
-                alt={`${product.name} preview ${activeImageIndex + 1}`}
-                className="b2c-modal-preview-img"
-              />
-              <button 
-                type="button" 
-                className="b2c-fav-button" 
-                style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'rgba(255,255,255,0.9)', width: '40px', height: '40px', borderRadius: '50%', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                onClick={() => alert('Added to favorites!')}
-              >
-                ❤️
-              </button>
-            </div>
-            
-            {selectedProductImages.length > 1 && (
-              <div className="b2c-modal-thumbs" style={{ marginTop: '16px', justifyContent: 'center' }}>
-                {selectedProductImages.map((image, index) => (
-                  <button
-                    key={`${image}-${index}`}
-                    type="button"
-                    className={`b2c-modal-thumb ${index === activeImageIndex ? 'active' : ''}`}
-                    onClick={() => setActiveImageIndex(index)}
-                  >
-                    <img src={image} alt={`${product.name} thumbnail ${index + 1}`} />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="b2c-detail-policy-card" style={{ marginTop: '24px', background: 'rgba(201, 163, 94, 0.06)', border: '1px solid rgba(201, 163, 94, 0.15)', borderRadius: '16px', padding: '20px' }}>
-              <h4 style={{ color: 'var(--b2c-navy)', margin: '0 0 10px', fontSize: '15px', fontWeight: 'bold' }}>⭐ Premium Print Quality Guarantee</h4>
-              <p style={{ color: 'var(--b2c-slate)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
-                All signature collection prints are output on high-fidelity Konica production machines. We inspect color registry, paper weight, and foil embellishment boundaries before courier packing.
-              </p>
-            </div>
-          </div>
-
-          <div className="b2c-modal-form-panel">
-            <div className="b2c-modal-customizer-form">
-              <span className="b2c-pill" style={{ background: 'var(--b2c-gold-soft)', color: '#946f31', border: 'none', marginBottom: '8px' }}>
-                {product.category}
-              </span>
-              <h2 style={{ fontSize: '28px', color: 'var(--b2c-navy)', margin: '4px 0 12px' }}>{product.name}</h2>
-              <p style={{ color: 'var(--b2c-slate)', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px' }}>
-                {product.description || product.tagline || 'Premium detailing with carefully balanced texture and color.'}
-              </p>
-
-              <div className="b2c-card-stars" style={{ marginBottom: '24px' }}>
-                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                <span className="b2c-card-rating-text" style={{ color: 'var(--b2c-navy)', fontWeight: 'bold', marginLeft: '6px' }}>5.0 (24 reviews)</span>
-              </div>
-
-              <div className="b2c-modal-field">
-                <label>Order Quantity (Copies)</label>
-                <select
-                  className="b2c-input-styled"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+          <div className="b2c-detail-container">
+            <div className="b2c-modal-preview-panel">
+              <div className="b2c-modal-preview-stage" style={{ position: 'relative' }}>
+                <img
+                  src={selectedProductImages[activeImageIndex]}
+                  alt={`${product.name} preview ${activeImageIndex + 1}`}
+                  className="b2c-modal-preview-img"
+                />
+                <button 
+                  type="button" 
+                  className="b2c-fav-button" 
+                  style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'rgba(255,255,255,0.9)', width: '40px', height: '40px', borderRadius: '50%', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  onClick={() => alert('Added to favorites!')}
                 >
-                  {qtyOptions.map((tier) => (
-                    <option key={tier.quantity} value={tier.quantity}>
-                      {tier.quantity} ({money(getStandardUnitPrice(product, tier.quantity, selectedPrintSide))} / unit{recommendedQuantity === tier.quantity && qtyOptions.length > 1 ? ' - Recommended' : ''})
-                    </option>
-                  ))}
-                </select>
-                <span className="b2c-field-hint">Select a quantity package. The total base price for the selected quantity is shown below.</span>
+                  ❤️
+                </button>
               </div>
-
-              <div className="b2c-modal-field">
-                <label>Print Side</label>
-                <select
-                  className="b2c-input-styled"
-                  value={selectedPrintSide}
-                  onChange={(e) => setSelectedPrintSide(e.target.value)}
-                >
-                  {getPrintSideOptions(product).map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+              
+              {selectedProductImages.length > 1 && (
+                <div className="b2c-modal-thumbs" style={{ marginTop: '16px', justifyContent: 'center' }}>
+                  {selectedProductImages.map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      className={`b2c-modal-thumb ${index === activeImageIndex ? 'active' : ''}`}
+                      onClick={() => setActiveImageIndex(index)}
+                    >
+                      <img src={image} alt={`${product.name} thumbnail ${index + 1}`} />
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              {product.sample_pdf_url && (
-                <div className="b2c-modal-field">
-                  <label>Design Serial Number (Optional)</label>
-                  <input
-                    type="text"
-                    className="b2c-input-styled"
-                    value={designSerialNumber}
-                    onChange={(e) => setDesignSerialNumber(e.target.value)}
-                    placeholder="Enter design serial no. from the sample PDF"
-                  />
-                  <span className="b2c-field-hint">
-                    Use this only if you selected a design from the{' '}
-                    <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" style={{ color: 'var(--b2c-accent)', fontWeight: 'bold' }}>
-                      Sample PDF
-                    </a>.
-                  </span>
                 </div>
               )}
 
-              <div className="b2c-modal-field">
-                <label>Special Calligraphy or Text Instructions</label>
-                <textarea
-                  placeholder="Enter names, wording, calligraphy style, or special typography requests..."
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
-                  className="b2c-modal-textarea"
-                  style={{ height: '100px' }}
-                ></textarea>
+              <div className="b2c-detail-policy-card" style={{ marginTop: '24px', background: 'rgba(201, 163, 94, 0.06)', border: '1px solid rgba(201, 163, 94, 0.15)', borderRadius: '16px', padding: '20px' }}>
+                <h4 style={{ color: 'var(--b2c-navy)', margin: '0 0 10px', fontSize: '15px', fontWeight: 'bold' }}>⭐ Premium Print Quality Guarantee</h4>
+                <p style={{ color: 'var(--b2c-slate)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+                  All signature collection prints are output on high-fidelity Konica production machines. We inspect color registry, paper weight, and foil embellishment boundaries before courier packing.
+                </p>
               </div>
+            </div>
 
-              <div className="b2c-modal-field">
-                <label>Artwork File</label>
-                <div style={{ background: '#f8fafc', border: '1px dashed var(--b2c-slate)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--b2c-slate)', display: 'block', marginBottom: '4px' }}>
-                    You can upload your artwork file directly in the cart drawer.
-                  </span>
-                  <span style={{ fontSize: '11px', color: 'var(--b2c-slate)', opacity: 0.8 }}>
-                    Accepts CDR, ZIP, PNG, JPG, JPEG formats.
-                  </span>
-                </div>
-              </div>
+            <div className="b2c-modal-form-panel">
+              <div className="b2c-modal-customizer-form">
+                <span className="b2c-pill" style={{ background: 'var(--b2c-gold-soft)', color: '#946f31', border: 'none', marginBottom: '8px' }}>
+                  {product.category}
+                </span>
+                <h2 style={{ fontSize: '28px', color: 'var(--b2c-navy)', margin: '4px 0 12px' }}>{product.name}</h2>
+                <p style={{ color: 'var(--b2c-slate)', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px' }}>
+                  {product.description || product.tagline || 'Premium detailing with carefully balanced texture and color.'}
+                </p>
 
-              <div className="b2c-price-summary-box" style={{ background: '#fff', border: '1px solid rgba(201,163,94,0.2)', padding: '20px', borderRadius: '16px', marginTop: '24px' }}>
-                <div className="b2c-summary-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
-                  <span>Base Price for {quantity} qty ({printSideLabels[selectedPrintSide] || 'Front'}):</span>
-                  <span>{money(calculation.basePrice)}</span>
+                <div className="b2c-card-stars" style={{ marginBottom: '24px' }}>
+                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                  <span className="b2c-card-rating-text" style={{ color: 'var(--b2c-navy)', fontWeight: 'bold', marginLeft: '6px' }}>5.0 (24 reviews)</span>
                 </div>
-                <div className="b2c-summary-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
-                  <span>Per Unit Price:</span>
-                  <span>{money(calculation.costPerCopy)}</span>
-                </div>
-                <hr style={{ border: 'none', borderTop: '1px solid rgba(13,20,36,0.06)', margin: '12px 0' }} />
-                <div className="b2c-summary-row total" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px' }}>
-                  <strong>Estimated Price:</strong>
-                  <strong style={{ color: 'var(--b2c-gold)', fontSize: '20px' }}>{money(calculation.total)}</strong>
-                </div>
-              </div>
 
-              <div className="b2c-modal-actions" style={{ marginTop: '28px', display: 'flex', gap: '16px' }}>
-                <button
-                  type="button"
-                  className="b2c-btn-primary"
-                  onClick={handleAddToCart}
-                  disabled={addingToCart}
-                  style={{ flex: 1, padding: '16px' }}
-                >
-                  {addingToCart ? 'Adding to Cart...' : user ? 'Add to Cart' : 'Login to Personalize & Order'}
-                </button>
-                <a
-                  href="/products"
-                  className="b2c-btn-secondary"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '14px 20px', textDecoration: 'none' }}
-                >
-                  Back to Shop
-                </a>
+                <div className="b2c-modal-field">
+                  <label>Order Quantity (Copies)</label>
+                  <select
+                    className="b2c-input-styled"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                  >
+                    {qtyOptions.map((tier) => (
+                      <option key={tier.quantity} value={tier.quantity}>
+                        {tier.quantity} ({money(getStandardUnitPrice(product, tier.quantity, selectedPrintSide))} / unit{recommendedQuantity === tier.quantity && qtyOptions.length > 1 ? ' - Recommended' : ''})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="b2c-field-hint">Select a quantity package. The total base price for the selected quantity is shown below.</span>
+                </div>
+
+                <div className="b2c-modal-field">
+                  <label>Print Side</label>
+                  <select
+                    className="b2c-input-styled"
+                    value={selectedPrintSide}
+                    onChange={(e) => setSelectedPrintSide(e.target.value)}
+                  >
+                    {getPrintSideOptions(product).map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {product.sample_pdf_url && (
+                  <div className="b2c-modal-field">
+                    <label>Design Serial Number (Optional)</label>
+                    <input
+                      type="text"
+                      className="b2c-input-styled"
+                      value={designSerialNumber}
+                      onChange={(e) => setDesignSerialNumber(e.target.value)}
+                      placeholder="Enter design serial no. from the sample PDF"
+                    />
+                    <span className="b2c-field-hint">
+                      Use this only if you selected a design from the{' '}
+                      <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" style={{ color: 'var(--b2c-accent)', fontWeight: 'bold' }}>
+                        Sample PDF
+                      </a>.
+                    </span>
+                  </div>
+                )}
+
+                <div className="b2c-modal-field">
+                  <label>Special Calligraphy or Text Instructions</label>
+                  <textarea
+                    placeholder="Enter names, wording, calligraphy style, or special typography requests..."
+                    value={customText}
+                    onChange={(e) => setCustomText(e.target.value)}
+                    className="b2c-modal-textarea"
+                    style={{ height: '100px' }}
+                  ></textarea>
+                </div>
+
+                <div className="b2c-modal-field">
+                  <label>Artwork File</label>
+                  <div style={{ background: '#f8fafc', border: '1px dashed var(--b2c-slate)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--b2c-slate)', display: 'block', marginBottom: '4px' }}>
+                      You can upload your artwork file directly in the cart drawer.
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--b2c-slate)', opacity: 0.8 }}>
+                      Accepts CDR, ZIP, PNG, JPG, JPEG formats.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="b2c-price-summary-box" style={{ background: '#fff', border: '1px solid rgba(201,163,94,0.2)', padding: '20px', borderRadius: '16px', marginTop: '24px' }}>
+                  <div className="b2c-summary-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
+                    <span>Base Price for {quantity} qty ({printSideLabels[selectedPrintSide] || 'Front'}):</span>
+                    <span>{money(calculation.basePrice)}</span>
+                  </div>
+                  <div className="b2c-summary-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
+                    <span>Per Unit Price:</span>
+                    <span>{money(calculation.costPerCopy)}</span>
+                  </div>
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(13,20,36,0.06)', margin: '12px 0' }} />
+                  <div className="b2c-summary-row total" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px' }}>
+                    <strong>Estimated Price:</strong>
+                    <strong style={{ color: 'var(--b2c-gold)', fontSize: '20px' }}>{money(calculation.total)}</strong>
+                  </div>
+                </div>
+
+                <div className="b2c-modal-actions" style={{ marginTop: '28px', display: 'flex', gap: '16px' }}>
+                  <button
+                    type="button"
+                    className="b2c-btn-primary"
+                    onClick={handleAddToCart}
+                    disabled={addingToCart}
+                    style={{ flex: 1, padding: '16px' }}
+                  >
+                    {addingToCart ? 'Adding...' : cart.some(item => item.product.id === product.id) ? 'Added to Cart ✓' : user ? 'Add to Cart' : 'Login to Personalize & Order'}
+                  </button>
+                  <a
+                    href="/products"
+                    className="b2c-btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '14px 20px', textDecoration: 'none' }}
+                  >
+                    Back to Shop
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Sidebar Cart panel */}
+        <aside className="cart panel" style={{ position: 'sticky', top: '100px', width: '380px', flexShrink: 0 }}>
+          {cart.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', padding: '14px 24px', background: '#f8fafc', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: 'var(--b2c-gold)' }} title="Cart Selection"></div>
+              <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: cartStep === 2 ? 'var(--b2c-gold)' : '#cbd5e1' }} title="Uploads & Checkout"></div>
+            </div>
+          )}
+          
+          {cartStep === 1 ? (
+            <>
+              <div className="cart-head" style={{ padding: '20px 24px 15px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--b2c-navy)' }}>Shopping Cart</h2>
+                <span style={{ fontSize: '12px', background: 'var(--b2c-gold-soft)', color: 'var(--b2c-gold)', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>{cart.length} items</span>
+              </div>
+              
+              {!cart.length ? (
+                <div className="empty" style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 20px', fontSize: '14px' }}>
+                  Your cart is empty. Add products to configure and order.
+                </div>
+              ) : (
+                <div style={{ padding: '0 24px 24px' }}>
+                  <div style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', margin: '15px 0' }}>
+                    {cart.map(item => (
+                      <div className="cart-item" key={item.cartId} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9', position: 'relative' }}>
+                        <button 
+                          className="remove" 
+                          onClick={() => handleRemoveFromCart(item.cartId)} 
+                          style={{ border: 'none', background: 'none', fontSize: '18px', color: '#cbd5e1', cursor: 'pointer', position: 'absolute', right: 0, top: 0 }}
+                          onMouseEnter={e => e.target.style.color = '#ef4444'}
+                          onMouseLeave={e => e.target.style.color = '#cbd5e1'}
+                        >
+                          ×
+                        </button>
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: '14px', color: 'var(--b2c-navy)', display: 'block', paddingRight: '20px' }}>{item.product.name}</strong>
+                          <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                            Qty: {item.quantity} · {printSideLabels[item.details.printSide] || item.details.printSide}
+                            {item.details.designSerialNumber && ` · Serial: ${item.details.designSerialNumber}`}
+                          </small>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Qty:</span>
+                              <input 
+                                type="number" 
+                                min="1" 
+                                value={item.quantity} 
+                                onChange={e => {
+                                  const val = Math.max(1, Number(e.target.value) || 1);
+                                  const updatedCart = cart.map(i => {
+                                    if (i.cartId === item.cartId) {
+                                      const nextTotal = getStandardTierTotal(i.product, val, i.details.printSide);
+                                      const nextUnitPrice = getStandardUnitPrice(i.product, val, i.details.printSide);
+                                      return {
+                                        ...i,
+                                        quantity: val,
+                                        total: nextTotal,
+                                        details: { ...i.details, costPerCopy: nextUnitPrice }
+                                      };
+                                    }
+                                    return i;
+                                  });
+                                  setCart(updatedCart);
+                                }}
+                                style={{ width: '60px', padding: '2px 4px', fontSize: '12px', border: '1px solid var(--line)', borderRadius: '4px', textAlign: 'center' }}
+                              />
+                            </div>
+                            <strong style={{ color: 'var(--b2c-gold)', fontSize: '14px' }}>{money(item.total)}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="cart-total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderTop: '1px solid var(--line)', marginBottom: '15px' }}>
+                    <span style={{ fontWeight: '500', color: 'var(--b2c-navy)' }}>Subtotal</span>
+                    <strong style={{ fontSize: '18px', color: 'var(--b2c-gold)' }}>{money(cart.reduce((sum, item) => sum + item.total, 0))}</strong>
+                  </div>
+                  
+                  <button className="btn primary wide" onClick={() => { window.location.href = '/cart'; }} style={{ width: '100%', padding: '12px', fontSize: '14px', borderRadius: '8px', background: 'var(--b2c-gold)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
+                    Next Step (Upload & Note) →
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="cart-head" style={{ padding: '20px 24px 15px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--b2c-navy)' }}>Upload Artwork</h2>
+                <button className="btn ghost" onClick={() => setCartStep(1)} style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid var(--line)', borderRadius: '6px', background: '#fff', cursor: 'pointer' }}>
+                  ← Back
+                </button>
+              </div>
+              
+              <div style={{ padding: '24px' }}>
+                <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px' }}>
+                  {cart.map((item) => (
+                    <div key={item.cartId} style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+                      <strong style={{ fontSize: '13px', color: 'var(--b2c-navy)', display: 'block', marginBottom: '2px' }}>{item.product.name}</strong>
+                      <small style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>
+                        {item.quantity} copies · {printSideLabels[item.details.printSide] || item.details.printSide}
+                      </small>
+                      
+                      <label htmlFor={`file-upload-details-${item.cartId}`} style={{ display: 'block', padding: '12px 8px', border: item.file ? '1px solid #22c55e' : '1px dashed #c9a35e', borderRadius: '8px', background: item.file ? '#f0fdf4' : '#fff', textAlign: 'center', cursor: 'pointer' }}>
+                        <span style={{ display: 'block', fontSize: '12px', color: item.file ? '#16a34a' : 'var(--b2c-gold)', fontWeight: 'bold' }}>
+                          {item.file ? '✓ File Selected' : '📁 Upload Artwork File'}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>Supports CDR, ZIP, PNG, JPG, JPEG</span>
+                        <input 
+                          id={`file-upload-details-${item.cartId}`}
+                          type="file"
+                          accept={acceptedArtworkTypes}
+                          onChange={e => handleCartFileChange(item.cartId, e.target.files?.[0] || null)}
+                          style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                        />
+                      </label>
+                      {item.file && (
+                        <div style={{ fontSize: '11px', color: 'var(--b2c-navy)', marginTop: '8px', padding: '6px', background: '#fff', border: '1px solid var(--line)', borderRadius: '4px', wordBreak: 'break-all', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{item.file.name}</span>
+                          <button type="button" onClick={() => handleCartFileChange(item.cartId, null)} style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Remove</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="cart-total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderTop: '1px solid var(--line)', marginBottom: '15px' }}>
+                  <span style={{ fontWeight: '500', color: 'var(--b2c-navy)' }}>Total</span>
+                  <strong style={{ fontSize: '18px', color: 'var(--b2c-gold)' }}>{money(cart.reduce((sum, item) => sum + item.total, 0))}</strong>
+                </div>
+                
+                <button 
+                  className="btn primary wide" 
+                  onClick={handleSendCartInquiry} 
+                  disabled={inquiryLoading} 
+                  style={{ width: '100%', padding: '12px', fontSize: '14px', borderRadius: '8px', background: 'var(--b2c-gold)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  {inquiryLoading ? 'Submitting Order...' : 'Place Order'}
+                </button>
+              </div>
+            </>
+          )}
+        </aside>
       </main>
+      <StoreFooter user={user} />
+    </div>
+  );
+}
+
+function CustomerCartPage({
+  user,
+  onLogout,
+  api,
+  cart = [],
+  setCart,
+  handleRemoveFromCart,
+  handleCartFileChange,
+  handleSendCartInquiry,
+  inquiryLoading,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  openCustomerLogin,
+}) {
+  const [customerNote, setCustomerNote] = useState('');
+
+  const printSideLabels = {
+    front: 'Front Only',
+    both: 'Front & Back',
+    front_back: 'Front & Back',
+    single: 'Front Only',
+    double: 'Front & Back',
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
+
+  return (
+    <div className="b2c-store-shell">
+      {user ? (
+        <CustomerHeader
+          user={user}
+          onLogout={onLogout}
+          currentPage="cart"
+          cartCount={cart.length}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkNotificationRead={onMarkNotificationRead}
+          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+        />
+      ) : (
+        <GuestHeader onLoginClick={openCustomerLogin} currentPage="cart" />
+      )}
+
+      <main className="b2c-store-main" style={{ maxWidth: '1650px', width: '100%', margin: '0 auto', padding: '30px' }}>
+        <section className="b2c-shop-hero" style={{ background: 'linear-gradient(135deg, #0d1424 0%, #162033 100%)', color: '#fff', padding: '40px', borderRadius: '24px', marginBottom: '30px', border: '1px solid rgba(201, 163, 94, 0.15)' }}>
+          <div className="b2c-orders-page-copy">
+            <span className="b2c-pill" style={{ background: 'var(--b2c-gold)', color: '#fff', fontWeight: 'bold' }}>Shopping Cart</span>
+            <h1 style={{ color: '#fff', fontSize: '32px', marginTop: '12px' }}>Review your personalized selections</h1>
+            <p style={{ opacity: 0.8, fontSize: '14px', marginTop: '5px' }}>Upload artwork files, write special instructions, and complete your purchase order.</p>
+          </div>
+        </section>
+
+        {!user ? (
+          <div className="panel" style={{ padding: '40px', textAlign: 'center', borderRadius: '16px' }}>
+            <h2 style={{ color: 'var(--b2c-navy)', marginBottom: '12px' }}>Please login to view your cart</h2>
+            <p style={{ color: 'var(--b2c-slate)', marginBottom: '20px' }}>You need to be logged in to view items in your cart and complete your purchase.</p>
+            <button className="btn primary" onClick={openCustomerLogin || (() => { window.location.href = '/'; })}>Login Now</button>
+          </div>
+        ) : !cart.length ? (
+          <div className="panel" style={{ padding: '60px 40px', textAlign: 'center', borderRadius: '16px' }}>
+            <h2 style={{ color: 'var(--b2c-navy)', marginBottom: '12px' }}>Your cart is empty</h2>
+            <p style={{ color: 'var(--b2c-slate)', marginBottom: '20px' }}>Browse our product catalog to personalize items and add them to your cart.</p>
+            <a href="/products" className="btn primary">Browse Products</a>
+          </div>
+        ) : (
+          <div className="shop-layout" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '30px', alignItems: 'start' }}>
+            {/* Left Column: Cart Items */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {cart.map((item) => (
+                <div key={item.cartId} className="panel" style={{ padding: '24px', borderRadius: '16px', position: 'relative' }}>
+                  <button
+                    onClick={() => handleRemoveFromCart(item.cartId)}
+                    style={{
+                      position: 'absolute',
+                      right: '20px',
+                      top: '20px',
+                      border: 'none',
+                      background: 'none',
+                      fontSize: '24px',
+                      color: '#cbd5e1',
+                      cursor: 'pointer',
+                      transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#cbd5e1'; }}
+                    title="Remove item"
+                  >
+                    ×
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'start' }}>
+                    <img
+                      src={getProductImage(item.product)}
+                      alt={item.product.name}
+                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '12px', border: '1px solid var(--line)' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <span className="b2c-pill" style={{ background: 'var(--b2c-gold-soft)', color: '#946f31', border: 'none', fontSize: '11px', padding: '3px 8px', marginBottom: '6px', display: 'inline-block' }}>
+                        {item.product.category}
+                      </span>
+                      <h3 style={{ margin: '0 0 8px', fontSize: '18px', color: 'var(--b2c-navy)' }}>{item.product.name}</h3>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '13px', color: 'var(--b2c-slate)', marginBottom: '15px' }}>
+                        <div><strong>Print Side:</strong> {printSideLabels[item.details.printSide] || item.details.printSide}</div>
+                        {item.details.designSerialNumber && (
+                          <div><strong>Design Serial:</strong> {item.details.designSerialNumber}</div>
+                        )}
+                        {item.details.customText && (
+                          <div style={{ gridColumn: '1 / -1' }}><strong>Instructions:</strong> "{item.details.customText}"</div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--b2c-navy)' }}>Quantity:</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = Math.max(1, Number(e.target.value) || 1);
+                              const updatedCart = cart.map((i) => {
+                                if (i.cartId === item.cartId) {
+                                  const nextTotal = getStandardTierTotal(i.product, val, i.details.printSide);
+                                  const nextUnitPrice = getStandardUnitPrice(i.product, val, i.details.printSide);
+                                  return {
+                                    ...i,
+                                    quantity: val,
+                                    total: nextTotal,
+                                    details: { ...i.details, costPerCopy: nextUnitPrice },
+                                  };
+                                }
+                                return i;
+                              });
+                              setCart(updatedCart);
+                            }}
+                            style={{ width: '80px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold' }}
+                          />
+                          <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                            ({money(item.details.costPerCopy)} / copy)
+                          </span>
+                        </div>
+
+                        <div>
+                          <strong style={{ fontSize: '20px', color: 'var(--b2c-gold)' }}>{money(item.total)}</strong>
+                        </div>
+                      </div>
+
+                      {/* Artwork File Upload Box */}
+                      <div style={{ marginTop: '15px' }}>
+                        <label htmlFor={`file-upload-cart-${item.cartId}`} style={{
+                          display: 'block',
+                          padding: '16px',
+                          border: item.file ? '1.5px solid #22c55e' : '1.5px dashed var(--b2c-gold)',
+                          borderRadius: '12px',
+                          textAlign: 'center',
+                          background: item.file ? '#f0fdf4' : 'rgba(201, 163, 94, 0.04)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}>
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: item.file ? '#16a34a' : 'var(--b2c-navy)', display: 'block' }}>
+                            {item.file ? '✓ Artwork File Selected' : '📁 Click to Upload Artwork File'}
+                          </span>
+                          <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>Accepts .cdr, .zip, .png, .jpg, .jpeg</span>
+                          <input
+                            id={`file-upload-cart-${item.cartId}`}
+                            type="file"
+                            accept={acceptedArtworkTypes}
+                            onChange={(e) => handleCartFileChange(item.cartId, e.target.files?.[0] || null)}
+                            style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                          />
+                        </label>
+
+                        {item.file && (
+                          <div style={{ fontSize: '12px', color: 'var(--b2c-navy)', marginTop: '8px', padding: '8px 12px', background: '#fff', border: '1px solid var(--line)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: '500' }}>{item.file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleCartFileChange(item.cartId, null)}
+                              style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                              Remove file
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right Column: Order Summary */}
+            <aside className="panel" style={{ padding: '24px', borderRadius: '16px', position: 'sticky', top: '100px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 20px', color: 'var(--b2c-navy)', borderBottom: '1px solid var(--line)', paddingBottom: '15px' }}>Order Summary</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
+                  <span style={{ color: 'var(--b2c-slate)' }}>Subtotal ({cart.length} items)</span>
+                  <strong style={{ color: 'var(--b2c-navy)' }}>{money(cartTotal)}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
+                  <span style={{ color: 'var(--b2c-slate)' }}>Estimated Delivery</span>
+                  <span style={{ color: 'var(--b2c-navy)', fontWeight: 'bold' }}>Free Shipping</span>
+                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '10px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px' }}>
+                  <span style={{ fontWeight: 'bold', color: 'var(--b2c-navy)' }}>Total amount</span>
+                  <strong style={{ color: 'var(--b2c-gold)', fontSize: '22px' }}>{money(cartTotal)}</strong>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--b2c-navy)' }}>Special Instructions / Note:</label>
+                <textarea
+                  value={customerNote}
+                  onChange={(e) => setCustomerNote(e.target.value)}
+                  placeholder="Enter courier, cutting, or special packaging requests..."
+                  style={{ width: '100%', height: '100px', padding: '10px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--line)', outline: 'none', resize: 'vertical' }}
+                />
+              </div>
+
+              <button
+                className="btn primary wide"
+                style={{ width: '100%', padding: '14px', fontSize: '15px', borderRadius: '8px', background: 'var(--b2c-gold)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201, 163, 94, 0.2)' }}
+                onClick={async () => {
+                  if (cart.some(item => !item.file)) {
+                    alert('Please upload artwork file for every personalized product in your cart.');
+                    return;
+                  }
+                  await handleSendCartInquiry(customerNote);
+                }}
+                disabled={inquiryLoading}
+              >
+                {inquiryLoading ? 'Submitting Order...' : 'Place B2C Order'}
+              </button>
+            </aside>
+          </div>
+        )}
+      </main>
+
       <StoreFooter user={user} />
     </div>
   );
@@ -5101,6 +5665,7 @@ export default function B2CApp() {
   const isContactPage = pathname.startsWith('/contact-us');
   const isColorPrintShop = pathname.startsWith('/b2c/color-print');
   const isProductsPage = pathname.startsWith('/products');
+  const isCartPage = pathname.startsWith('/cart');
   const productMatch = pathname.match(/^\/product\/([^/]+)/);
   const isProductDetailsPage = !!productMatch;
   const urlProductId = productMatch ? productMatch[1] : null;
@@ -5114,6 +5679,9 @@ export default function B2CApp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [inquiryLoading, setInquiryLoading] = useState(false);
   const [policy, setPolicy] = useState(defaultPolicy);
   const [policyLoading, setPolicyLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -5165,6 +5733,91 @@ export default function B2CApp() {
     }
 
     return data;
+  };
+
+  // Initialize cart when user becomes available
+  useEffect(() => {
+    if (user) {
+      try {
+        const saved = localStorage.getItem(`b2c_cart_${user.id}`);
+        if (saved) {
+          setCart(JSON.parse(saved).map((item) => ({ ...item, file: null })));
+        } else {
+          setCart([]);
+        }
+      } catch {
+        setCart([]);
+      }
+    } else {
+      setCart([]);
+    }
+  }, [user?.id]);
+
+  // Sync B2C standard product cart to local storage when cart state updates
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(
+        `b2c_cart_${user.id}`,
+        JSON.stringify(cart.map(({ file, ...item }) => item))
+      );
+    }
+  }, [cart, user?.id]);
+
+  const handleRemoveFromCart = (cartId) => {
+    setCart(prev => prev.filter(item => item.cartId !== cartId));
+  };
+
+  const handleCartFileChange = (cartId, file) => {
+    setCart((current) =>
+      current.map((item) => (
+        item.cartId === cartId
+          ? { ...item, file: file || null }
+          : item
+      ))
+    );
+  };
+
+  const handleSendCartInquiry = async (customerNote = '') => {
+    if (!user.phone || !user.email || !user.address) {
+      alert('Please complete your profile with phone, email, and address before placing an order.');
+      window.location.href = '/profile';
+      return;
+    }
+
+    setInquiryLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('customer_note', customerNote);
+      formData.append('items_json', JSON.stringify(
+        cart.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          print_side: item.details.printSide,
+          gsm: null,
+          design_serial_number: item.details.designSerialNumber || null,
+          custom_text: item.details.customText || null,
+        }))
+      ));
+
+      cart.forEach((item, index) => {
+        if (item.file) {
+          formData.append(`files[${index}]`, item.file);
+        }
+      });
+
+      const response = await api('/api/b2c/orders', {
+        method: 'POST',
+        body: formData,
+      });
+      setCart([]);
+      setIsCartOpen(false);
+      alert(`Order ${response.order?.order_number || ''} submitted successfully.`);
+      window.location.href = '/my-orders';
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setInquiryLoading(false);
+    }
   };
 
   async function checkUser() {
@@ -5442,6 +6095,25 @@ export default function B2CApp() {
           onMarkAllNotificationsRead={markAllNotificationsRead}
         />
       );
+    } else if (isCartPage) {
+      pageContent = (
+        <CustomerCartPage
+          user={user}
+          onLogout={handleLogout}
+          api={api}
+          cart={cart}
+          setCart={setCart}
+          handleRemoveFromCart={handleRemoveFromCart}
+          handleCartFileChange={handleCartFileChange}
+          handleSendCartInquiry={handleSendCartInquiry}
+          inquiryLoading={inquiryLoading}
+          notifications={notifications}
+          unreadCount={unreadNotifications}
+          onMarkNotificationRead={markNotificationRead}
+          onMarkAllNotificationsRead={markAllNotificationsRead}
+          openCustomerLogin={() => setMode('login')}
+        />
+      );
     } else if (isProductsPage) {
       pageContent = (
         <CustomerProductsPage
@@ -5454,6 +6126,7 @@ export default function B2CApp() {
           unreadCount={unreadNotifications}
           onMarkNotificationRead={markNotificationRead}
           onMarkAllNotificationsRead={markAllNotificationsRead}
+          cart={cart}
         />
       );
     } else if (isProductDetailsPage) {
@@ -5469,6 +6142,12 @@ export default function B2CApp() {
           onMarkNotificationRead={markNotificationRead}
           onMarkAllNotificationsRead={markAllNotificationsRead}
           productId={urlProductId}
+          cart={cart}
+          setCart={setCart}
+          handleRemoveFromCart={handleRemoveFromCart}
+          handleCartFileChange={handleCartFileChange}
+          handleSendCartInquiry={handleSendCartInquiry}
+          inquiryLoading={inquiryLoading}
         />
       );
     } else {
@@ -5483,6 +6162,14 @@ export default function B2CApp() {
           unreadCount={unreadNotifications}
           onMarkNotificationRead={markNotificationRead}
           onMarkAllNotificationsRead={markAllNotificationsRead}
+          cart={cart}
+          setCart={setCart}
+          isCartOpen={isCartOpen}
+          setIsCartOpen={setIsCartOpen}
+          handleRemoveFromCart={handleRemoveFromCart}
+          handleCartFileChange={handleCartFileChange}
+          handleSendCartInquiry={handleSendCartInquiry}
+          inquiryLoading={inquiryLoading}
         />
       );
     }
@@ -5540,6 +6227,27 @@ export default function B2CApp() {
     );
   }
 
+  if (isCartPage) {
+    return (
+      <CustomerCartPage
+        user={null}
+        onLogout={handleLogout}
+        api={api}
+        cart={cart}
+        setCart={setCart}
+        handleRemoveFromCart={handleRemoveFromCart}
+        handleCartFileChange={handleCartFileChange}
+        handleSendCartInquiry={handleSendCartInquiry}
+        inquiryLoading={inquiryLoading}
+        notifications={notifications}
+        unreadCount={unreadNotifications}
+        onMarkNotificationRead={markNotificationRead}
+        onMarkAllNotificationsRead={markAllNotificationsRead}
+        openCustomerLogin={() => { window.location.href = '/'; }}
+      />
+    );
+  }
+
   if (isProductsPage) {
     return (
       <CustomerProductsPage
@@ -5553,6 +6261,7 @@ export default function B2CApp() {
         onMarkNotificationRead={markNotificationRead}
         onMarkAllNotificationsRead={markAllNotificationsRead}
         openCustomerLogin={() => { window.location.href = '/'; }}
+        cart={cart}
       />
     );
   }
@@ -5571,6 +6280,12 @@ export default function B2CApp() {
         onMarkAllNotificationsRead={markAllNotificationsRead}
         openCustomerLogin={() => { window.location.href = '/'; }}
         productId={urlProductId}
+        cart={cart}
+        setCart={setCart}
+        handleRemoveFromCart={handleRemoveFromCart}
+        handleCartFileChange={handleCartFileChange}
+        handleSendCartInquiry={handleSendCartInquiry}
+        inquiryLoading={inquiryLoading}
       />
     );
   }
@@ -5684,6 +6399,106 @@ function CustomerColorPrintShopPage({
 
   // Filter category
   const [selectedCatFilter, setSelectedCatFilter] = useState('All');
+
+  const printSideLabels = {
+    front: 'Front Only',
+    both: 'Front & Back',
+    front_back: 'Front & Back',
+    single: 'Front Only',
+    double: 'Front & Back',
+  };
+
+  const PRESET_THEMES = [
+    { // Sky Blue (Default / general)
+      primary: '#0ea5e9',
+      primaryHover: '#0284c7',
+      glow: 'rgba(14, 165, 233, 0.12)',
+      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%)',
+      bgLight: '#f0f9ff',
+      text: '#0369a1',
+      borderAccent: '#bae6fd'
+    },
+    { // Purple / Magenta (Color products)
+      primary: '#d946ef',
+      primaryHover: '#c026d3',
+      glow: 'rgba(217, 70, 239, 0.12)',
+      gradient: 'linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%)',
+      bgLight: '#fdf4ff',
+      text: '#86198f',
+      borderAccent: '#f5d0fe'
+    },
+    { // Indigo / Blue
+      primary: '#6366f1',
+      primaryHover: '#4f46e5',
+      glow: 'rgba(99, 102, 241, 0.12)',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
+      bgLight: '#eef2ff',
+      text: '#3730a3',
+      borderAccent: '#c7d2fe'
+    },
+    { // Emerald / Green
+      primary: '#10b981',
+      primaryHover: '#059669',
+      glow: 'rgba(16, 185, 129, 0.12)',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+      bgLight: '#ecfdf5',
+      text: '#065f46',
+      borderAccent: '#a7f3d0'
+    },
+    { // Amber / Orange
+      primary: '#f59e0b',
+      primaryHover: '#d97706',
+      glow: 'rgba(245, 158, 11, 0.12)',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+      bgLight: '#fffbeb',
+      text: '#92400e',
+      borderAccent: '#fde68a'
+    },
+    { // Rose / Red
+      primary: '#f43f5e',
+      primaryHover: '#e11d48',
+      glow: 'rgba(244, 63, 94, 0.12)',
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
+      bgLight: '#fff1f2',
+      text: '#9f1239',
+      borderAccent: '#fecdd3'
+    },
+    { // Teal
+      primary: '#14b8a6',
+      primaryHover: '#0d9488',
+      glow: 'rgba(20, 184, 166, 0.12)',
+      gradient: 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
+      bgLight: '#f0fdfa',
+      text: '#115e59',
+      borderAccent: '#99f6e4'
+    },
+    { // Slate / Dark Gray
+      primary: '#475569',
+      primaryHover: '#334155',
+      glow: 'rgba(71, 85, 105, 0.12)',
+      gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)',
+      bgLight: '#f8fafc',
+      text: '#1e293b',
+      borderAccent: '#e2e8f0'
+    }
+  ];
+
+  const getCategoryTheme = (name) => {
+    const norm = (name || '').toLowerCase().trim();
+    if (norm.includes('color')) {
+      return PRESET_THEMES[1];
+    }
+    if (norm.includes('black') || norm.includes('white') || norm.includes('b&w') || norm.includes('mono')) {
+      return PRESET_THEMES[7];
+    }
+
+    let hash = 0;
+    for (let i = 0; i < norm.length; i++) {
+      hash = norm.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % PRESET_THEMES.length;
+    return PRESET_THEMES[index];
+  };
 
   // Save cart to local storage
   useEffect(() => {
@@ -5838,191 +6653,241 @@ function CustomerColorPrintShopPage({
         onLogout={onLogout}
         currentPage="color-print"
         cartCount={cart.length}
-        onOpenCart={() => setCartStep(1)}
+        onOpenCart={() => { window.location.href = '/cart'; }}
         notifications={notifications}
         unreadCount={unreadCount}
         onMarkNotificationRead={onMarkNotificationRead}
         onMarkAllNotificationsRead={onMarkAllNotificationsRead}
       />
 
-      <main className="b2c-store-main b2c-color-print-container">
-        <div className="b2c-color-print-products">
-          <div className="b2c-shop-hero" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '30px', borderRadius: '16px', marginBottom: '30px' }}>
+      <main className="b2c-store-main shop-layout" style={{ maxWidth: '1650px', width: '100%', margin: '0 auto', padding: '30px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', flex: 1, minWidth: 0 }}>
+          <div className="b2c-shop-hero" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '30px', borderRadius: '16px', marginBottom: '10px' }}>
             <span className="b2c-pill" style={{ background: '#38bdf8', color: '#0f172a', fontWeight: 'bold' }}>Customization Color Print</span>
-            <h1 style={{ marginTop: '10px', fontSize: '28px' }}>Custom printing with best volume discounts</h1>
-            <p style={{ opacity: 0.8, fontSize: '14px', marginTop: '5px' }}>Upload your print designs, choose print copies and double-sided preferences, and see instant volume discounts.</p>
+            <h1 style={{ marginTop: '10px', fontSize: '28px', color: '#fff' }}>Custom printing with best volume discounts</h1>
+            <p style={{ opacity: 0.8, fontSize: '14px', marginTop: '5px', color: '#cbd5e1' }}>Upload your print designs, choose print copies and double-sided preferences, and see instant volume discounts.</p>
           </div>
 
           {notice && <div className="b2c-alert success">{notice}</div>}
           {error && <div className="b2c-alert error">{error}</div>}
 
           {/* Categories Tab Filter */}
-          <div className="b2c-categories-tabs" style={{ marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-            <button className={`b2c-filter-tab ${selectedCatFilter === 'All' ? 'active' : ''}`} onClick={() => setSelectedCatFilter('All')}>All Categories</button>
-            {categories.map(cat => (
-              <button key={cat.id} className={`b2c-filter-tab ${selectedCatFilter === cat.name ? 'active' : ''}`} onClick={() => setSelectedCatFilter(cat.name)}>{cat.name}</button>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+            <button
+              onClick={() => setSelectedCatFilter('All')}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '999px',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: selectedCatFilter === 'All' ? 'var(--blue)' : 'rgba(255, 255, 255, 0.72)',
+                border: selectedCatFilter === 'All' ? '1.5px solid var(--blue)' : '1.5px solid rgba(13, 20, 36, 0.08)',
+                color: selectedCatFilter === 'All' ? '#ffffff' : 'var(--muted)',
+                transition: 'all 0.25s ease',
+                outline: 'none',
+                boxShadow: selectedCatFilter === 'All' ? '0 4px 12px rgba(0, 0, 0, 0.1)' : 'none'
+              }}
+            >
+              All Categories
+            </button>
+            {categories.map(cat => {
+              const isActive = selectedCatFilter === cat.name;
+              const theme = getCategoryTheme(cat.name);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCatFilter(cat.name)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '999px',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    background: isActive ? theme.primary : 'rgba(255, 255, 255, 0.72)',
+                    border: isActive ? `1.5px solid ${theme.primary}` : '1.5px solid rgba(13, 20, 36, 0.08)',
+                    color: isActive ? '#ffffff' : 'var(--muted)',
+                    transition: 'all 0.25s ease',
+                    outline: 'none',
+                    boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.1)' : 'none'
+                  }}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
 
           {activeCategories.map(cat => {
             const catProducts = groupedProducts[cat.name] || [];
             if (!catProducts.length) return null;
+            const theme = getCategoryTheme(cat.name);
             return (
-              <section key={cat.id} className="b2c-admin-card" style={{ marginBottom: '30px' }}>
-                <div className="b2c-admin-card-head" style={{ borderBottom: '1px solid var(--line)', paddingBottom: '12px', marginBottom: '15px' }}>
-                  <h2 style={{ fontSize: '20px', color: 'var(--navy)' }}>{cat.name}</h2>
+              <section key={cat.id} className="panel" style={{ display: 'block', marginBottom: '30px', borderTop: `4px solid ${theme.primary}` }}>
+                <div className="panel-head" style={{ borderBottom: 'none', padding: '24px 28px 12px 28px' }}>
+                  <h2 style={{ color: theme.text }}>{cat.name} Products</h2>
+                  <p>Browse products and select copy quantities by color.</p>
                 </div>
-                <div className="b2c-color-print-desktop-table" style={{ overflowX: 'auto' }}>
-                  <table className="b2c-admin-table" style={{ width: '100%' }}>
-                    <thead>
-                      <tr>
-                        <th>Product Name</th>
-                        <th>Print Side</th>
-                        <th>Select Copies</th>
-                        <th style={{ textAlign: 'right' }}>Total Price</th>
-                        <th style={{ textAlign: 'right' }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {catProducts.map(product => {
-                        const currentCopies = chosenCopies[product.id] ?? product.print_copy;
-                        const currentSide = chosenSides[product.id] ?? 'front';
-                        const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
-                        const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
-                        const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
-                        const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
+                <div style={{ padding: '0 28px 28px' }}>
+                  <div className="b2c-color-print-desktop-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Product Name</th>
+                          <th>Print Side</th>
+                          <th>Select Copies</th>
+                          <th style={{ textAlign: 'right' }}>Total Price</th>
+                          <th style={{ textAlign: 'right' }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {catProducts.map(product => {
+                          const currentCopies = chosenCopies[product.id] ?? product.print_copy;
+                          const currentSide = chosenSides[product.id] ?? 'front';
+                          const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
+                          const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
+                          const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
 
-                        return (
-                          <tr key={product.id}>
-                            <td>
-                              <strong style={{ color: 'var(--navy)', fontSize: '15px' }}>{product.name}</strong>
-                            </td>
-                            <td>
-                              <select
-                                value={currentSide}
-                                onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
-                                style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none' }}
+                          return (
+                            <tr key={product.id}>
+                              <td data-label="Product Name">
+                                <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
+                              </td>
+                              <td data-label="Print Side">
+                                <select
+                                  value={currentSide}
+                                  onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
+                                  style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)', outline: 'none' }}
+                                >
+                                  <option value="front">Front Only</option>
+                                  {hasBoth && <option value="both">Front & Back</option>}
+                                </select>
+                              </td>
+                              <td data-label="Select Copies">
+                                <div className="copies-adjuster">
+                                  <button
+                                    type="button"
+                                    className="adjust-btn"
+                                    onClick={() => {
+                                      const val = Math.max(1, currentCopies - 1);
+                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                    }}
+                                  >
+                                    −
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={currentCopies}
+                                    onChange={e => {
+                                      const val = Math.max(1, Number(e.target.value) || 1);
+                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="adjust-btn"
+                                    onClick={() => {
+                                      const val = currentCopies + 1;
+                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td data-label="Total Price" style={{ textAlign: 'right' }}>
+                                <strong style={{ fontSize: '18px', color: 'var(--blue)', display: 'block' }}>{money(totalPrice)}</strong>
+                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
+                              </td>
+                              <td data-label="Action" style={{ textAlign: 'right' }}>
+                                <button
+                                  className="btn primary"
+                                  onClick={() => addToCart(product, currentCopies, currentSide)}
+                                  style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
+                                >
+                                  + Add to Cart
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile view cards */}
+                  <div className="b2c-color-print-mobile-cards">
+                    {catProducts.map(product => {
+                      const currentCopies = chosenCopies[product.id] ?? product.print_copy;
+                      const currentSide = chosenSides[product.id] ?? 'front';
+                      const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
+                      const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
+                      const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
+
+                      return (
+                        <div key={product.id} className="b2c-color-print-card-item">
+                          <div style={{ borderBottom: '1px solid var(--line)', paddingBottom: '8px', marginBottom: '4px' }}>
+                            <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
+                          </div>
+
+                          <div className="b2c-color-print-card-row">
+                            <span className="b2c-color-print-card-label">Print Side</span>
+                            <select
+                              value={currentSide}
+                              onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
+                              style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none' }}
+                            >
+                              <option value="front">Front Only</option>
+                              {hasBoth && <option value="both">Front & Back</option>}
+                            </select>
+                          </div>
+
+                          <div className="b2c-color-print-card-row">
+                            <span className="b2c-color-print-card-label">Select Copies</span>
+                            <div className="copies-adjuster">
+                              <button
+                                type="button"
+                                className="adjust-btn"
+                                onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, currentCopies - 1) }))}
                               >
-                                <option value="front">Front Only</option>
-                                {hasBoth && <option value="both">Front & Back</option>}
-                              </select>
-                            </td>
-                            <td>
-                              <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', borderRadius: '6px', overflow: 'hidden' }}>
-                                <button
-                                  type="button"
-                                  style={{ padding: '6px 12px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
-                                  onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, currentCopies - 1) }))}
-                                >
-                                  −
-                                </button>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={currentCopies}
-                                  onChange={e => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, Number(e.target.value) || 1) }))}
-                                  style={{ width: '60px', textAlign: 'center', border: 'none', outline: 'none', padding: '6px' }}
-                                />
-                                <button
-                                  type="button"
-                                  style={{ padding: '6px 12px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
-                                  onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: currentCopies + 1 }))}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min="1"
+                                value={currentCopies}
+                                onChange={e => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, Number(e.target.value) || 1) }))}
+                              />
+                              <button
+                                type="button"
+                                className="adjust-btn"
+                                onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: currentCopies + 1 }))}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="b2c-color-print-card-row" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '4px' }}>
+                            <div>
                               <strong style={{ fontSize: '16px', color: 'var(--blue)' }}>{money(totalPrice)}</strong>
                               <div style={{ color: 'var(--muted)', fontSize: '11px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</div>
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button
-                                className="b2c-btn-primary"
-                                style={{ padding: '8px 12px', fontSize: '12px' }}
-                                onClick={() => addToCart(product, currentCopies, currentSide)}
-                              >
-                                + Add to Cart
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile view cards */}
-                <div className="b2c-color-print-mobile-cards">
-                  {catProducts.map(product => {
-                    const currentCopies = chosenCopies[product.id] ?? product.print_copy;
-                    const currentSide = chosenSides[product.id] ?? 'front';
-                    const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
-                    const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
-                    const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
-                    const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
-
-                    return (
-                      <div key={product.id} className="b2c-color-print-card-item">
-                        <div style={{ borderBottom: '1px solid var(--line)', paddingBottom: '8px', marginBottom: '4px' }}>
-                          <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
-                        </div>
-
-                        <div className="b2c-color-print-card-row">
-                          <span className="b2c-color-print-card-label">Print Side</span>
-                          <select
-                            value={currentSide}
-                            onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
-                            style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none' }}
-                          >
-                            <option value="front">Front Only</option>
-                            {hasBoth && <option value="both">Front & Back</option>}
-                          </select>
-                        </div>
-
-                        <div className="b2c-color-print-card-row">
-                          <span className="b2c-color-print-card-label">Select Copies</span>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', borderRadius: '6px', overflow: 'hidden' }}>
+                            </div>
                             <button
-                              type="button"
-                              style={{ padding: '6px 12px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
-                              onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, currentCopies - 1) }))}
+                              className="btn primary"
+                              style={{ padding: '8px 14px', fontSize: '12px' }}
+                              onClick={() => addToCart(product, currentCopies, currentSide)}
                             >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              value={currentCopies}
-                              onChange={e => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, Number(e.target.value) || 1) }))}
-                              style={{ width: '50px', textAlign: 'center', border: 'none', outline: 'none', padding: '6px', fontSize: '13px' }}
-                            />
-                            <button
-                              type="button"
-                              style={{ padding: '6px 12px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
-                              onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: currentCopies + 1 }))}
-                            >
-                              +
+                              Add to Cart
                             </button>
                           </div>
                         </div>
-
-                        <div className="b2c-color-print-card-row" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '4px' }}>
-                          <div>
-                            <strong style={{ fontSize: '16px', color: 'var(--blue)' }}>{money(totalPrice)}</strong>
-                            <div style={{ color: 'var(--muted)', fontSize: '11px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</div>
-                          </div>
-                          <button
-                            className="b2c-btn-primary"
-                            style={{ padding: '8px 14px', fontSize: '12px' }}
-                            onClick={() => addToCart(product, currentCopies, currentSide)}
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </section>
             );
@@ -6030,90 +6895,48 @@ function CustomerColorPrintShopPage({
         </div>
 
         {/* Sidebar Cart panel */}
-        <aside className="b2c-color-print-aside">
+        <aside className="cart panel" style={{ position: 'sticky', top: '100px', width: '380px', flexShrink: 0 }}>
           {cart.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => setCartStep(1)}>
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  background: 'var(--blue)',
-                  color: '#fff'
-                }}>1</span>
-                <span style={{ fontSize: '13px', fontWeight: cartStep === 1 ? 'bold' : 'normal', color: 'var(--navy)' }}>Cart</span>
-              </div>
-              <div style={{ flex: 1, height: '2px', background: cartStep === 2 ? 'var(--blue)' : 'var(--line)', margin: '0 10px' }}></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  background: cartStep === 2 ? 'var(--blue)' : 'var(--line)',
-                  color: cartStep === 2 ? '#fff' : 'var(--muted)'
-                }}>2</span>
-                <span style={{ fontSize: '13px', fontWeight: cartStep === 2 ? 'bold' : 'normal', color: cartStep === 2 ? 'var(--navy)' : 'var(--muted)' }}>Artwork</span>
-              </div>
+            <div style={{ display: 'flex', gap: '8px', padding: '14px 24px', background: '#f8fafc', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: 'var(--blue)' }} title="Cart Selection"></div>
+              <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: cartStep === 2 ? 'var(--blue)' : '#cbd5e1' }} title="Uploads & Checkout"></div>
             </div>
           )}
 
           {cartStep === 1 ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--navy)', margin: 0 }}>Shopping Cart</h3>
+            <>
+              <div className="cart-head" style={{ padding: '20px 24px 15px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--navy)' }}>Shopping Cart</h2>
                 <span style={{ fontSize: '12px', background: 'var(--blue-bg)', color: 'var(--blue)', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>{cart.length} items</span>
               </div>
 
               {!cart.length ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 0' }}>Add custom products from the list.</div>
+                <div className="empty" style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 20px', fontSize: '14px' }}>
+                  Add custom products from the list.
+                </div>
               ) : (
-                <>
-                  <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ padding: '0 24px 24px' }}>
+                  <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', margin: '15px 0' }}>
                     {cart.map(item => (
-                      <div key={item.cartId} style={{ display: 'flex', gap: '10px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9', position: 'relative' }}>
+                      <div className="cart-item" key={item.cartId} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9', position: 'relative' }}>
                         <button
-                          style={{
-                            position: 'absolute',
-                            right: 0,
-                            top: 0,
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            background: '#f1f5f9',
-                            border: 'none',
-                            color: '#64748b',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            transition: 'all 0.2s'
-                          }}
+                          className="remove"
                           onClick={() => removeCart(item.cartId)}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}
+                          style={{ border: 'none', background: 'none', fontSize: '18px', color: '#cbd5e1', cursor: 'pointer', position: 'absolute', right: 0, top: 0 }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#cbd5e1'; }}
                           title="Remove item"
                         >
                           ×
                         </button>
                         <div style={{ flex: 1 }}>
-                          <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy)', paddingRight: '22px' }}>{item.name}</h4>
-                          <div style={{ color: 'var(--muted)', fontSize: '11px', marginTop: '2px' }}>
+                          <strong style={{ fontSize: '14px', color: 'var(--navy)', display: 'block', paddingRight: '20px' }}>{item.name}</strong>
+                          <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginTop: '2px' }}>
                             {item.print_copy} copies · {item.print_side === 'both' ? 'Double Sided' : 'Single Sided'}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                          </small>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ fontSize: '11px', color: 'var(--muted)', marginRight: '4px' }}>Packs:</span>
+                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Packs:</span>
                               <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', borderRadius: '4px', overflow: 'hidden', height: '24px' }}>
                                 <button
                                   type="button"
@@ -6139,99 +6962,101 @@ function CustomerColorPrintShopPage({
                     ))}
                   </div>
 
-                  <div style={{ marginTop: '20px', borderTop: '1px solid var(--line)', paddingTop: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                      <span>Subtotal:</span>
-                      <strong style={{ fontSize: '18px', color: 'var(--blue)' }}>{money(cartTotal)}</strong>
-                    </div>
-                    <button className="b2c-btn-primary" style={{ width: '100%' }} onClick={() => setCartStep(2)}>
-                      Next Step (Uploads)
-                    </button>
+                  <div className="cart-total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderTop: '1px solid var(--line)', marginBottom: '15px' }}>
+                    <span style={{ fontWeight: '500', color: 'var(--navy)' }}>Subtotal</span>
+                    <strong style={{ fontSize: '18px', color: 'var(--blue)' }}>{money(cartTotal)}</strong>
                   </div>
-                </>
+                  <button className="btn primary wide" style={{ width: '100%' }} onClick={() => setCartStep(2)}>
+                    Next Step (Uploads) →
+                  </button>
+                </div>
               )}
-            </div>
+            </>
           ) : (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid var(--line)', paddingBottom: '10px' }}>
+            <>
+              <div className="cart-head" style={{ padding: '20px 24px 15px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--navy)' }}>Upload Artwork</h2>
                 <button
                   type="button"
-                  style={{ background: 'none', border: 'none', color: 'var(--blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                  className="btn ghost"
+                  style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid var(--line)', borderRadius: '6px', background: '#fff', cursor: 'pointer' }}
                   onClick={() => setCartStep(1)}
                 >
-                  ← Back to Cart
+                  ← Back
                 </button>
-                <h3 style={{ fontSize: '16px', color: 'var(--navy)' }}>Upload Artwork</h3>
               </div>
 
-              <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px', paddingRight: '4px' }}>
-                {cart.map((item, index) => (
-                  <div key={item.cartId} style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--line)', transition: 'border-color 0.2s' }}>
-                    <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--navy)', marginBottom: '3px' }}>{item.name}</h4>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px' }}>{item.print_copy} copies · {item.print_side === 'both' ? 'F&B' : 'Front'} · {item.packs} pack(s)</div>
-                    
-                    <label style={{
-                      display: 'block',
-                      padding: '12px 8px',
-                      border: item.file ? '1px solid #22c55e' : '1px dashed #38bdf8',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      background: item.file ? '#f0fdf4' : '#fff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}>
-                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: item.file ? '#16a34a' : 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        {item.file ? '✓ File Selected' : '📁 Upload Artwork File'}
-                      </div>
-                      <span style={{ fontSize: '10px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>Accepts .cdr, .zip, .png, .jpg, .jpeg</span>
-                      <input
-                        type="file"
-                        accept={acceptedArtworkTypes}
-                        onChange={e => updateCart(item.cartId, { file: e.target.files?.[0] || null })}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                    
-                    {item.file && (
-                      <div style={{ fontSize: '11px', color: 'var(--navy)', marginTop: '8px', padding: '6px', background: '#fff', border: '1px solid var(--line)', borderRadius: '4px', wordBreak: 'break-all', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>{item.file.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => updateCart(item.cartId, { file: null })}
-                          style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '15px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', color: 'var(--navy)' }}>Special Instructions / Note:</label>
-                <textarea
-                  value={customerNote}
-                  onChange={e => setCustomerNote(e.target.value)}
-                  placeholder="Enter courier, cutting, or special requests..."
-                  style={{ width: '100%', height: '80px', padding: '8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none', resize: 'vertical', marginBottom: '15px' }}
-                />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                  <span>Total amount:</span>
-                  <strong style={{ fontSize: '18px', color: 'var(--blue)' }}>{money(cartTotal)}</strong>
+              <div style={{ padding: '24px' }}>
+                <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px' }}>
+                  {cart.map((item, index) => (
+                    <div key={item.cartId} style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+                      <strong style={{ fontSize: '13px', color: 'var(--navy)', display: 'block', marginBottom: '2px' }}>{item.name}</strong>
+                      <small style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>{item.print_copy} copies · {item.print_side === 'both' ? 'F&B' : 'Front'} · {item.packs} pack(s)</small>
+                      
+                      <label htmlFor={`file-upload-color-${item.cartId}`} style={{
+                        display: 'block',
+                        padding: '12px 8px',
+                        border: item.file ? '1px solid #22c55e' : '1px dashed #38bdf8',
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        background: item.file ? '#f0fdf4' : '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: item.file ? '#16a34a' : 'var(--blue)', display: 'block' }}>
+                          {item.file ? '✓ File Selected' : '📁 Upload Artwork File'}
+                        </span>
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>Accepts .cdr, .zip, .png, .jpg, .jpeg</span>
+                        <input
+                          id={`file-upload-color-${item.cartId}`}
+                          type="file"
+                          accept={acceptedArtworkTypes}
+                          onChange={e => updateCart(item.cartId, { file: e.target.files?.[0] || null })}
+                          style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
+                        />
+                      </label>
+                      
+                      {item.file && (
+                        <div style={{ fontSize: '11px', color: 'var(--navy)', marginTop: '8px', padding: '6px', background: '#fff', border: '1px solid var(--line)', borderRadius: '4px', wordBreak: 'break-all', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{item.file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateCart(item.cartId, { file: null })}
+                            style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                <button
-                  className="b2c-btn-primary"
-                  style={{ width: '100%' }}
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                >
-                  {checkoutLoading ? 'Submitting Order...' : 'Place B2C Order'}
-                </button>
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '15px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', color: 'var(--navy)' }}>Special Instructions / Note:</label>
+                  <textarea
+                    value={customerNote}
+                    onChange={e => setCustomerNote(e.target.value)}
+                    placeholder="Enter courier, cutting, or special requests..."
+                    style={{ width: '100%', height: '80px', padding: '8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none', resize: 'vertical', marginBottom: '15px' }}
+                  />
+
+                  <div className="cart-total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <span style={{ fontWeight: '500', color: 'var(--navy)' }}>Total amount:</span>
+                    <strong style={{ fontSize: '18px', color: 'var(--blue)' }}>{money(cartTotal)}</strong>
+                  </div>
+
+                  <button
+                    className="btn primary wide"
+                    style={{ width: '100%', padding: '12px', fontSize: '14px', borderRadius: '8px', background: 'var(--blue)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+                    onClick={handleCheckout}
+                    disabled={checkoutLoading}
+                  >
+                    {checkoutLoading ? 'Submitting Order...' : 'Place B2C Order'}
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </aside>
       </main>
@@ -6241,7 +7066,7 @@ function CustomerColorPrintShopPage({
           type="button"
           className="b2c-mobile-floating-cart-bar"
           onClick={() => {
-            const asideElement = document.querySelector('.b2c-color-print-aside');
+            const asideElement = document.querySelector('.cart.panel');
             asideElement?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
