@@ -84,7 +84,10 @@ function B2CNotificationMenu({ notifications = [], unreadCount = 0, onMarkRead, 
   return (
     <div className="b2c-notification-menu" onClick={(event) => event.stopPropagation()}>
       <button type="button" className="b2c-notification-bell" onClick={() => setOpen((prev) => !prev)}>
-        <span>Bell</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="b2c-bell-icon">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
         {unreadCount > 0 ? <span className="b2c-notification-count">{unreadCount}</span> : null}
       </button>
       {open ? (
@@ -2861,9 +2864,9 @@ function CustomerHeader({
           <a href="/" className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
           <a href="/products" className={`b2c-orders-btn ${currentPage === 'products' ? 'active' : ''}`}>Products</a>
           <a href="/about-us" className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+          <a href="/my-orders" className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
           <a href="/printing-policy" className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
           <a href="/contact-us" className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
-          <a href="/my-orders" className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
           <a href="/profile" className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
           {onOpenCart ? (
             <button className="b2c-cart-toggle-btn" onClick={onOpenCart}>
@@ -2887,9 +2890,9 @@ function CustomerHeader({
         <a href="/" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'home' ? 'active' : ''}`}>Home</a>
         <a href="/products" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'products' ? 'active' : ''}`}>Products</a>
         <a href="/about-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'about' ? 'active' : ''}`}>About Us</a>
+        <a href="/my-orders" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
         <a href="/printing-policy" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'policy' ? 'active' : ''}`}>Printing Policy</a>
         <a href="/contact-us" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'contact' ? 'active' : ''}`}>Contact Us</a>
-        <a href="/my-orders" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'orders' ? 'active' : ''}`}>My Orders</a>
         <a href="/profile" onClick={() => setMenuOpen(false)} className={`b2c-orders-btn ${currentPage === 'profile' ? 'active' : ''}`}>Profile</a>
         {onOpenCart ? (
           <button className="b2c-cart-toggle-btn" onClick={() => { setMenuOpen(false); onOpenCart(); }}>
@@ -5474,11 +5477,11 @@ function CustomerCartPage({
             <a href="/products" className="btn primary">Browse Products</a>
           </div>
         ) : (
-          <div className="shop-layout" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '30px', alignItems: 'start' }}>
+          <div className="b2c-cart-layout">
             {/* Left Column: Cart Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {cart.map((item) => (
-                <div key={item.cartId} className="panel" style={{ padding: '24px', borderRadius: '16px', position: 'relative' }}>
+                <div key={item.cartId} className="b2c-cart-item-card">
                   <button
                     onClick={() => handleRemoveFromCart(item.cartId)}
                     style={{
@@ -5490,7 +5493,8 @@ function CustomerCartPage({
                       fontSize: '24px',
                       color: '#cbd5e1',
                       cursor: 'pointer',
-                      transition: 'color 0.2s'
+                      transition: 'color 0.2s',
+                      zIndex: 2
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = '#cbd5e1'; }}
@@ -5499,19 +5503,19 @@ function CustomerCartPage({
                     ×
                   </button>
 
-                  <div style={{ display: 'flex', gap: '20px', alignItems: 'start' }}>
+                  <div className="b2c-cart-item-flex">
                     <img
                       src={getProductImage(item.product)}
                       alt={item.product.name}
-                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '12px', border: '1px solid var(--line)' }}
+                      className="b2c-cart-item-image"
                     />
-                    <div style={{ flex: 1 }}>
+                    <div className="b2c-cart-item-content">
                       <span className="b2c-pill" style={{ background: 'var(--b2c-gold-soft)', color: '#946f31', border: 'none', fontSize: '11px', padding: '3px 8px', marginBottom: '6px', display: 'inline-block' }}>
                         {item.product.category}
                       </span>
                       <h3 style={{ margin: '0 0 8px', fontSize: '18px', color: 'var(--b2c-navy)' }}>{item.product.name}</h3>
                       
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '13px', color: 'var(--b2c-slate)', marginBottom: '15px' }}>
+                      <div className="b2c-cart-item-specs">
                         <div><strong>Print Side:</strong> {printSideLabels[item.details.printSide] || item.details.printSide}</div>
                         {item.details.designSerialNumber && (
                           <div><strong>Design Serial:</strong> {item.details.designSerialNumber}</div>
@@ -5521,8 +5525,8 @@ function CustomerCartPage({
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="b2c-cart-item-actions-row">
+                        <div className="b2c-cart-quantity-selector">
                           <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--b2c-navy)' }}>Quantity:</span>
                           <input
                             type="number"
@@ -5545,7 +5549,7 @@ function CustomerCartPage({
                               });
                               setCart(updatedCart);
                             }}
-                            style={{ width: '80px', padding: '6px', border: '1px solid var(--line)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold' }}
+                            className="b2c-cart-quantity-input"
                           />
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
                             ({money(item.details.costPerCopy)} / copy)
@@ -5602,7 +5606,7 @@ function CustomerCartPage({
             </div>
 
             {/* Right Column: Order Summary */}
-            <aside className="panel" style={{ padding: '24px', borderRadius: '16px', position: 'sticky', top: '100px' }}>
+            <aside className="panel cart" style={{ padding: '24px', borderRadius: '16px', position: 'sticky', top: '100px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 20px', color: 'var(--b2c-navy)', borderBottom: '1px solid var(--line)', paddingBottom: '15px' }}>Order Summary</h2>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
