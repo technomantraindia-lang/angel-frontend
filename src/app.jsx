@@ -728,6 +728,7 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
   const [chosenCopies, setChosenCopies] = useState({});
   const [chosenSides, setChosenSides] = useState({});
   const [chosenGsm, setChosenGsm] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   async function load() {
     try {
@@ -774,9 +775,9 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
     const copies = Number(copiesCount) || product.print_copy;
     const unitPrice = getTierPrice(product, copies, printSide, selectedGsm);
     setCart(current => {
-      const exists = current.some(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide && (i.gsm || '') === (selectedGsm || ''));
+      const exists = current.some(i => i.id === product.id && i.print_side === printSide && (i.gsm || '') === (selectedGsm || ''));
       if (exists) {
-        return current.map(i => i.id === product.id && i.print_copy === copies && i.print_side === printSide && (i.gsm || '') === (selectedGsm || '') ? { ...i, packs: i.packs + 1 } : i);
+        return current.map(i => i.id === product.id && i.print_side === printSide && (i.gsm || '') === (selectedGsm || '') ? { ...i, print_copy: copies, amount: unitPrice } : i);
       } else {
         return [...current, { ...product, print_copy: copies, print_side: printSide, gsm: selectedGsm || '', gsm_price: getSelectedGsmExtraPrice(product, selectedGsm), amount: unitPrice, packs: 1, file: null }];
       }
@@ -784,13 +785,13 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
     setNotice(`${product.name} (${copies} copies, ${printSide === 'both' ? 'Front & Back' : 'Front Only'}${selectedGsm ? `, ${selectedGsm}` : ''}) added to cart.`);
   }
 
-  function updateCart(id, printCopy, printSide, gsm, values) {
-    setCart(current => current.map(item => item.id === id && item.print_copy === printCopy && item.print_side === printSide && (item.gsm || '') === (gsm || '') ? { ...item, ...values } : item));
+  function updateCart(id, printSide, gsm, values) {
+    setCart(current => current.map(item => item.id === id && item.print_side === printSide && (item.gsm || '') === (gsm || '') ? { ...item, ...values } : item));
   }
 
-  function removeCart(id, printCopy, printSide, gsm) {
+  function removeCart(id, printSide, gsm) {
     setCart(current => {
-      const next = current.filter(item => !(item.id === id && item.print_copy === printCopy && item.print_side === printSide && (item.gsm || '') === (gsm || '')));
+      const next = current.filter(item => !(item.id === id && item.print_side === printSide && (item.gsm || '') === (gsm || '')));
       if (next.length === 0) setCartStep(1);
       return next;
     });
@@ -838,111 +839,164 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
             </div>
           </section>
         ) : (
-          Object.keys(groupedProducts).map(catName => {
-            const catProducts = groupedProducts[catName];
-            const theme = getCategoryTheme(catName);
-            return (
-              <section key={catName} className="panel" style={{ display: 'block', marginBottom: '30px', borderTop: `4px solid ${theme.primary}` }}>
-                <div className="panel-head" style={{ borderBottom: 'none', padding: '24px 28px 12px 28px' }}>
-                  <h2 style={{ color: theme.text }}>{catName} Products</h2>
-                  <p>Browse products and select copy quantities by color.</p>
-                </div>
-                <div style={{ padding: '0 28px 28px' }}>
-                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Product Name</th>
-                          <th>Print Side</th>
-                          <th>Base Price</th>
-                          <th>Select Copies</th>
-                          <th style={{ textAlign: 'right' }}>Total Price</th>
-                          <th style={{ textAlign: 'right' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {catProducts.map(product => {
-                          const currentCopies = chosenCopies[product.id] ?? product.print_copy;
-                          const currentSide = chosenSides[product.id] ?? 'front';
-                          const totalPrice = getTierPrice(product, currentCopies, currentSide, '');
-                          const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
-                          const basePriceDisplay = currentSide === 'both' ? product.front_back_amount : product.amount;
-                          const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
+          <>
+            {/* Categories Tab Filter */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+              <button
+                onClick={() => setSelectedCategory('All')}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '999px',
+                  fontFamily: 'inherit',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: selectedCategory === 'All' ? 'var(--blue)' : 'rgba(255, 255, 255, 0.72)',
+                  border: selectedCategory === 'All' ? '1.5px solid var(--blue)' : '1.5px solid rgba(13, 20, 36, 0.08)',
+                  color: selectedCategory === 'All' ? '#ffffff' : 'var(--muted)',
+                  transition: 'all 0.25s ease',
+                  outline: 'none',
+                  boxShadow: selectedCategory === 'All' ? '0 4px 12px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
+              >
+                All Categories
+              </button>
+              {Object.keys(groupedProducts).map(catName => {
+                const isActive = selectedCategory === catName;
+                const theme = getCategoryTheme(catName);
+                return (
+                  <button
+                    key={catName}
+                    onClick={() => setSelectedCategory(catName)}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '999px',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      background: isActive ? theme.primary : 'rgba(255, 255, 255, 0.72)',
+                      border: isActive ? `1.5px solid ${theme.primary}` : '1.5px solid rgba(13, 20, 36, 0.08)',
+                      color: isActive ? '#ffffff' : 'var(--muted)',
+                      transition: 'all 0.25s ease',
+                      outline: 'none',
+                      boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.1)' : 'none'
+                    }}
+                  >
+                    {catName}
+                  </button>
+                );
+              })}
+            </div>
 
-                          return (
-                            <tr key={product.id}>
-                              <td data-label="Product Name">
-                                <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
-                              </td>
-                              <td data-label="Print Side">
-                                <select
-                                  value={currentSide}
-                                  onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
-                                  style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)' }}
-                                >
-                                  <option value="front">Front Only</option>
-                                  {hasBoth && <option value="both">Front & Back</option>}
-                                </select>
-                              </td>
-                              <td data-label="Base Price" style={{ color: 'var(--ink)', fontWeight: '600' }}>
-                                {money(basePriceDisplay)} / copy
-                              </td>
-                              <td data-label="Select Copies">
-                                <div className="copies-adjuster">
-                                  <button
-                                    type="button"
-                                    className="adjust-btn"
-                                    onClick={() => {
-                                      const val = Math.max(1, currentCopies - 1);
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
-                                    }}
-                                  >
-                                    −
-                                  </button>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={currentCopies}
-                                    onChange={e => {
-                                      const val = Math.max(1, Number(e.target.value) || 1);
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="adjust-btn"
-                                    onClick={() => {
-                                      const val = currentCopies + 1;
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
-                                    }}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </td>
-                              <td data-label="Total Price" style={{ textAlign: 'right' }}>
-                                <strong style={{ fontSize: '18px', color: 'var(--blue)', display: 'block' }}>{money(totalPrice)}</strong>
-                                <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
-                              </td>
-                              <td data-label="Action" style={{ textAlign: 'right' }}>
-                                <button
-                                  className="btn primary"
-                                  onClick={() => addToCart(product, currentCopies, currentSide, '')}
-                                  style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
-                                >
-                                  + Add to Cart
-                                </button>
-                              </td>
+            {(() => {
+              const activeCats = selectedCategory === 'All' ? Object.keys(groupedProducts) : [selectedCategory].filter(Boolean);
+              return activeCats.map(catName => {
+                const catProducts = groupedProducts[catName];
+                if (!catProducts || !catProducts.length) return null;
+                const theme = getCategoryTheme(catName);
+                return (
+                  <section key={catName} className="panel" style={{ display: 'block', marginBottom: '30px', borderTop: `4px solid ${theme.primary}` }}>
+                    <div className="panel-head" style={{ borderBottom: 'none', padding: '24px 28px 12px 28px' }}>
+                      <h2 style={{ color: theme.text }}>{catName} Products</h2>
+                      <p>Browse products and select copy quantities by color.</p>
+                    </div>
+                    <div style={{ padding: '0 28px 28px' }}>
+                      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <table className="admin-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Print Side</th>
+                              <th>Select Copies</th>
+                              <th style={{ textAlign: 'right' }}>Total Price</th>
+                              <th style={{ textAlign: 'right' }}>Action</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </section>
-            );
-          })
+                          </thead>
+                          <tbody>
+                            {catProducts.map(product => {
+                              const currentCopies = chosenCopies[product.id] ?? product.print_copy;
+                              const currentSide = chosenSides[product.id] ?? 'front';
+                              const totalPrice = getTierPrice(product, currentCopies, currentSide, '');
+                              const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
+                              const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
+
+                              return (
+                                <tr key={product.id}>
+                                  <td data-label="Product Name">
+                                    <strong style={{ color: 'var(--navy)', fontSize: '16px' }}>{product.name}</strong>
+                                  </td>
+                                  <td data-label="Print Side">
+                                    <select
+                                      value={currentSide}
+                                      onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
+                                      style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)' }}
+                                    >
+                                      <option value="front">Front Only</option>
+                                      {hasBoth && <option value="both">Front & Back</option>}
+                                    </select>
+                                  </td>
+                                  <td data-label="Select Copies">
+                                    <div className="copies-adjuster">
+                                      <button
+                                        type="button"
+                                        className="adjust-btn"
+                                        onClick={() => {
+                                          const val = Math.max(1, currentCopies - 1);
+                                          setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                          setCart(current => current.map(i => i.id === product.id && i.print_side === currentSide ? { ...i, print_copy: val, amount: getTierPrice(product, val, currentSide, i.gsm) } : i));
+                                        }}
+                                      >
+                                        −
+                                      </button>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={currentCopies}
+                                        onChange={e => {
+                                          const val = Math.max(1, Number(e.target.value) || 1);
+                                          setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                          setCart(current => current.map(i => i.id === product.id && i.print_side === currentSide ? { ...i, print_copy: val, amount: getTierPrice(product, val, currentSide, i.gsm) } : i));
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="adjust-btn"
+                                        onClick={() => {
+                                          const val = currentCopies + 1;
+                                          setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                          setCart(current => current.map(i => i.id === product.id && i.print_side === currentSide ? { ...i, print_copy: val, amount: getTierPrice(product, val, currentSide, i.gsm) } : i));
+                                        }}
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </td>
+                                  <td data-label="Total Price" style={{ textAlign: 'right' }}>
+                                    <strong style={{ fontSize: '18px', color: 'var(--blue)', display: 'block' }}>{money(totalPrice)}</strong>
+                                    <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentCopies} copies · {money(perCopyPrice)} / copy</small>
+                                  </td>
+                                  <td data-label="Action" style={{ textAlign: 'right' }}>
+                                    <button
+                                      className="btn primary"
+                                      onClick={() => addToCart(product, currentCopies, currentSide, '')}
+                                      style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
+                                    >
+                                      + Add to Cart
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </section>
+                );
+              });
+            })()}
+          </>
         )}
       </div>
       <aside className="cart panel">
@@ -956,12 +1010,17 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
           <>
             <div className="cart-head"><h2>Shopping Cart</h2><span>{cart.length} items</span></div>
             {!cart.length && <div className="empty">Add products from the price list.</div>}
-            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`}>
-              <button className="remove" onClick={() => removeCart(item.id, item.print_copy, item.print_side, item.gsm)}>×</button>
+            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_side}-${item.gsm || 'standard'}`}>
+              <button className="remove" onClick={() => removeCart(item.id, item.print_side, item.gsm)}>×</button>
               <strong>{item.name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
-              <small>{item.print_copy} copies · {money(item.amount)} per set{item.gsm ? ` · ${item.gsm}` : ''}</small>
-              <label>Packs<input type="number" min="1" value={item.packs} onChange={e => updateCart(item.id, item.print_copy, item.print_side, item.gsm, { packs: Math.max(1, Number(e.target.value) || 1) })} /></label>
-              <b>{money(Number(item.amount) * item.packs)}</b>
+              <label>Copies<input type="number" min="1" value={item.print_copy} onChange={e => {
+                const val = Math.max(1, Number(e.target.value) || 1);
+                const originalProduct = products.find(p => p.id === item.id) || item;
+                const newPrice = getTierPrice(originalProduct, val, item.print_side, item.gsm);
+                updateCart(item.id, item.print_side, item.gsm, { print_copy: val, amount: newPrice });
+                setChosenCopies(prev => ({ ...prev, [item.id]: val }));
+              }} /></label>
+              <b>{money(Number(item.amount))}</b>
             </div>)}
             {cart.length > 0 && <>
               <div className="cart-total" style={{ marginTop: '20px', marginBottom: '15px' }}><span>Subtotal</span><strong>{money(total)}</strong></div>
@@ -974,13 +1033,13 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
               <h2>Upload & Details</h2>
               <button className="btn ghost" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => setCartStep(1)}>← Back</button>
             </div>
-            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ borderBottom: '1px solid var(--line)', padding: '18px 24px', display: 'block', background: '#fff' }}>
+            {cart.map(item => <div className="cart-item" key={`${item.id}-${item.print_side}-${item.gsm || 'standard'}`} style={{ borderBottom: '1px solid var(--line)', padding: '18px 24px', display: 'block', background: '#fff' }}>
               <strong style={{ display: 'block', marginBottom: '4px' }}>{item.name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></strong>
-              <small style={{ display: 'block', marginBottom: '12px' }}>{item.print_copy} copies · {item.packs} set(s) · {money(Number(item.amount) * item.packs)}{item.gsm ? ` · ${item.gsm}` : ''}</small>
-              <label htmlFor={`file-upload-${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`} style={{ display: 'block', padding: '16px 12px', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', textAlign: 'center', cursor: 'pointer' }}>
+              <small style={{ display: 'block', marginBottom: '12px' }}>{item.print_copy} copies · {money(Number(item.amount))} per set{item.gsm ? ` · ${item.gsm}` : ''}</small>
+              <label htmlFor={`file-upload-${item.id}-${item.print_side}-${item.gsm || 'standard'}`} style={{ display: 'block', padding: '16px 12px', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc', textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--muted)', fontWeight: 'bold', marginBottom: '6px' }}>📁 Choose Artwork File (.cdr, .jpg, .jpeg, .png, .zip)</span>
                 <input
-                  id={`file-upload-${item.id}-${item.print_copy}-${item.print_side}-${item.gsm || 'standard'}`}
+                  id={`file-upload-${item.id}-${item.print_side}-${item.gsm || 'standard'}`}
                   type="file"
                   accept=".cdr,.jpg,.jpeg,.png,.zip"
                   style={{ display: 'none' }}
@@ -991,11 +1050,11 @@ function DealerPortal({ user, refreshUser, unreadNotifications = 0 }) {
                       if (!['cdr', 'jpg', 'jpeg', 'png', 'zip'].includes(ext)) {
                         alert('Only .cdr, .jpg, .jpeg, .png, and .zip files are allowed.');
                         e.target.value = null;
-                        updateCart(item.id, item.print_copy, item.print_side, item.gsm, { file: null });
+                        updateCart(item.id, item.print_side, item.gsm, { file: null });
                         return;
                       }
                     }
-                    updateCart(item.id, item.print_copy, item.print_side, item.gsm, { file: file || null });
+                    updateCart(item.id, item.print_side, item.gsm, { file: file || null });
                   }}
                 />
                 {item.file ? (
@@ -1155,7 +1214,7 @@ function B2BOrderDetailsModal({ order, onClose, showReceiptActions = false, onSh
                   <div className="b2b-order-item-top">
                     <div>
                       <strong>{item.product_name}</strong>
-                      <span>{item.category}</span>
+                      <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>Category: {item.category}</span>
                     </div>
                     <strong>{money(item.line_total)}</strong>
                   </div>
@@ -1163,14 +1222,11 @@ function B2BOrderDetailsModal({ order, onClose, showReceiptActions = false, onSh
                     <div><strong>Print Side</strong><span>{item.print_side === 'both' ? 'Front & Back' : 'Front Only'}</span></div>
                     <div><strong>Paper GSM</strong><span>{item.gsm || 'Standard'}</span></div>
                     <div><strong>Copies</strong><span>{item.print_copy}</span></div>
-                    <div><strong>Sets</strong><span>{item.packs}</span></div>
-                    <div><strong>Unit Price</strong><span>{money(item.unit_price)}</span></div>
                   </div>
                   {item.file_path ? (
                     <a
-                      href="#"
+                      href={`/portal/api/download/${item.id}`}
                       className="file-link b2b-order-file"
-                      onClick={(event) => forceDownload(event, `/storage/${item.file_path}`, item.original_filename || 'Artwork')}
                     >
                       Download {item.original_filename || 'Artwork'}
                     </a>
@@ -1273,7 +1329,7 @@ function B2COrderDetailsModal({ order, onClose }) {
                   <div className="b2b-order-item-top">
                     <div>
                       <strong>{item.product_name}</strong>
-                      {item.category_name && <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>{item.category_name}</span>}
+                      {item.category_name && <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Category: {item.category_name}</span>}
                       {!item.b2c_product_id && (
                         <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>Customize Color Print</span>
                       )}
@@ -1286,7 +1342,6 @@ function B2COrderDetailsModal({ order, onClose }) {
                     <div><strong>Quantity</strong><span>{item.quantity}</span></div>
                     {item.design_serial_number && <div><strong>Design Serial No</strong><span>{item.design_serial_number}</span></div>}
                     {item.finish && item.finish !== 'none' && <div><strong>Finish</strong><span>{finishLabels[item.finish] || item.finish}</span></div>}
-                    <div><strong>Unit Price</strong><span>{money(item.unit_price)}</span></div>
                   </div>
                   {item.custom_text && (
                     <div className="b2b-order-note" style={{ marginTop: '8px', padding: '8px' }}>
@@ -1296,9 +1351,8 @@ function B2COrderDetailsModal({ order, onClose }) {
                   )}
                   {item.file_path ? (
                     <a
-                      href="#"
+                      href={`/portal/api/b2c/download/${item.id}`}
                       className="file-link b2b-order-file"
-                      onClick={(event) => forceDownload(event, `/storage/${item.file_path}`, item.original_filename || 'Artwork')}
                       style={{ marginTop: '10px' }}
                     >
                       Download {item.original_filename || 'Artwork'}
@@ -1348,8 +1402,9 @@ function OrderHistory({ orders }) {
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
               <div>
                 <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
-                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                  ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set{item.gsm ? ` · ${item.gsm}` : ''})
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>Category: {item.category}</span>
+                <span style={{ fontSize: '12px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+                  ({item.print_copy} copies{item.gsm ? ` · ${item.gsm}` : ''})
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1357,8 +1412,7 @@ function OrderHistory({ orders }) {
                 {item.file_path ? (
                   <a
                     className="file-link"
-                    href="#"
-                    onClick={(e) => forceDownload(e, `/storage/${item.file_path}`, item.original_filename || "artwork")}
+                    href={`/portal/api/download/${item.id}`}
                     style={{
                       background: 'var(--blue2)',
                       color: 'var(--blue)',
@@ -1425,6 +1479,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
   const [inlineCategoryName, setInlineCategoryName] = useState('');
   const [inlineCategoryLoading, setInlineCategoryLoading] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [showDealerPassword, setShowDealerPassword] = useState({});
 
   const [flashSettings, setFlashSettings] = useState({
     dealer_flash_text: '',
@@ -1524,7 +1579,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
   };
 
   const filteredDealers = useMemo(() => {
-    return dealers.filter(d => 
+    return dealers.filter(d =>
       (d.name || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
       (d.email || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
       (d.phone || '').toLowerCase().includes(searchDealer.toLowerCase()) ||
@@ -1533,7 +1588,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
   }, [dealers, searchDealer]);
 
   const filteredHoldDealers = useMemo(() => {
-    return holdDealers.filter(d => 
+    return holdDealers.filter(d =>
       (d.name || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
       (d.email || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
       (d.phone || '').toLowerCase().includes(searchHoldDealer.toLowerCase()) ||
@@ -1545,7 +1600,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
     return products.filter(p => {
       const categoryMatch = selectedProductCategory === 'All' || p.category === selectedProductCategory;
       const searchMatch = (p.name || '').toLowerCase().includes(searchProduct.toLowerCase()) ||
-                          (p.category || '').toLowerCase().includes(searchProduct.toLowerCase());
+        (p.category || '').toLowerCase().includes(searchProduct.toLowerCase());
       return categoryMatch && searchMatch;
     });
   }, [products, searchProduct, selectedProductCategory]);
@@ -1577,7 +1632,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
   }, [orders, searchCancelledOrder]);
 
   const filteredStaff = useMemo(() => {
-    return staff.filter(s => 
+    return staff.filter(s =>
       (s.name || '').toLowerCase().includes(searchStaff.toLowerCase()) ||
       (s.email || '').toLowerCase().includes(searchStaff.toLowerCase())
     );
@@ -1709,6 +1764,25 @@ function AdminPanel({ unreadNotifications = 0 }) {
     try {
       const res = await api(`/admin/categories/${category.id}`, { method: 'DELETE' });
       setNotice(res.message || 'Category deleted successfully.');
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleEditCategory(category) {
+    const newName = window.prompt("Edit Category Name:", category.name);
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === category.name) return;
+
+    setError(''); setNotice('');
+    try {
+      await api(`/admin/categories/${category.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: trimmed })
+      });
+      setNotice('Category renamed successfully.');
       load();
     } catch (err) {
       setError(err.message);
@@ -2054,7 +2128,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
       </div>
       <table className="admin-table">
         <thead>
-          <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
+          <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Password</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
         </thead>
         <tbody>
           {filteredDealers.map(d => <tr key={d.id}>
@@ -2063,6 +2137,21 @@ function AdminPanel({ unreadNotifications = 0 }) {
               <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{d.email} · {d.phone}</small>
             </td>
             <td><strong style={{ color: 'var(--navy)' }}>{d.company_name}</strong></td>
+            <td>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>
+                  {showDealerPassword[d.id] ? (d.plain_password || 'N/A') : '••••••••'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDealerPassword(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748b' }}
+                  title={showDealerPassword[d.id] ? "Hide password" : "Show password"}
+                >
+                  {showDealerPassword[d.id] ? <IconEyeOff /> : <IconEye />}
+                </button>
+              </div>
+            </td>
             <td><StatusBadge status={d.approval_status} /></td>
             <td><span style={{ fontWeight: 'bold', color: d.wallet_balance > 0 ? 'var(--green)' : 'var(--muted)' }}>{money(d.wallet_balance)}</span></td>
             <td className="actions" style={{ justifyContent: 'flex-end' }}>
@@ -2095,12 +2184,12 @@ function AdminPanel({ unreadNotifications = 0 }) {
       </div>
       <table className="admin-table">
         <thead>
-          <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
+          <tr><th>Dealer Name / Email</th><th>Company Name</th><th>Password</th><th>Approval Status</th><th>Wallet Balance</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
         </thead>
         <tbody>
           {!filteredHoldDealers.length ? (
             <tr>
-              <td colSpan="5" style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>
+              <td colSpan="6" style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px' }}>
                 No dealers on hold or rejected to review.
               </td>
             </tr>
@@ -2111,6 +2200,21 @@ function AdminPanel({ unreadNotifications = 0 }) {
                 <small style={{ color: 'var(--muted)', fontSize: '12px' }}>{d.email} · {d.phone}</small>
               </td>
               <td><strong style={{ color: 'var(--navy)' }}>{d.company_name}</strong></td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>
+                    {showDealerPassword[d.id] ? (d.plain_password || 'N/A') : '••••••••'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDealerPassword(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748b' }}
+                    title={showDealerPassword[d.id] ? "Hide password" : "Show password"}
+                  >
+                    {showDealerPassword[d.id] ? <IconEyeOff /> : <IconEye />}
+                  </button>
+                </div>
+              </td>
               <td><StatusBadge status={d.approval_status} /></td>
               <td><span style={{ fontWeight: 'bold', color: d.wallet_balance > 0 ? 'var(--green)' : 'var(--muted)' }}>{money(d.wallet_balance)}</span></td>
               <td className="actions" style={{ justifyContent: 'flex-end' }}>
@@ -2299,22 +2403,40 @@ function AdminPanel({ unreadNotifications = 0 }) {
               {categories.map(c => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--line)' }}>
                   <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--navy)' }}>{c.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(c)}
-                    style={{
-                      background: 'var(--red-bg)',
-                      color: 'var(--red)',
-                      border: '1px solid #fca5a5',
-                      borderRadius: '6px',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Delete
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleEditCategory(c)}
+                      style={{
+                        background: '#e4f1ff',
+                        color: '#1267b2',
+                        border: '1px solid #cfe7ff',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(c)}
+                      style={{
+                        background: 'var(--red-bg)',
+                        color: 'var(--red)',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -2370,7 +2492,6 @@ function AdminPanel({ unreadNotifications = 0 }) {
                   <span>{p.print_copy} copies</span>
                 )}
               </td>
-              <td><strong>{money(p.amount)}</strong></td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
                   <button style={{ background: '#f0f4f8', color: 'var(--navy)' }} onClick={() => quickEdit(p)}>Edit / Tiers</button>
@@ -2441,8 +2562,9 @@ function AdminPanel({ unreadNotifications = 0 }) {
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
                     <div>
                       <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
-                      <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
+                      <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>Category: {item.category}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+                        ({item.print_copy} copies{item.gsm ? ` · ${item.gsm}` : ''})
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -2450,8 +2572,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
                       {item.file_path ? (
                         <a
                           className="file-link"
-                          href="#"
-                          onClick={(e) => forceDownload(e, `/storage/${item.file_path}`, item.original_filename || "CDR/Artwork")}
+                          href={`/portal/api/download/${item.id}`}
                           style={{
                             background: 'var(--blue2)',
                             color: 'var(--blue)',
@@ -2619,8 +2740,9 @@ function AdminPanel({ unreadNotifications = 0 }) {
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fff', border: '1px solid var(--line)', borderRadius: '8px' }}>
                     <div>
                       <span style={{ fontWeight: '600', color: 'var(--navy)' }}>{item.product_name} <small style={{ fontWeight: 'normal', color: 'var(--blue)' }}>({item.print_side === 'both' ? 'Front & Back' : 'Front Only'})</small></span>
-                      <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
-                        ({item.print_copy * item.packs} total copies · {item.packs} set(s) · {money(item.unit_price)}/set)
+                      <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>Category: {item.category}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+                        ({item.print_copy} copies{item.gsm ? ` · ${item.gsm}` : ''})
                       </span>
                     </div>
                     <span style={{ fontWeight: 'bold', color: 'var(--blue)' }}>{money(item.line_total)}</span>
@@ -2779,7 +2901,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
         {/* Dealer B2B Settings */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px', border: '1px solid var(--line)', borderRadius: '12px', background: '#f8fafc' }}>
           <h3 style={{ margin: 0, color: 'var(--navy)', borderBottom: '1.5px solid var(--line)', paddingBottom: '8px' }}>Dealer Portal (B2B) Announcement</h3>
-          
+
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
             <input
               type="checkbox"
@@ -3103,8 +3225,8 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
                     <div>
                       <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--navy)', display: 'block' }}>
                         {activeModule === 'b2c'
-                          ? `${item.product_name} — ${item.quantity} copies`
-                          : `${item.product_name} — ${item.print_copy * item.packs} copies (${item.packs} set(s))`}
+                          ? `${item.product_name} (${item.category_name || 'N/A'}) — ${item.quantity} copies`
+                          : `${item.product_name} (${item.category || 'N/A'}) — ${item.print_copy} copies`}
                       </span>
                       {activeModule === 'b2c' && !item.b2c_product_id && (
                         <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '2px' }}>Customize Color Print</span>
@@ -3118,8 +3240,7 @@ function StaffModulePanel({ unreadNotifications = 0 }) {
                     {item.file_path ? (
                       <a
                         className="file-link"
-                        href="#"
-                        onClick={(e) => forceDownload(e, `/storage/${item.file_path}`, item.original_filename || 'Artwork')}
+                        href={activeModule === 'b2c' ? `/portal/api/b2c/download/${item.id}` : `/portal/api/download/${item.id}`}
                         style={{
                           background: 'var(--blue2)',
                           color: 'var(--blue)',
@@ -3342,10 +3463,10 @@ function App() {
                   />
                 </div>
               )}
-              
+
               <div className="b2b-flash-content">
                 <h2 className="b2b-flash-title">Notice</h2>
-                
+
                 {flashMessage.text && (
                   <ul className="b2b-flash-list">
                     {flashMessage.text.split('\n').map(l => l.trim()).filter(l => l.length > 0).map((line, idx) => {
@@ -3369,7 +3490,7 @@ function App() {
 
 const pathname = window.location.pathname;
 const isPortal = pathname.startsWith('/portal');
-const isB2C = ['/b2c', '/b2c-admin', '/my-orders', '/profile', '/printing-policy', '/about-us', '/contact-us']
+const isB2C = ['/b2c', '/b2c-admin', '/my-orders', '/profile', '/printing-policy', '/about-us', '/contact-us', '/products', '/product']
   .some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
 if (isPortal) {
