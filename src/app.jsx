@@ -318,7 +318,9 @@ function AuthPage({ onLogin }) {
       </form>
       {mode === 'login' && <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
         <p className="helper" style={{ margin: 0 }}>Dealer accounts can login only after admin approval.</p>
-        <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); }} style={{ background: 'none', border: 'none', color: 'var(--blue)', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}>Forgot Password?</button>
+        {form.email.trim().toLowerCase() === 'admin@angelprintshop.com' && (
+          <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice(''); }} style={{ background: 'none', border: 'none', color: 'var(--blue)', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}>Forgot Password?</button>
+        )}
       </div>}
       {mode === 'forgot' && <p className="helper" style={{ marginTop: '12px', marginBottom: 0 }}>
         Admin password reset mobile number: {ADMIN_RECOVERY_PHONE}. Dealers should use their own registered mobile number.
