@@ -59,6 +59,12 @@ const defaultPolicy = {
   title: 'Printing Policy',
   content: '',
 };
+const CUSTOMER_LOGIN_SECTION_ID = 'b2c-login';
+const CUSTOMER_LOGIN_QUERY_PARAM = 'customer-login';
+
+function redirectToCustomerLogin() {
+  window.location.href = `/?${CUSTOMER_LOGIN_QUERY_PARAM}=1#${CUSTOMER_LOGIN_SECTION_ID}`;
+}
 
 function downloadTextFile(content, filename, type = 'text/plain;charset=utf-8') {
   const blob = new Blob([content], { type });
@@ -430,6 +436,19 @@ function getStandardUnitPrice(product, quantity, printSide = 'front') {
   return roundMoneyValue(total / copies);
 }
 
+function getStandardTierOptionLabel(product, tier, printSide = 'front', recommendedQuantity = null, allTiers = []) {
+  const quantityLabel = `${tier.quantity} Copies`;
+  const totalPriceLabel = money(getStandardTierTotal(product, tier.quantity, printSide));
+  const isRecommended = recommendedQuantity === tier.quantity && allTiers.length > 1;
+  const maxQuantityLabelLength = allTiers.reduce((maxLength, currentTier) => {
+    const currentLength = `${currentTier.quantity} Copies`.length;
+    return Math.max(maxLength, currentLength);
+  }, quantityLabel.length);
+  const spacer = '\u00A0'.repeat(Math.max(4, (maxQuantityLabelLength - quantityLabel.length) + 6));
+
+  return `${quantityLabel}${spacer}${totalPriceLabel}${isRecommended ? '  - Recommended' : ''}`;
+}
+
 function getDefaultStandardQuantity(product, printSide = 'front') {
   return getStandardProductPricingTiers(product, printSide)[0]?.quantity || Math.max(1, Number(product?.print_copy || 1));
 }
@@ -446,6 +465,7 @@ function emptyB2CProductForm(categories = []) {
     description: '',
     print_side_mode: 'front_only',
     pricing_tiers: [createEmptyB2CPricingTier()],
+    allow_design_serial: false,
     sort_order: 0,
     remove_sample_pdf: false,
   };
@@ -705,6 +725,7 @@ function B2CAdminPanel({
             price: fallbackFrontPrice,
             front_back_price: fallbackFrontBackPrice,
           }],
+      allow_design_serial: Boolean(product.allow_design_serial),
       sort_order: product.sort_order || 0,
       remove_sample_pdf: false,
     });
@@ -885,6 +906,7 @@ function B2CAdminPanel({
       formData.append('print_side_mode', productForm.print_side_mode || 'front_only');
       formData.append('pricing_tiers_json', JSON.stringify(normalizedPricingTiers));
       formData.append('gsm_options_json', JSON.stringify([]));
+      formData.append('allow_design_serial', productForm.allow_design_serial ? '1' : '0');
       formData.append('sort_order', '0');
       formData.append('is_active', '1');
       formData.append('remove_sample_pdf', productForm.remove_sample_pdf ? '1' : '0');
@@ -1532,17 +1554,22 @@ function B2CAdminPanel({
                                   return (
                                     <tr key={`b2c-tier-${index}`}>
                                       <td>
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          value={tier.quantity}
-                                          onChange={(event) => updateProductPricingTier(index, 'quantity', event.target.value)}
-                                          placeholder="e.g. 100"
-                                          required
-                                        />
+                                        <div className="b2c-admin-tier-field">
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={tier.quantity}
+                                            onChange={(event) => updateProductPricingTier(index, 'quantity', event.target.value)}
+                                            placeholder="e.g. 100"
+                                            required
+                                          />
+                                          <span className="b2c-admin-tier-helper b2c-admin-tier-helper-hidden">
+                                            Per unit: {money(0)}
+                                          </span>
+                                        </div>
                                       </td>
                                       <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div className="b2c-admin-tier-field">
                                           <input
                                             type="number"
                                             min="0"
@@ -1552,14 +1579,14 @@ function B2CAdminPanel({
                                             placeholder="₹"
                                             required
                                           />
-                                          <span style={{ fontSize: '11px', color: 'var(--b2c-success)', fontWeight: '600' }}>
+                                          <span className="b2c-admin-tier-helper">
                                             Per unit: {money(frontUnitPrice)}
                                           </span>
                                         </div>
                                       </td>
                                       {productForm.print_side_mode !== 'front_only' && (
                                         <td>
-                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                          <div className="b2c-admin-tier-field">
                                             <input
                                               type="number"
                                               min="0"
@@ -1569,7 +1596,7 @@ function B2CAdminPanel({
                                               placeholder="₹"
                                               required
                                             />
-                                            <span style={{ fontSize: '11px', color: 'var(--b2c-success)', fontWeight: '600' }}>
+                                            <span className="b2c-admin-tier-helper">
                                               Per unit: {money(frontBackUnitPrice)}
                                             </span>
                                           </div>
@@ -1779,6 +1806,25 @@ function B2CAdminPanel({
                                   )}
                                 </div>
                               )}
+                            </div>
+
+                            <div style={{ borderTop: '1px solid rgba(13, 20, 36, 0.06)', paddingTop: '16px' }}>
+                              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(productForm.allow_design_serial)}
+                                  onChange={(event) => handleProductField('allow_design_serial', event.target.checked)}
+                                  style={{ marginTop: '3px' }}
+                                />
+                                <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--b2c-navy)' }}>
+                                    Require Design Serial Number
+                                  </span>
+                                  <span style={{ fontSize: '11px', color: 'var(--b2c-slate)', lineHeight: '1.5' }}>
+                                    Enable this when the sample PDF contains design serial numbers and the customer must enter one before ordering.
+                                  </span>
+                                </span>
+                              </label>
                             </div>
                           </div>
                         </div>
@@ -3198,6 +3244,13 @@ function CustomerHome({
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
+    const trimmedSerialNumber = designSerialNumber.trim();
+
+    if (selectedProduct.allow_design_serial && !trimmedSerialNumber) {
+      alert('Please enter the design serial number before adding this product to the cart.');
+      return;
+    }
+
     const finalQuantity = Number(quantity);
     const finalTotal = getStandardTierTotal(selectedProduct, finalQuantity, selectedPrintSide);
     const finalUnitPrice = getStandardUnitPrice(selectedProduct, finalQuantity, selectedPrintSide);
@@ -3213,7 +3266,7 @@ function CustomerHome({
         printSide: selectedPrintSide,
         gsm: null,
         gsmPrice: 0,
-        designSerialNumber: designSerialNumber.trim(),
+        designSerialNumber: trimmedSerialNumber,
       },
       file: artworkFile,
     };
@@ -3445,22 +3498,6 @@ function CustomerHome({
                     <h3>Product Details & Order</h3>
 
                     <div className="b2c-modal-field">
-                      <label>Order Quantity (Copies)</label>
-                      <select
-                        className="b2c-input-styled"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value))}
-                      >
-                        {qtyOptions.map((tier) => (
-                          <option key={tier.quantity} value={tier.quantity}>
-                            {tier.quantity} ({money(getStandardUnitPrice(selectedProduct, tier.quantity, selectedPrintSide))} / unit{recommendedQuantity === tier.quantity && qtyOptions.length > 1 ? ' - Recommended' : ''})
-                          </option>
-                        ))}
-                      </select>
-                      <span className="b2c-field-hint">Select a quantity package. The total base price for the selected quantity is shown below.</span>
-                    </div>
-
-                    <div className="b2c-modal-field">
                       <label>Print Side</label>
                       <select
                         className="b2c-input-styled"
@@ -3473,44 +3510,59 @@ function CustomerHome({
                       </select>
                     </div>
 
+                    <div className="b2c-modal-field">
+                      <label>Order Quantity (Copies)</label>
+                      <select
+                        className="b2c-input-styled"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        style={{ fontFamily: '"Courier New", monospace', fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {qtyOptions.map((tier) => (
+                          <option key={tier.quantity} value={tier.quantity}>
+                            {getStandardTierOptionLabel(selectedProduct, tier, selectedPrintSide, recommendedQuantity, qtyOptions)}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="b2c-field-hint">Select a quantity package. Each option shows the admin-set quantity on the left and the total package price on the right.</span>
+                    </div>
+
                     {selectedProduct.sample_pdf_url && (
                       <div className="b2c-modal-field">
-                        <label>Design Serial Number (Optional)</label>
+                        <label>Sample PDF</label>
+                        <a href={selectedProduct.sample_pdf_url} target="_blank" rel="noreferrer" className="b2c-card-link-btn b2c-modal-download-btn">
+                          Open Sample PDF
+                        </a>
+                        <span className="b2c-field-hint">Check the admin-uploaded PDF before entering the design serial number.</span>
+                      </div>
+                    )}
+
+                    {selectedProduct.allow_design_serial && (
+                      <div className="b2c-modal-field">
+                        <label>Design Serial Number</label>
                         <input
                           type="text"
                           className="b2c-input-styled"
                           value={designSerialNumber}
                           onChange={(e) => setDesignSerialNumber(e.target.value)}
                           placeholder="Enter design serial no. from the sample PDF"
+                          required
                         />
-                        <span className="b2c-field-hint">Use this only if you selected a design from the sample PDF.</span>
+                        <span className="b2c-field-hint">
+                          Enter the serial number from the sample PDF before placing the order.
+                          {selectedProduct.sample_pdf_url ? ' Open the sample PDF above if you need to check the design serial.' : ''}
+                        </span>
                       </div>
                     )}
 
                     <div className="b2c-modal-field">
-                      <label>Special Calligraphy or Text Instructions</label>
+                      <label>Add Instruction</label>
                       <textarea
                         placeholder="Enter names, wording, calligraphy style, or special typography requests..."
                         value={customText}
                         onChange={(e) => setCustomText(e.target.value)}
                         className="b2c-modal-textarea"
                       ></textarea>
-                    </div>
-
-                    <div className="b2c-modal-field">
-                      <label>Upload Artwork File (Optional)</label>
-                      <div className="b2c-modal-upload-box">
-                        <input
-                          type="file"
-                          accept={acceptedArtworkTypes}
-                          onChange={(e) => setArtworkFile(e.target.files?.[0] || null)}
-                          className="b2c-modal-file-input"
-                        />
-                        <span className="b2c-field-hint">Allowed formats: CDR, ZIP, JPG, PNG</span>
-                        <span className="b2c-modal-upload-name">
-                          {artworkFile ? `Selected: ${artworkFile.name}` : 'No artwork file selected'}
-                        </span>
-                      </div>
                     </div>
 
                     {/* Real-time Pricing Summary */}
@@ -4469,7 +4521,7 @@ function GuestExperience({
   const openCustomerLogin = () => {
     setMode('login');
     window.requestAnimationFrame(() => {
-      document.getElementById('b2c-login')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(CUSTOMER_LOGIN_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
@@ -4500,9 +4552,9 @@ function GuestExperience({
                 <h3>Custom Color Print</h3>
                 <p className="b2c-category-tagline">Upload your own design/artwork, customize sizes, copies, and order color prints with bulk discounts.</p>
                 <div className="b2c-category-action-row">
-                  <a href="/b2c/color-print" className="b2c-category-btn">
+                  <button type="button" className="b2c-category-btn" onClick={openCustomerLogin}>
                     Order Color Prints <IconArrowRight />
-                  </a>
+                  </button>
                 </div>
               </div>
             </article>
@@ -4550,7 +4602,7 @@ function GuestExperience({
 
         <AboutPreviewSection />
 
-        <section id="b2c-login" className="b2c-login-panel-section">
+        <section id={CUSTOMER_LOGIN_SECTION_ID} className="b2c-login-panel-section">
           <div className="b2c-section-head-centered">
             <span className="b2c-pill subtle">Customer Access</span>
             <h2>Login or create your Customer account</h2>
@@ -5027,8 +5079,14 @@ function CustomerProductDetailsPage({
       if (openCustomerLogin) {
         openCustomerLogin();
       } else {
-        window.location.href = '/';
+        redirectToCustomerLogin();
       }
+      return;
+    }
+
+    const trimmedSerialNumber = designSerialNumber.trim();
+    if (product.allow_design_serial && !trimmedSerialNumber) {
+      alert('Please enter the design serial number before adding this product to the cart.');
       return;
     }
 
@@ -5056,7 +5114,7 @@ function CustomerProductDetailsPage({
         printSide: selectedPrintSide,
         gsm: null,
         gsmPrice: 0,
-        designSerialNumber: designSerialNumber.trim(),
+        designSerialNumber: trimmedSerialNumber,
       },
       file: null,
     };
@@ -5106,7 +5164,7 @@ function CustomerProductDetailsPage({
                 <button 
                   type="button" 
                   className="b2c-fav-button" 
-                  style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'rgba(255,255,255,0.9)', width: '40px', height: '40px', borderRadius: '50%', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  style={{ display: 'none' }}
                   onClick={() => alert('Added to favorites!')}
                 >
                   ❤️
@@ -5152,22 +5210,6 @@ function CustomerProductDetailsPage({
                 </div>
 
                 <div className="b2c-modal-field">
-                  <label>Order Quantity (Copies)</label>
-                  <select
-                    className="b2c-input-styled"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                  >
-                    {qtyOptions.map((tier) => (
-                      <option key={tier.quantity} value={tier.quantity}>
-                        {tier.quantity} ({money(getStandardUnitPrice(product, tier.quantity, selectedPrintSide))} / unit{recommendedQuantity === tier.quantity && qtyOptions.length > 1 ? ' - Recommended' : ''})
-                      </option>
-                    ))}
-                  </select>
-                  <span className="b2c-field-hint">Select a quantity package. The total base price for the selected quantity is shown below.</span>
-                </div>
-
-                <div className="b2c-modal-field">
                   <label>Print Side</label>
                   <select
                     className="b2c-input-styled"
@@ -5180,27 +5222,60 @@ function CustomerProductDetailsPage({
                   </select>
                 </div>
 
+                <div className="b2c-modal-field">
+                  <label>Order Quantity (Copies)</label>
+                  <select
+                    className="b2c-input-styled"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    style={{ fontFamily: '"Courier New", monospace', fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {qtyOptions.map((tier) => (
+                      <option key={tier.quantity} value={tier.quantity}>
+                        {getStandardTierOptionLabel(product, tier, selectedPrintSide, recommendedQuantity, qtyOptions)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="b2c-field-hint">Select a quantity package. Each option shows the admin-set quantity on the left and the total package price on the right.</span>
+                </div>
+
                 {product.sample_pdf_url && (
                   <div className="b2c-modal-field">
-                    <label>Design Serial Number (Optional)</label>
+                    <label>Sample PDF</label>
+                    <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" className="b2c-card-link-btn b2c-modal-download-btn">
+                      Open Sample PDF
+                    </a>
+                    <span className="b2c-field-hint">Check the admin-uploaded PDF before entering the design serial number.</span>
+                  </div>
+                )}
+
+                {product.allow_design_serial && (
+                  <div className="b2c-modal-field">
+                    <label>Design Serial Number</label>
                     <input
                       type="text"
                       className="b2c-input-styled"
                       value={designSerialNumber}
                       onChange={(e) => setDesignSerialNumber(e.target.value)}
                       placeholder="Enter design serial no. from the sample PDF"
+                      required
                     />
                     <span className="b2c-field-hint">
-                      Use this only if you selected a design from the{' '}
-                      <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" style={{ color: 'var(--b2c-accent)', fontWeight: 'bold' }}>
-                        Sample PDF
-                      </a>.
+                      Enter the serial number from the sample PDF before ordering.
+                      {product.sample_pdf_url ? (
+                        <>
+                          {' '}Check the{' '}
+                          <a href={product.sample_pdf_url} target="_blank" rel="noreferrer" style={{ color: 'var(--b2c-accent)', fontWeight: 'bold' }}>
+                            Sample PDF
+                          </a>.
+                        </>
+                      ) : null}
                     </span>
                   </div>
                 )}
 
                 <div className="b2c-modal-field">
-                  <label>Special Calligraphy or Text Instructions</label>
+                  <label>Add Instruction</label>
                   <textarea
                     placeholder="Enter names, wording, calligraphy style, or special typography requests..."
                     value={customText}
@@ -5210,17 +5285,6 @@ function CustomerProductDetailsPage({
                   ></textarea>
                 </div>
 
-                <div className="b2c-modal-field">
-                  <label>Artwork File</label>
-                  <div style={{ background: '#f8fafc', border: '1px dashed var(--b2c-slate)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '13px', color: 'var(--b2c-slate)', display: 'block', marginBottom: '4px' }}>
-                      You can upload your artwork file directly in the cart drawer.
-                    </span>
-                    <span style={{ fontSize: '11px', color: 'var(--b2c-slate)', opacity: 0.8 }}>
-                      Accepts CDR, ZIP, PNG, JPG, JPEG formats.
-                    </span>
-                  </div>
-                </div>
 
                 <div className="b2c-price-summary-box" style={{ background: '#fff', border: '1px solid rgba(201,163,94,0.2)', padding: '20px', borderRadius: '16px', marginTop: '24px' }}>
                   <div className="b2c-summary-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
@@ -5302,31 +5366,8 @@ function CustomerProductDetailsPage({
                             {item.details.designSerialNumber && ` · Serial: ${item.details.designSerialNumber}`}
                           </small>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Qty:</span>
-                              <input 
-                                type="number" 
-                                min="1" 
-                                value={item.quantity} 
-                                onChange={e => {
-                                  const val = Math.max(1, Number(e.target.value) || 1);
-                                  const updatedCart = cart.map(i => {
-                                    if (i.cartId === item.cartId) {
-                                      const nextTotal = getStandardTierTotal(i.product, val, i.details.printSide);
-                                      const nextUnitPrice = getStandardUnitPrice(i.product, val, i.details.printSide);
-                                      return {
-                                        ...i,
-                                        quantity: val,
-                                        total: nextTotal,
-                                        details: { ...i.details, costPerCopy: nextUnitPrice }
-                                      };
-                                    }
-                                    return i;
-                                  });
-                                  setCart(updatedCart);
-                                }}
-                                style={{ width: '60px', padding: '2px 4px', fontSize: '12px', border: '1px solid var(--line)', borderRadius: '4px', textAlign: 'center' }}
-                              />
+                            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                              Fixed Qty: <strong style={{ color: 'var(--b2c-navy)' }}>{item.quantity}</strong>
                             </div>
                             <strong style={{ color: 'var(--b2c-gold)', fontSize: '14px' }}>{money(item.total)}</strong>
                           </div>
@@ -5468,7 +5509,7 @@ function CustomerCartPage({
           <div className="panel" style={{ padding: '40px', textAlign: 'center', borderRadius: '16px' }}>
             <h2 style={{ color: 'var(--b2c-navy)', marginBottom: '12px' }}>Please login to view your cart</h2>
             <p style={{ color: 'var(--b2c-slate)', marginBottom: '20px' }}>You need to be logged in to view items in your cart and complete your purchase.</p>
-            <button className="btn primary" onClick={openCustomerLogin || (() => { window.location.href = '/'; })}>Login Now</button>
+            <button className="btn primary" onClick={openCustomerLogin || redirectToCustomerLogin}>Login Now</button>
           </div>
         ) : !cart.length ? (
           <div className="panel" style={{ padding: '60px 40px', textAlign: 'center', borderRadius: '16px' }}>
@@ -5527,30 +5568,8 @@ function CustomerCartPage({
 
                       <div className="b2c-cart-item-actions-row">
                         <div className="b2c-cart-quantity-selector">
-                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--b2c-navy)' }}>Quantity:</span>
-                          <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const val = Math.max(1, Number(e.target.value) || 1);
-                              const updatedCart = cart.map((i) => {
-                                if (i.cartId === item.cartId) {
-                                  const nextTotal = getStandardTierTotal(i.product, val, i.details.printSide);
-                                  const nextUnitPrice = getStandardUnitPrice(i.product, val, i.details.printSide);
-                                  return {
-                                    ...i,
-                                    quantity: val,
-                                    total: nextTotal,
-                                    details: { ...i.details, costPerCopy: nextUnitPrice },
-                                  };
-                                }
-                                return i;
-                              });
-                              setCart(updatedCart);
-                            }}
-                            className="b2c-cart-quantity-input"
-                          />
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--b2c-navy)' }}>Fixed Quantity:</span>
+                          <span style={{ fontSize: '14px', color: 'var(--b2c-slate)' }}>{item.quantity} copies</span>
                           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
                             ({money(item.details.costPerCopy)} / copy)
                           </span>
@@ -5574,7 +5593,7 @@ function CustomerCartPage({
                           transition: 'all 0.2s'
                         }}>
                           <span style={{ fontSize: '13px', fontWeight: 'bold', color: item.file ? '#16a34a' : 'var(--b2c-navy)', display: 'block' }}>
-                            {item.file ? '✓ Artwork File Selected' : '📁 Click to Upload Artwork File'}
+                            {item.file ? '✓ Artwork File Selected' : '📁 Upload Artwork File'}
                           </span>
                           <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>Accepts .cdr, .zip, .png, .jpg, .jpeg</span>
                           <input
@@ -5767,6 +5786,22 @@ export default function B2CApp() {
     }
   }, [cart, user?.id]);
 
+  useEffect(() => {
+    if (loadingUser || user) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const shouldOpenLogin =
+      window.location.hash === `#${CUSTOMER_LOGIN_SECTION_ID}` ||
+      params.get(CUSTOMER_LOGIN_QUERY_PARAM) === '1';
+
+    if (!shouldOpenLogin) return;
+
+    setMode('login');
+    window.requestAnimationFrame(() => {
+      document.getElementById(CUSTOMER_LOGIN_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [loadingUser, user]);
+
   const handleRemoveFromCart = (cartId) => {
     setCart(prev => prev.filter(item => item.cartId !== cartId));
   };
@@ -5785,6 +5820,12 @@ export default function B2CApp() {
     if (!user.phone || !user.email || !user.address) {
       alert('Please complete your profile with phone, email, and address before placing an order.');
       window.location.href = '/profile';
+      return;
+    }
+
+    const missingRequiredSerial = cart.find((item) => item.product.allow_design_serial && !item.details.designSerialNumber?.trim());
+    if (missingRequiredSerial) {
+      alert(`Please enter the design serial number for ${missingRequiredSerial.product.name} before placing the order.`);
       return;
     }
 
@@ -6247,7 +6288,7 @@ export default function B2CApp() {
         unreadCount={unreadNotifications}
         onMarkNotificationRead={markNotificationRead}
         onMarkAllNotificationsRead={markAllNotificationsRead}
-        openCustomerLogin={() => { window.location.href = '/'; }}
+        openCustomerLogin={redirectToCustomerLogin}
       />
     );
   }
@@ -6264,7 +6305,7 @@ export default function B2CApp() {
         unreadCount={unreadNotifications}
         onMarkNotificationRead={markNotificationRead}
         onMarkAllNotificationsRead={markAllNotificationsRead}
-        openCustomerLogin={() => { window.location.href = '/'; }}
+        openCustomerLogin={redirectToCustomerLogin}
         cart={cart}
       />
     );
@@ -6282,7 +6323,7 @@ export default function B2CApp() {
         unreadCount={unreadNotifications}
         onMarkNotificationRead={markNotificationRead}
         onMarkAllNotificationsRead={markAllNotificationsRead}
-        openCustomerLogin={() => { window.location.href = '/'; }}
+        openCustomerLogin={redirectToCustomerLogin}
         productId={urlProductId}
         cart={cart}
         setCart={setCart}
@@ -6370,6 +6411,14 @@ const getB2CTierPrice = (product, copies, printSide = 'front') => {
   return Math.round(baseCost * (1 - discount / 100));
 };
 
+const normalizeColorPrintSide = (printSide = 'front') => (
+  printSide === 'both' || printSide === 'front_back' ? 'both' : 'front'
+);
+
+const getColorPrintCartId = (productId, printSide = 'front') => (
+  `color-print-${productId}-${normalizeColorPrintSide(printSide)}`
+);
+
 function CustomerColorPrintShopPage({
   user,
   onLogout,
@@ -6389,7 +6438,16 @@ function CustomerColorPrintShopPage({
   const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem(`b2c_color_print_cart_${user.id}`);
-      return saved ? JSON.parse(saved).map(item => ({ ...item, file: null })) : [];
+      return saved
+        ? JSON.parse(saved).map((item) => ({
+            ...item,
+            cartId: item.cartId || getColorPrintCartId(item.id, item.print_side),
+            print_copy: Math.max(1, Number(item.print_copy || 1)),
+            print_side: normalizeColorPrintSide(item.print_side),
+            amount: Number(item.amount || 0),
+            file: null,
+          }))
+        : [];
     } catch {
       return [];
     }
@@ -6410,6 +6468,33 @@ function CustomerColorPrintShopPage({
     front_back: 'Front & Back',
     single: 'Front Only',
     double: 'Front & Back',
+  };
+
+  const findCartItem = (items, productId, printSide) => (
+    items.find((item) => String(item.id) === String(productId) && normalizeColorPrintSide(item.print_side) === normalizeColorPrintSide(printSide))
+  );
+
+  const buildCartItem = (product, copies, printSide, existingItem = null) => {
+    const normalizedSide = normalizeColorPrintSide(printSide);
+    const safeCopies = Math.max(1, Number(copies) || Number(product.print_copy) || 1);
+    return {
+      cartId: existingItem?.cartId || getColorPrintCartId(product.id, normalizedSide),
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      print_copy: safeCopies,
+      print_side: normalizedSide,
+      amount: getB2CTierPrice(product, safeCopies, normalizedSide),
+      file: existingItem?.file ?? null,
+    };
+  };
+
+  const syncSelectedCopies = (productId, copies) => {
+    setChosenCopies((prev) => ({ ...prev, [productId]: Math.max(1, Number(copies) || 1) }));
+  };
+
+  const syncSelectedSide = (productId, printSide) => {
+    setChosenSides((prev) => ({ ...prev, [productId]: normalizeColorPrintSide(printSide) }));
   };
 
   const PRESET_THEMES = [
@@ -6533,39 +6618,109 @@ function CustomerColorPrintShopPage({
     return () => { isMounted = false; };
   }, [api]);
 
-  const addToCart = (product, copies, printSide) => {
-    const amount = getB2CTierPrice(product, copies, printSide);
-    setCart(current => {
-      const exists = current.find(item => item.id === product.id && item.print_copy === copies && item.print_side === printSide);
-      if (exists) {
-        return current.map(item => item.id === product.id && item.print_copy === copies && item.print_side === printSide
-          ? { ...item, packs: item.packs + 1 }
-          : item
-        );
+  useEffect(() => {
+    if (!products.length) return;
+
+    setCart((current) => current.map((item) => {
+      const product = products.find((entry) => String(entry.id) === String(item.id));
+      if (!product) return item;
+
+      const normalizedSide = normalizeColorPrintSide(item.print_side);
+      const safeCopies = Math.max(1, Number(item.print_copy || product.print_copy || 1));
+      const nextAmount = getB2CTierPrice(product, safeCopies, normalizedSide);
+      const nextCartId = getColorPrintCartId(product.id, normalizedSide);
+
+      if (
+        item.print_copy === safeCopies &&
+        item.print_side === normalizedSide &&
+        item.amount === nextAmount &&
+        item.cartId === nextCartId
+      ) {
+        return item;
       }
-      return [...current, {
-        cartId: `${product.id}-${copies}-${printSide}-${Date.now()}`,
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        print_copy: copies,
-        print_side: printSide,
-        amount: amount,
-        packs: 1,
-        file: null
-      }];
+
+      return {
+        ...item,
+        cartId: nextCartId,
+        print_copy: safeCopies,
+        print_side: normalizedSide,
+        amount: nextAmount,
+      };
+    }));
+  }, [products]);
+
+  const handleChosenSideChange = (product, nextSide) => {
+    const normalizedSide = normalizeColorPrintSide(nextSide);
+    const matchingCartItem = findCartItem(cart, product.id, normalizedSide);
+    syncSelectedSide(product.id, normalizedSide);
+    syncSelectedCopies(product.id, matchingCartItem?.print_copy || product.print_copy);
+  };
+
+  const handleChosenCopiesChange = (product, nextCopies, printSide) => {
+    const normalizedSide = normalizeColorPrintSide(printSide);
+    const safeCopies = Math.max(1, Number(nextCopies) || 1);
+    syncSelectedCopies(product.id, safeCopies);
+
+    setCart((current) => {
+      const existingItem = findCartItem(current, product.id, normalizedSide);
+      if (!existingItem) return current;
+
+      const updatedItem = buildCartItem(product, safeCopies, normalizedSide, existingItem);
+      return current.map((item) => item.cartId === existingItem.cartId ? updatedItem : item);
     });
-    setNotice(`${product.name} (${copies} copies, ${printSide === 'both' ? 'Front & Back' : 'Front Only'}) added to cart.`);
+  };
+
+  const addToCart = (product, copies, printSide) => {
+    const normalizedSide = normalizeColorPrintSide(printSide);
+    const safeCopies = Math.max(1, Number(copies) || Number(product.print_copy) || 1);
+    syncSelectedSide(product.id, normalizedSide);
+    syncSelectedCopies(product.id, safeCopies);
+
+    setCart(current => {
+      const existingItem = findCartItem(current, product.id, normalizedSide);
+      const nextItem = buildCartItem(product, safeCopies, normalizedSide, existingItem);
+      return existingItem
+        ? current.map((item) => item.cartId === existingItem.cartId ? nextItem : item)
+        : [...current, nextItem];
+    });
+    setNotice(`${product.name} (${safeCopies} copies, ${normalizedSide === 'both' ? 'Front & Back' : 'Front Only'}) added to cart.`);
   };
 
   const updateCart = (cartId, values) => {
-    setCart(current => current.map(item => item.cartId === cartId ? { ...item, ...values } : item));
+    setCart((current) => current.map((item) => item.cartId === cartId ? { ...item, ...values } : item));
+  };
+
+  const updateCartCopies = (cartId, copies) => {
+    setCart((current) => {
+      const existingItem = current.find((item) => item.cartId === cartId);
+      if (!existingItem) return current;
+
+      const product = products.find((entry) => String(entry.id) === String(existingItem.id));
+      if (!product) return current;
+
+      const updatedItem = buildCartItem(product, copies, existingItem.print_side, existingItem);
+      syncSelectedSide(existingItem.id, existingItem.print_side);
+      syncSelectedCopies(existingItem.id, updatedItem.print_copy);
+
+      return current.map((item) => item.cartId === cartId ? updatedItem : item);
+    });
   };
 
   const removeCart = (cartId) => {
     setCart(current => {
+      const removedItem = current.find((item) => item.cartId === cartId);
       const next = current.filter(item => item.cartId !== cartId);
       if (next.length === 0) setCartStep(1);
+
+      if (removedItem) {
+        const matchingReplacement = next.find((item) => String(item.id) === String(removedItem.id));
+        syncSelectedSide(removedItem.id, matchingReplacement?.print_side || 'front');
+        syncSelectedCopies(
+          removedItem.id,
+          matchingReplacement?.print_copy || products.find((product) => String(product.id) === String(removedItem.id))?.print_copy || 1
+        );
+      }
+
       return next;
     });
   };
@@ -6597,7 +6752,6 @@ function CustomerColorPrintShopPage({
       formData.append('items_json', JSON.stringify(cart.map(i => ({
         product_id: i.id,
         is_color_print: true,
-        packs: i.packs,
         print_copy: i.print_copy,
         print_side: i.print_side === 'both' ? 'front_back' : 'front'
       }))));
@@ -6637,7 +6791,7 @@ function CustomerColorPrintShopPage({
 
   const activeCategories = categories.filter(c => selectedCatFilter === 'All' || c.name === selectedCatFilter);
 
-  const cartTotal = cart.reduce((sum, item) => sum + Number(item.amount) * item.packs, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + Number(item.amount), 0);
 
   if (loading) {
     return (
@@ -6748,10 +6902,14 @@ function CustomerColorPrintShopPage({
                       </thead>
                       <tbody>
                         {catProducts.map(product => {
-                          const currentCopies = chosenCopies[product.id] ?? product.print_copy;
-                          const currentSide = chosenSides[product.id] ?? 'front';
+                          const currentSide = normalizeColorPrintSide(
+                            chosenSides[product.id] ?? cart.find((item) => String(item.id) === String(product.id))?.print_side ?? 'front'
+                          );
+                          const cartItemForSelection = findCartItem(cart, product.id, currentSide);
+                          const currentCopies = chosenCopies[product.id] ?? cartItemForSelection?.print_copy ?? product.print_copy;
                           const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
                           const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
+                          const inCart = !!cartItemForSelection;
                           const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
 
                           return (
@@ -6762,7 +6920,7 @@ function CustomerColorPrintShopPage({
                               <td data-label="Print Side">
                                 <select
                                   value={currentSide}
-                                  onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
+                                  onChange={e => handleChosenSideChange(product, e.target.value)}
                                   style={{ padding: '6px 10px', fontSize: '14px', borderRadius: '6px', border: '1.5px solid var(--line)', outline: 'none' }}
                                 >
                                   <option value="front">Front Only</option>
@@ -6776,7 +6934,7 @@ function CustomerColorPrintShopPage({
                                     className="adjust-btn"
                                     onClick={() => {
                                       const val = Math.max(1, currentCopies - 1);
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                      handleChosenCopiesChange(product, val, currentSide);
                                     }}
                                   >
                                     −
@@ -6787,7 +6945,7 @@ function CustomerColorPrintShopPage({
                                     value={currentCopies}
                                     onChange={e => {
                                       const val = Math.max(1, Number(e.target.value) || 1);
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                      handleChosenCopiesChange(product, val, currentSide);
                                     }}
                                   />
                                   <button
@@ -6795,7 +6953,7 @@ function CustomerColorPrintShopPage({
                                     className="adjust-btn"
                                     onClick={() => {
                                       const val = currentCopies + 1;
-                                      setChosenCopies(prev => ({ ...prev, [product.id]: val }));
+                                      handleChosenCopiesChange(product, val, currentSide);
                                     }}
                                   >
                                     +
@@ -6812,7 +6970,7 @@ function CustomerColorPrintShopPage({
                                   onClick={() => addToCart(product, currentCopies, currentSide)}
                                   style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
                                 >
-                                  + Add to Cart
+                                  {inCart ? 'Update Cart' : '+ Add to Cart'}
                                 </button>
                               </td>
                             </tr>
@@ -6825,10 +6983,14 @@ function CustomerColorPrintShopPage({
                   {/* Mobile view cards */}
                   <div className="b2c-color-print-mobile-cards">
                     {catProducts.map(product => {
-                      const currentCopies = chosenCopies[product.id] ?? product.print_copy;
-                      const currentSide = chosenSides[product.id] ?? 'front';
+                      const currentSide = normalizeColorPrintSide(
+                        chosenSides[product.id] ?? cart.find((item) => String(item.id) === String(product.id))?.print_side ?? 'front'
+                      );
+                      const cartItemForSelection = findCartItem(cart, product.id, currentSide);
+                      const currentCopies = chosenCopies[product.id] ?? cartItemForSelection?.print_copy ?? product.print_copy;
                       const totalPrice = getB2CTierPrice(product, currentCopies, currentSide);
                       const perCopyPrice = currentCopies > 0 ? (totalPrice / currentCopies) : 0;
+                      const inCart = !!cartItemForSelection;
                       const hasBoth = product.front_back_amount !== null && product.front_back_amount !== undefined && product.front_back_amount !== '' && Number(product.front_back_amount) > 0;
 
                       return (
@@ -6841,7 +7003,7 @@ function CustomerColorPrintShopPage({
                             <span className="b2c-color-print-card-label">Print Side</span>
                             <select
                               value={currentSide}
-                              onChange={e => setChosenSides(prev => ({ ...prev, [product.id]: e.target.value }))}
+                              onChange={e => handleChosenSideChange(product, e.target.value)}
                               style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--line)', outline: 'none' }}
                             >
                               <option value="front">Front Only</option>
@@ -6855,7 +7017,7 @@ function CustomerColorPrintShopPage({
                               <button
                                 type="button"
                                 className="adjust-btn"
-                                onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, currentCopies - 1) }))}
+                                onClick={() => handleChosenCopiesChange(product, Math.max(1, currentCopies - 1), currentSide)}
                               >
                                 −
                               </button>
@@ -6863,12 +7025,12 @@ function CustomerColorPrintShopPage({
                                 type="number"
                                 min="1"
                                 value={currentCopies}
-                                onChange={e => setChosenCopies(prev => ({ ...prev, [product.id]: Math.max(1, Number(e.target.value) || 1) }))}
+                                onChange={e => handleChosenCopiesChange(product, Math.max(1, Number(e.target.value) || 1), currentSide)}
                               />
                               <button
                                 type="button"
                                 className="adjust-btn"
-                                onClick={() => setChosenCopies(prev => ({ ...prev, [product.id]: currentCopies + 1 }))}
+                                onClick={() => handleChosenCopiesChange(product, currentCopies + 1, currentSide)}
                               >
                                 +
                               </button>
@@ -6885,7 +7047,7 @@ function CustomerColorPrintShopPage({
                               style={{ padding: '8px 14px', fontSize: '12px' }}
                               onClick={() => addToCart(product, currentCopies, currentSide)}
                             >
-                              Add to Cart
+                              {inCart ? 'Update Cart' : 'Add to Cart'}
                             </button>
                           </div>
                         </div>
@@ -6940,26 +7102,26 @@ function CustomerColorPrintShopPage({
                           </small>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Packs:</span>
+                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Copies:</span>
                               <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', borderRadius: '4px', overflow: 'hidden', height: '24px' }}>
                                 <button
                                   type="button"
                                   style={{ padding: '0 8px', background: '#f8fafc', border: 'none', cursor: 'pointer', height: '100%', display: 'flex', alignItems: 'center' }}
-                                  onClick={() => updateCart(item.cartId, { packs: Math.max(1, item.packs - 1) })}
+                                  onClick={() => updateCartCopies(item.cartId, Math.max(1, item.print_copy - 1))}
                                 >
                                   −
                                 </button>
-                                <span style={{ width: '30px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold' }}>{item.packs}</span>
+                                <span style={{ width: '56px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold' }}>{item.print_copy}</span>
                                 <button
                                   type="button"
                                   style={{ padding: '0 8px', background: '#f8fafc', border: 'none', cursor: 'pointer', height: '100%', display: 'flex', alignItems: 'center' }}
-                                  onClick={() => updateCart(item.cartId, { packs: item.packs + 1 })}
+                                  onClick={() => updateCartCopies(item.cartId, item.print_copy + 1)}
                                 >
                                   +
                                 </button>
                               </div>
                             </div>
-                            <strong style={{ fontSize: '14px', color: 'var(--blue)' }}>{money(item.amount * item.packs)}</strong>
+                            <strong style={{ fontSize: '14px', color: 'var(--blue)' }}>{money(item.amount)}</strong>
                           </div>
                         </div>
                       </div>
@@ -6995,7 +7157,7 @@ function CustomerColorPrintShopPage({
                   {cart.map((item, index) => (
                     <div key={item.cartId} style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--line)' }}>
                       <strong style={{ fontSize: '13px', color: 'var(--navy)', display: 'block', marginBottom: '2px' }}>{item.name}</strong>
-                      <small style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>{item.print_copy} copies · {item.print_side === 'both' ? 'F&B' : 'Front'} · {item.packs} pack(s)</small>
+                      <small style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>{item.print_copy} copies · {item.print_side === 'both' ? 'F&B' : 'Front'}</small>
                       
                       <label htmlFor={`file-upload-color-${item.cartId}`} style={{
                         display: 'block',

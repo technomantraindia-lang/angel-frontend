@@ -5290,6 +5290,9 @@ body {
   font-weight: 800;
   padding: 12px 20px;
   border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
   transition: all 0.25s ease;
 }
 
@@ -5838,8 +5841,29 @@ body {
 .b2c-admin-tier-table td {
   padding: 14px 12px;
   border-bottom: 1.5px solid rgba(13, 20, 36, 0.05);
-  vertical-align: middle;
+  vertical-align: top;
   background: rgba(255, 252, 247, 0.2);
+}
+
+.b2c-admin-tier-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 66px;
+  justify-content: flex-start;
+}
+
+.b2c-admin-tier-helper {
+  font-size: 11px;
+  color: var(--b2c-success);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.b2c-admin-tier-helper-hidden {
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
 }
 
 .b2c-admin-tier-table input {
@@ -6180,5 +6204,3 @@ body {
     justify-content: space-between;
   }
 }
-
-
