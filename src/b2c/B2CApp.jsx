@@ -53,7 +53,7 @@ const IconFacebook = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
 );
 
-const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: Number(value || 0) % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
 const acceptedArtworkTypes = '.cdr,.zip,.png,.jpg,.jpeg';
 const defaultPolicy = {
   title: 'Printing Policy',
@@ -506,7 +506,12 @@ function B2CAdminPanel({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [categoryName, setCategoryName] = useState('');
+  const [categoryImageFile, setCategoryImageFile] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [removeCategoryImage, setRemoveCategoryImage] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showCategoriesSection, setShowCategoriesSection] = useState(false);
   const [productForm, setProductForm] = useState(() => emptyB2CProductForm());
   const [editingProductId, setEditingProductId] = useState(null);
   const [existingImages, setExistingImages] = useState([]);
@@ -747,11 +752,19 @@ function B2CAdminPanel({
     setCategoryLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('name', categoryName.trim());
+      if (categoryImageFile) {
+        formData.append('image', categoryImageFile);
+      }
+
       await api('/portal/api/admin/b2c/categories', {
         method: 'POST',
-        body: JSON.stringify({ name: categoryName.trim() }),
+        body: formData,
       });
       setCategoryName('');
+      setCategoryImageFile(null);
+      setShowCategoryForm(false);
       setNotice('Customer category added successfully.');
       await loadAdminData();
     } catch (err) {
@@ -776,24 +789,61 @@ function B2CAdminPanel({
     }
   };
 
-  const handleEditCategory = async (category) => {
-    const newName = window.prompt("Edit Category Name:", category.name);
-    if (newName === null) return;
-    const trimmed = newName.trim();
-    if (!trimmed || trimmed === category.name) return;
+  const handleStartEditCategory = (category) => {
+    setEditingCategory(category);
+    setCategoryName(category.name);
+    setCategoryImageFile(null);
+    setRemoveCategoryImage(false);
+    setShowCategoryForm(true);
+    setShowCategoriesSection(true);
+    setError('');
+    setNotice('');
+  };
+
+  const handleCancelEditCategory = () => {
+    setEditingCategory(null);
+    setCategoryName('');
+    setCategoryImageFile(null);
+    setRemoveCategoryImage(false);
+    setShowCategoryForm(false);
+    setError('');
+    setNotice('');
+  };
+
+  const handleUpdateCategory = async (event) => {
+    event.preventDefault();
+    if (!editingCategory || !categoryName.trim()) return;
 
     setError('');
     setNotice('');
+    setCategoryLoading(true);
 
     try {
-      await api(`/portal/api/admin/b2c/categories/${category.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ name: trimmed }),
+      const formData = new FormData();
+      formData.append('name', categoryName.trim());
+      if (categoryImageFile) {
+        formData.append('image', categoryImageFile);
+      }
+      if (removeCategoryImage) {
+        formData.append('remove_image', '1');
+      }
+
+      await api(`/portal/api/admin/b2c/categories/${editingCategory.id}`, {
+        method: 'POST',
+        body: formData,
       });
-      setNotice('Customer category renamed successfully.');
+
+      setEditingCategory(null);
+      setCategoryName('');
+      setCategoryImageFile(null);
+      setRemoveCategoryImage(false);
+      setShowCategoryForm(false);
+      setNotice('Customer category updated successfully.');
       await loadAdminData();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setCategoryLoading(false);
     }
   };
 
@@ -1365,35 +1415,200 @@ function B2CAdminPanel({
           <>
             {tab === 'add_product' && (
               <>
-            <section className="b2c-admin-card">
-              <div className="b2c-admin-card-head">
+            <section className="b2c-admin-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(201, 163, 94, 0.22)', background: 'linear-gradient(180deg, var(--b2c-white) 0%, var(--b2c-pearl) 100%)', borderRadius: '24px', boxShadow: '0 8px 30px rgba(13, 20, 36, 0.04)', marginBottom: '24px' }}>
+              <div 
+                className="b2c-admin-card-head" 
+                onClick={() => {
+                  if (editingCategory) {
+                    // Do not allow collapsing while in edit mode to prevent confusion
+                    return;
+                  }
+                  setShowCategoriesSection(!showCategoriesSection);
+                }}
+                style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  cursor: editingCategory ? 'default' : 'pointer', 
+                  margin: '0', 
+                  padding: '20px 28px',
+                  background: 'linear-gradient(90deg, rgba(201, 163, 94, 0.07) 0%, rgba(201, 163, 94, 0.02) 100%)',
+                  borderBottom: showCategoriesSection ? '1.5px solid rgba(201, 163, 94, 0.16)' : 'none',
+                  transition: 'background-color 0.25s ease',
+                  userSelect: 'none'
+                }}
+                onMouseEnter={(e) => { if (!editingCategory) e.currentTarget.style.backgroundColor = 'rgba(201, 163, 94, 0.12)'; }}
+                onMouseLeave={(e) => { if (!editingCategory) e.currentTarget.style.backgroundColor = ''; }}
+              >
                 <div>
-                  <span className="b2c-pill subtle">Categories</span>
-                  <h2>Manage Customer categories</h2>
+                  <span className="b2c-pill subtle" style={{ marginBottom: '4px', display: 'inline-block' }}>Categories</span>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--b2c-navy)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {editingCategory ? `Edit Category: ${editingCategory.name}` : 'Manage Customer Categories'}
+                    <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--muted)' }}>
+                      ({categories.length} categories)
+                    </span>
+                  </h2>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  {!editingCategory && (
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--b2c-gold)' }}>
+                      {showCategoriesSection ? 'Hide Panel' : 'Expand Panel'}
+                    </span>
+                  )}
+                  {!editingCategory && (
+                    <svg 
+                      width="18" 
+                      height="18" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ 
+                        transform: showCategoriesSection ? 'rotate(180deg)' : 'rotate(0deg)', 
+                        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        color: 'var(--b2c-gold)'
+                      }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  )}
                 </div>
               </div>
 
-              <form className="b2c-admin-inline-form" onSubmit={handleAddCategory}>
-                <input
-                  type="text"
-                  value={categoryName}
-                  onChange={(event) => setCategoryName(event.target.value)}
-                  placeholder="Add new category"
-                />
-                <button className="b2c-btn-primary" type="submit" disabled={categoryLoading}>
-                  {categoryLoading ? 'Adding...' : 'Add Category'}
-                </button>
-              </form>
+              {showCategoriesSection && (
+                <div style={{ padding: '28px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+                    {editingCategory ? (
+                      <button 
+                        className="b2c-btn-secondary" 
+                        type="button" 
+                        onClick={handleCancelEditCategory}
+                        style={{ padding: '8px 16px', fontSize: '13px', width: 'auto' }}
+                      >
+                        Cancel Edit
+                      </button>
+                    ) : (
+                      <button 
+                        className="b2c-btn-primary" 
+                        type="button" 
+                        onClick={() => setShowCategoryForm(!showCategoryForm)}
+                        style={{ padding: '8px 16px', fontSize: '13px', width: 'auto' }}
+                      >
+                        {showCategoryForm ? 'Close Form' : '+ Add Category'}
+                      </button>
+                    )}
+                  </div>
 
-              {categories.length > 0 && (
-                <div className="b2c-admin-chip-list">
-                  {categories.map((category) => (
-                    <div key={category.id} className="b2c-admin-chip">
-                      <span>{category.name}</span>
-                      <button type="button" onClick={() => handleEditCategory(category)} style={{ color: '#1d4ed8', marginRight: '6px' }}>Edit</button>
-                      <button type="button" onClick={() => handleDeleteCategory(category)}>Remove</button>
+                  {showCategoryForm && (
+                    <form 
+                      className="b2c-admin-product-form" 
+                      onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory}
+                      style={{ marginBottom: '30px', padding: '20px', background: 'rgba(201, 163, 94, 0.04)', borderRadius: '16px', border: '1px solid rgba(201, 163, 94, 0.12)' }}
+                    >
+                      <div className="b2c-admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                        <label>
+                          Category Name
+                          <input
+                            type="text"
+                            value={categoryName}
+                            onChange={(event) => setCategoryName(event.target.value)}
+                            placeholder="e.g. Wedding Cards, Visiting Cards"
+                            required
+                          />
+                        </label>
+                        
+                        <label>
+                          Category Image File
+                          <input
+                            type="file"
+                            accept="image/*"
+                            key={categoryImageFile ? 'has-file' : 'no-file'}
+                            onChange={(event) => setCategoryImageFile(event.target.files?.[0] || null)}
+                            style={{ padding: '7px 10px' }}
+                          />
+                        </label>
+                      </div>
+
+                      {editingCategory && editingCategory.image_url && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px' }}>
+                          <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--line)' }}>
+                            <img src={editingCategory.image_url} alt="Current" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 'bold', color: 'var(--b2c-error)', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={removeCategoryImage} 
+                              onChange={(e) => setRemoveCategoryImage(e.target.checked)} 
+                              style={{ width: 'auto', margin: 0 }}
+                            />
+                            Remove current category image
+                          </label>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                        <button className="b2c-btn-primary" type="submit" disabled={categoryLoading}>
+                          {categoryLoading ? 'Saving...' : editingCategory ? 'Update Category' : 'Add Category'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {categories.length > 0 ? (
+                    <div className="b2c-admin-table-wrap" style={{ marginTop: '20px' }}>
+                      <table className="b2c-admin-table" style={{ minWidth: '600px' }}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: '80px' }}>Image</th>
+                            <th>Category Name</th>
+                            <th style={{ width: '150px', textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {categories.map((category) => (
+                            <tr key={category.id}>
+                              <td>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(13,20,36,0.08)', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  {category.image_url ? (
+                                    <img src={category.image_url} alt={category.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 'bold', textAlign: 'center', padding: '2px' }}>No Image</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td style={{ verticalAlign: 'middle', fontWeight: 'bold', fontSize: '15px' }}>
+                                {category.name}
+                              </td>
+                              <td style={{ verticalAlign: 'middle', textAlign: 'right' }}>
+                                <div className="b2c-admin-table-actions" style={{ justifyContent: 'flex-end', gap: '10px' }}>
+                                  <button 
+                                    type="button" 
+                                    className="b2c-btn-secondary" 
+                                    onClick={() => handleStartEditCategory(category)}
+                                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    className="b2c-btn-secondary" 
+                                    onClick={() => handleDeleteCategory(category)}
+                                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' }}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="b2c-admin-empty">No categories available. Please create one above.</div>
+                  )}
                 </div>
               )}
             </section>
@@ -2129,9 +2344,9 @@ function B2CAdminPanel({
                         </div>
                         {Number(baseAmountForTier) > 0 && (
                           <div style={{ fontSize: '11px', color: 'var(--green)', fontWeight: 'bold', marginTop: '4px', paddingLeft: '4px' }}>
-                            💡 {money(Math.round(Number(baseAmountForTier) * (1 - (Number(tier.discount) || 0) / 100)))} per copy
-                            {Number(tier.min) > 0 && ` (Total: ${money(Math.round(Number(baseAmountForTier) * Number(tier.min) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.min} copies`}
-                            {Number(tier.max) > 0 && ` to ${money(Math.round(Number(baseAmountForTier) * Number(tier.max) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.max} copies`}
+                            💡 {money(roundMoneyValue(Number(baseAmountForTier) * (1 - (Number(tier.discount) || 0) / 100)))} per copy
+                            {Number(tier.min) > 0 && ` (Total: ${money(roundMoneyValue(Number(baseAmountForTier) * Number(tier.min) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.min} copies`}
+                            {Number(tier.max) > 0 && ` to ${money(roundMoneyValue(Number(baseAmountForTier) * Number(tier.max) * (1 - (Number(tier.discount) || 0) / 100)))} for ${tier.max} copies`}
                             {Number(tier.min) > 0 && ')'}
                           </div>
                         )}
@@ -3346,7 +3561,7 @@ function CustomerHome({
             {categories.map((cat) => (
               <article key={cat.id} className="b2c-category-card">
                 <div className="b2c-category-img-wrap">
-                  <img src={getProductImage(cat.name)} alt={cat.name} className="b2c-category-img" />
+                  <img src={cat.image_url || getProductImage(cat.name)} alt={cat.name} className="b2c-category-img" />
                   <div className="b2c-category-badge-wrap">
                     <span className="b2c-category-tag">Category</span>
                   </div>
@@ -3524,7 +3739,6 @@ function CustomerHome({
                           </option>
                         ))}
                       </select>
-                      <span className="b2c-field-hint">Select a quantity package. Each option shows the admin-set quantity on the left and the total package price on the right.</span>
                     </div>
 
                     {selectedProduct.sample_pdf_url && (
@@ -3635,17 +3849,7 @@ function CustomerHome({
                         <p className="b2c-drawer-item-spec">
                           Side: {printSideLabels[item.details.printSide] || item.details.printSide}
                         </p>
-                        <label className="b2c-artwork-upload">
-                          <span>Sample file (optional)</span>
-                          <input
-                            type="file"
-                            accept={acceptedArtworkTypes}
-                            onChange={(event) => handleCartFileChange(item.cartId, event.target.files?.[0] || null)}
-                          />
-                        </label>
-                        <div className="b2c-drawer-item-subcopy">
-                          {item.file ? `Attached: ${item.file.name}` : 'Supports CDR, ZIP, PNG, JPG'}
-                        </div>
+
                         <div className="b2c-drawer-item-price-row">
                           <strong>{money(item.total)}</strong>
                           <button className="b2c-drawer-item-remove" onClick={() => handleRemoveFromCart(item.cartId)}>Remove</button>
@@ -4563,7 +4767,7 @@ function GuestExperience({
             {categories.map((cat) => (
               <article key={cat.id || cat.name} className="b2c-category-card">
                 <div className="b2c-category-img-wrap">
-                  <img src={getProductImage(cat.name)} alt={cat.name} className="b2c-category-img" />
+                  <img src={cat.image_url || getProductImage(cat.name)} alt={cat.name} className="b2c-category-img" />
                   <div className="b2c-category-badge-wrap">
                     <span className="b2c-category-tag">Category</span>
                   </div>
@@ -4866,7 +5070,12 @@ function CustomerProductsPage({
             </div>
           ) : (
             filteredProducts.map((product) => (
-              <article key={product.id} className="b2c-premium-product-card">
+              <a 
+                key={product.id} 
+                href={`/product/${product.id}`} 
+                className="b2c-premium-product-card"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
                 <div className="b2c-card-img-wrap">
                   <img src={getProductImage(product)} alt={product.name} className="b2c-card-img" />
                   <div className="b2c-card-badge-wrap">
@@ -4881,18 +5090,14 @@ function CustomerProductsPage({
                     <span className="b2c-card-rating-text">(5.0)</span>
                   </div>
                   <div className="b2c-card-pricing-row">
-                    <div className="b2c-card-price">
-                      <span className="b2c-price-lbl">Starting from</span>
-                      <strong className="b2c-price-val">{money(product.amount)}</strong>
-                    </div>
-                    <div className="b2c-card-actions">
-                      <a href={`/product/${product.id}`} className="b2c-card-btn" style={{ textDecoration: 'none' }}>
-                        View Details <IconArrowRight />
-                      </a>
+                    <div className="b2c-card-actions" style={{ marginLeft: 'auto' }}>
+                      <span className="b2c-card-btn">
+                        Shop Now <IconArrowRight />
+                      </span>
                     </div>
                   </div>
                 </div>
-              </article>
+              </a>
             ))
           )}
         </div>
@@ -5236,7 +5441,6 @@ function CustomerProductDetailsPage({
                       </option>
                     ))}
                   </select>
-                  <span className="b2c-field-hint">Select a quantity package. Each option shows the admin-set quantity on the left and the total package price on the right.</span>
                 </div>
 
                 {product.sample_pdf_url && (
@@ -5382,7 +5586,7 @@ function CustomerProductDetailsPage({
                   </div>
                   
                   <button className="btn primary wide" onClick={() => { window.location.href = '/cart'; }} style={{ width: '100%', padding: '12px', fontSize: '14px', borderRadius: '8px', background: 'var(--b2c-gold)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-                    Next Step (Upload & Note) →
+                    Proceed to Checkout →
                   </button>
                 </div>
               )}
@@ -5405,25 +5609,7 @@ function CustomerProductDetailsPage({
                         {item.quantity} copies · {printSideLabels[item.details.printSide] || item.details.printSide}
                       </small>
                       
-                      <label htmlFor={`file-upload-details-${item.cartId}`} style={{ display: 'block', padding: '12px 8px', border: item.file ? '1px solid #22c55e' : '1px dashed #c9a35e', borderRadius: '8px', background: item.file ? '#f0fdf4' : '#fff', textAlign: 'center', cursor: 'pointer' }}>
-                        <span style={{ display: 'block', fontSize: '12px', color: item.file ? '#16a34a' : 'var(--b2c-gold)', fontWeight: 'bold' }}>
-                          {item.file ? '✓ File Selected' : '📁 Upload Artwork File'}
-                        </span>
-                        <span style={{ display: 'block', fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>Supports CDR, ZIP, PNG, JPG, JPEG</span>
-                        <input 
-                          id={`file-upload-details-${item.cartId}`}
-                          type="file"
-                          accept={acceptedArtworkTypes}
-                          onChange={e => handleCartFileChange(item.cartId, e.target.files?.[0] || null)}
-                          style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
-                        />
-                      </label>
-                      {item.file && (
-                        <div style={{ fontSize: '11px', color: 'var(--b2c-navy)', marginTop: '8px', padding: '6px', background: '#fff', border: '1px solid var(--line)', borderRadius: '4px', wordBreak: 'break-all', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{item.file.name}</span>
-                          <button type="button" onClick={() => handleCartFileChange(item.cartId, null)} style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Remove</button>
-                        </div>
-                      )}
+
                     </div>
                   ))}
                 </div>
@@ -5501,7 +5687,7 @@ function CustomerCartPage({
           <div className="b2c-orders-page-copy">
             <span className="b2c-pill" style={{ background: 'var(--b2c-gold)', color: '#fff', fontWeight: 'bold' }}>Shopping Cart</span>
             <h1 style={{ color: '#fff', fontSize: '32px', marginTop: '12px' }}>Review your personalized selections</h1>
-            <p style={{ opacity: 0.8, fontSize: '14px', marginTop: '5px' }}>Upload artwork files, write special instructions, and complete your purchase order.</p>
+            <p style={{ opacity: 0.8, fontSize: '14px', marginTop: '5px' }}>Write special instructions and complete your purchase order.</p>
           </div>
         </section>
 
@@ -5580,44 +5766,7 @@ function CustomerCartPage({
                         </div>
                       </div>
 
-                      {/* Artwork File Upload Box */}
-                      <div style={{ marginTop: '15px' }}>
-                        <label htmlFor={`file-upload-cart-${item.cartId}`} style={{
-                          display: 'block',
-                          padding: '16px',
-                          border: item.file ? '1.5px solid #22c55e' : '1.5px dashed var(--b2c-gold)',
-                          borderRadius: '12px',
-                          textAlign: 'center',
-                          background: item.file ? '#f0fdf4' : 'rgba(201, 163, 94, 0.04)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}>
-                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: item.file ? '#16a34a' : 'var(--b2c-navy)', display: 'block' }}>
-                            {item.file ? '✓ Artwork File Selected' : '📁 Upload Artwork File'}
-                          </span>
-                          <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>Accepts .cdr, .zip, .png, .jpg, .jpeg</span>
-                          <input
-                            id={`file-upload-cart-${item.cartId}`}
-                            type="file"
-                            accept={acceptedArtworkTypes}
-                            onChange={(e) => handleCartFileChange(item.cartId, e.target.files?.[0] || null)}
-                            style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
-                          />
-                        </label>
 
-                        {item.file && (
-                          <div style={{ fontSize: '12px', color: 'var(--b2c-navy)', marginTop: '8px', padding: '8px 12px', background: '#fff', border: '1px solid var(--line)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: '500' }}>{item.file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleCartFileChange(item.cartId, null)}
-                              style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
-                            >
-                              Remove file
-                            </button>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -5632,10 +5781,6 @@ function CustomerCartPage({
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
                   <span style={{ color: 'var(--b2c-slate)' }}>Subtotal ({cart.length} items)</span>
                   <strong style={{ color: 'var(--b2c-navy)' }}>{money(cartTotal)}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
-                  <span style={{ color: 'var(--b2c-slate)' }}>Estimated Delivery</span>
-                  <span style={{ color: 'var(--b2c-navy)', fontWeight: 'bold' }}>Free Shipping</span>
                 </div>
                 <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '10px 0' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px' }}>
@@ -5658,15 +5803,11 @@ function CustomerCartPage({
                 className="btn primary wide"
                 style={{ width: '100%', padding: '14px', fontSize: '15px', borderRadius: '8px', background: 'var(--b2c-gold)', border: 'none', color: '#fff', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201, 163, 94, 0.2)' }}
                 onClick={async () => {
-                  if (cart.some(item => !item.file)) {
-                    alert('Please upload artwork file for every personalized product in your cart.');
-                    return;
-                  }
                   await handleSendCartInquiry(customerNote);
                 }}
                 disabled={inquiryLoading}
               >
-                {inquiryLoading ? 'Submitting Order...' : 'Place B2C Order'}
+                {inquiryLoading ? 'Submitting Order...' : 'Place Order'}
               </button>
             </aside>
           </div>
@@ -6408,7 +6549,7 @@ const getB2CTierPrice = (product, copies, printSide = 'front') => {
       }
     }
   }
-  return Math.round(baseCost * (1 - discount / 100));
+  return roundMoneyValue(baseCost * (1 - discount / 100));
 };
 
 const normalizeColorPrintSide = (printSide = 'front') => (
@@ -7218,7 +7359,7 @@ function CustomerColorPrintShopPage({
                     onClick={handleCheckout}
                     disabled={checkoutLoading}
                   >
-                    {checkoutLoading ? 'Submitting Order...' : 'Place B2C Order'}
+                    {checkoutLoading ? 'Submitting Order...' : 'Place Order'}
                   </button>
                 </div>
               </div>
