@@ -6265,3 +6265,30 @@ body {
     justify-content: space-between;
   }
 }
+
+/* Remember Me Styles for Customer Portal */
+.b2c-remember-me-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.b2c-remember-me-checkbox {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: var(--b2c-gold) !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+}
+
+.b2c-remember-me-label {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--b2c-navy) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}

@@ -203,6 +203,7 @@ function AuthPage({ onLogin }) {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [form, setForm] = useState({ name: '', company_name: '', email: '', phone: '', address: '', pincode: '', gst_number: '', password: '', password_confirmation: '' });
   const update = e => setForm({ ...form, [e.target.name]: e.target.value });
   async function submit(e) {
@@ -215,7 +216,7 @@ function AuthPage({ onLogin }) {
         const data = await api('/forgot-password', { method: 'POST', body: JSON.stringify({ email: form.email, phone: form.phone, password: form.password, password_confirmation: form.password_confirmation }) });
         setNotice(data.message); setMode('login');
       } else {
-        const data = await api('/login', { method: 'POST', body: JSON.stringify({ email: form.email, password: form.password }) });
+        const data = await api('/login', { method: 'POST', body: JSON.stringify({ email: form.email, password: form.password, remember }) });
         onLogin(data.user);
       }
     } catch (err) { setError(err.message); }
@@ -313,6 +314,20 @@ function AuthPage({ onLogin }) {
               </button>
             </div>
           </label>
+        )}
+        {mode === 'login' && (
+          <div className="full remember-me-wrap">
+            <input
+              type="checkbox"
+              id="remember"
+              className="remember-me-checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            <label htmlFor="remember" className="remember-me-label">
+              Remember me on this device
+            </label>
+          </div>
         )}
         <button className="btn primary full" type="submit">{mode === 'login' ? 'Login to Portal' : mode === 'forgot' ? 'Reset Password' : 'Submit for Approval'}</button>
       </form>

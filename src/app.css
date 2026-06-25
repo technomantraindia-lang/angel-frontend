@@ -2717,5 +2717,41 @@ button {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* Remember Me Styles */
+.remember-me-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.form-grid input[type="checkbox"].remember-me-checkbox {
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 2px solid var(--surface-border) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  accent-color: var(--blue) !important;
+}
+
+.remember-me-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--navy) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
 
 

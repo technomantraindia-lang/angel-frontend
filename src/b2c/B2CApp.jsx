@@ -4756,6 +4756,8 @@ function GuestExperience({
   setShowConfirmPassword,
   previewProducts,
   categories = [],
+  remember,
+  setRemember,
 }) {
   const openCustomerLogin = () => {
     setMode('login');
@@ -4978,6 +4980,21 @@ function GuestExperience({
                         {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {mode === 'login' && (
+                  <div className="b2c-remember-me-wrap">
+                    <input
+                      type="checkbox"
+                      id="b2c-remember"
+                      className="b2c-remember-me-checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                    />
+                    <label htmlFor="b2c-remember" className="b2c-remember-me-label">
+                      Remember me on this device
+                    </label>
                   </div>
                 )}
 
@@ -5919,6 +5936,7 @@ export default function B2CApp() {
   const [notice, setNotice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
@@ -6241,7 +6259,8 @@ export default function B2CApp() {
           method: 'POST',
           body: JSON.stringify({
             email: form.email,
-            password: form.password
+            password: form.password,
+            remember
           })
         });
 
@@ -6589,6 +6608,8 @@ export default function B2CApp() {
         setShowConfirmPassword={setShowConfirmPassword}
         previewProducts={previewProducts}
         categories={categories}
+        remember={remember}
+        setRemember={setRemember}
       />
     );
   }
@@ -6613,6 +6634,8 @@ export default function B2CApp() {
       setShowConfirmPassword={setShowConfirmPassword}
       previewProducts={previewProducts}
       categories={categories}
+      remember={remember}
+      setRemember={setRemember}
     />
   );
 }
