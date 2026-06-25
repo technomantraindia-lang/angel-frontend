@@ -4,6 +4,7 @@ import logo from '../logo.png';
 import carouselTwo from '../carousle 2.png';
 import carouselThree from '../carousle 3.png';
 import carouselFour from '../carousle 4.png';
+import finalBanner from '../newest_banner.png';
 import machineImage from '../machine.png';
 import newBrocher from '../new brocher.png';
 import newWedding from '../new weeding .png';
@@ -181,6 +182,14 @@ const processSteps = [
 ];
 
 const heroSlides = [
+  {
+    image: finalBanner,
+    alt: 'Angel Enterprise premium banner',
+    eyebrow: 'Featured Collection',
+    title: 'Transforming Ideas into Premium Prints',
+    description: 'Discover high-fidelity printing solutions, luxury wedding collections, and bespoke branding stationery.',
+    position: 'center',
+  },
   {
     image: carouselFour,
     alt: 'Angel Enterprise premium print showcase banner',
@@ -446,7 +455,7 @@ function getStandardTierOptionLabel(product, tier, printSide = 'front', recommen
   }, quantityLabel.length);
   const spacer = '\u00A0'.repeat(Math.max(4, (maxQuantityLabelLength - quantityLabel.length) + 6));
 
-  return `${quantityLabel}${spacer}${totalPriceLabel}${isRecommended ? '  - Recommended' : ''}`;
+  return `${quantityLabel}${spacer}(${totalPriceLabel})${isRecommended ? '  - Recommended' : ''}`;
 }
 
 function getDefaultStandardQuantity(product, printSide = 'front') {
@@ -466,6 +475,7 @@ function emptyB2CProductForm(categories = []) {
     print_side_mode: 'front_only',
     pricing_tiers: [createEmptyB2CPricingTier()],
     allow_design_serial: false,
+    allow_artwork_upload: false,
     sort_order: 0,
     remove_sample_pdf: false,
   };
@@ -731,6 +741,7 @@ function B2CAdminPanel({
             front_back_price: fallbackFrontBackPrice,
           }],
       allow_design_serial: Boolean(product.allow_design_serial),
+      allow_artwork_upload: Boolean(product.allow_artwork_upload),
       sort_order: product.sort_order || 0,
       remove_sample_pdf: false,
     });
@@ -957,6 +968,7 @@ function B2CAdminPanel({
       formData.append('pricing_tiers_json', JSON.stringify(normalizedPricingTiers));
       formData.append('gsm_options_json', JSON.stringify([]));
       formData.append('allow_design_serial', productForm.allow_design_serial ? '1' : '0');
+      formData.append('allow_artwork_upload', productForm.allow_artwork_upload ? '1' : '0');
       formData.append('sort_order', '0');
       formData.append('is_active', '1');
       formData.append('remove_sample_pdf', productForm.remove_sample_pdf ? '1' : '0');
@@ -2041,6 +2053,25 @@ function B2CAdminPanel({
                                 </span>
                               </label>
                             </div>
+
+                            <div style={{ borderTop: '1px solid rgba(13, 20, 36, 0.06)', paddingTop: '16px' }}>
+                              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(productForm.allow_artwork_upload)}
+                                  onChange={(event) => handleProductField('allow_artwork_upload', event.target.checked)}
+                                  style={{ marginTop: '3px' }}
+                                />
+                                <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--b2c-navy)' }}>
+                                    Allow Artwork Upload
+                                  </span>
+                                  <span style={{ fontSize: '11px', color: 'var(--b2c-slate)', lineHeight: '1.5' }}>
+                                    Enable this to allow/require the customer to upload an artwork file (PDF, CDR, JPG, PNG, ZIP etc.) for this product.
+                                  </span>
+                                </span>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -3041,7 +3072,7 @@ function HeroCarousel() {
             className={`b2c-hero-slide ${index === activeSlide ? 'active' : ''}`}
             aria-hidden={index !== activeSlide}
           >
-            <img src={slide.image} alt={slide.alt} className="b2c-hero-slide-image" />
+            <img src={slide.image} alt={slide.alt} className="b2c-hero-slide-image" style={{ objectPosition: slide.position || 'center' }} />
           </article>
         ))}
       </div>
@@ -3466,6 +3497,8 @@ function CustomerHome({
       return;
     }
 
+
+
     const finalQuantity = Number(quantity);
     const finalTotal = getStandardTierTotal(selectedProduct, finalQuantity, selectedPrintSide);
     const finalUnitPrice = getStandardUnitPrice(selectedProduct, finalQuantity, selectedPrintSide);
@@ -3571,7 +3604,7 @@ function CustomerHome({
                   <p className="b2c-category-tagline">Explore our premium collection of custom {cat.name.toLowerCase()} options with high-quality finishes.</p>
                   <div className="b2c-category-action-row">
                     <a href={`/products?category=${encodeURIComponent(cat.name)}`} className="b2c-category-btn">
-                      Explore Products <IconArrowRight />
+                      Shop Now <IconArrowRight />
                     </a>
                   </div>
                 </div>
@@ -3768,6 +3801,8 @@ function CustomerHome({
                         </span>
                       </div>
                     )}
+
+
 
                     <div className="b2c-modal-field">
                       <label>Add Instruction</label>
@@ -4777,7 +4812,7 @@ function GuestExperience({
                   <p className="b2c-category-tagline">Explore our premium collection of custom {cat.name.toLowerCase()} options with high-quality finishes.</p>
                   <div className="b2c-category-action-row">
                     <a href={`/products?category=${encodeURIComponent(cat.name)}`} className="b2c-category-btn">
-                      Explore Products <IconArrowRight />
+                      Shop Now <IconArrowRight />
                     </a>
                   </div>
                 </div>
@@ -5295,6 +5330,8 @@ function CustomerProductDetailsPage({
       return;
     }
 
+
+
     setAddingToCart(true);
     const finalQuantity = Number(quantity);
     const baseUnitPrice = getStandardUnitPrice(product, finalQuantity, selectedPrintSide);
@@ -5321,7 +5358,7 @@ function CustomerProductDetailsPage({
         gsmPrice: 0,
         designSerialNumber: trimmedSerialNumber,
       },
-      file: null,
+      file: artworkFile,
     };
     
     setCart([...cart, cartItem]);
@@ -5478,6 +5515,8 @@ function CustomerProductDetailsPage({
                   </div>
                 )}
 
+
+
                 <div className="b2c-modal-field">
                   <label>Add Instruction</label>
                   <textarea
@@ -5608,7 +5647,25 @@ function CustomerProductDetailsPage({
                       <small style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>
                         {item.quantity} copies · {printSideLabels[item.details.printSide] || item.details.printSide}
                       </small>
-                      
+                      {item.product.allow_artwork_upload && (
+                        <div style={{ marginTop: '8px' }}>
+                          <input
+                            type="file"
+                            accept=".pdf,.cdr,.zip,.png,.jpg,.jpeg"
+                            onChange={(e) => handleCartFileChange(item.cartId, e.target.files[0] || null)}
+                            style={{ fontSize: '11px', maxWidth: '100%' }}
+                          />
+                          {item.file ? (
+                            <span style={{ fontSize: '11px', color: 'green', display: 'block', marginTop: '2px' }}>
+                              ✓ {item.file.name}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--b2c-error)', display: 'block', marginTop: '2px', fontWeight: 'bold' }}>
+                              ⚠ Artwork required
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                     </div>
                   ))}
@@ -5765,6 +5822,27 @@ function CustomerCartPage({
                           <strong style={{ fontSize: '20px', color: 'var(--b2c-gold)' }}>{money(item.total)}</strong>
                         </div>
                       </div>
+
+                      {item.product.allow_artwork_upload && (
+                        <div className="b2c-cart-item-upload" style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px dashed rgba(13,20,36,0.06)' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--b2c-navy)', marginBottom: '6px' }}>
+                            Artwork File:
+                          </label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <input
+                              type="file"
+                              accept=".pdf,.cdr,.zip,.png,.jpg,.jpeg"
+                              onChange={(e) => handleCartFileChange(item.cartId, e.target.files[0] || null)}
+                              style={{ fontSize: '12px' }}
+                            />
+                            {item.file ? (
+                              <span style={{ fontSize: '12px', color: 'green', fontWeight: 'bold' }}>✓ {item.file.name}</span>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: 'var(--b2c-error)', fontWeight: 'bold' }}>⚠ Upload required</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
 
                     </div>
@@ -5967,6 +6045,12 @@ export default function B2CApp() {
     const missingRequiredSerial = cart.find((item) => item.product.allow_design_serial && !item.details.designSerialNumber?.trim());
     if (missingRequiredSerial) {
       alert(`Please enter the design serial number for ${missingRequiredSerial.product.name} before placing the order.`);
+      return;
+    }
+
+    const missingArtwork = cart.find((item) => item.product.allow_artwork_upload && !item.file);
+    if (missingArtwork) {
+      alert(`Please upload the artwork file for ${missingArtwork.product.name} before placing the order.`);
       return;
     }
 

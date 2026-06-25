@@ -948,7 +948,9 @@ body {
   position: relative;
   width: 100%;
   margin: 0;
-  aspect-ratio: 2.35 / 1;
+  aspect-ratio: 1.78 / 1; /* Match 16:9 widescreen banners perfectly */
+  min-height: 580px;
+  max-height: 800px;
   border-radius: 0;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(13, 20, 36, 0.08);
@@ -979,7 +981,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: cover; /* Cover full screen as requested */
   object-position: center;
 }
 
@@ -5342,10 +5344,69 @@ body {
 
 .b2c-detail-container {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr 1.1fr;
   gap: 40px;
   align-items: start;
 }
+
+/* Scaling Customer Product Detail Form Sizing and Typography */
+.b2c-modal-form-panel .b2c-modal-customizer-form {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.b2c-modal-form-panel .b2c-modal-customizer-form h2 {
+  font-size: 32px !important;
+}
+
+.b2c-modal-form-panel .b2c-modal-customizer-form p {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+.b2c-modal-form-panel .b2c-modal-field label {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  margin-bottom: 8px !important;
+}
+
+.b2c-modal-form-panel .b2c-input-styled,
+.b2c-modal-form-panel select.b2c-input-styled,
+.b2c-modal-form-panel textarea.b2c-modal-textarea,
+.b2c-modal-form-panel select.b2c-input-styled option {
+  font-size: 15px !important;
+  padding: 14px 18px !important;
+  border-radius: 14px !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+}
+
+.b2c-modal-form-panel .b2c-price-summary-box {
+  padding: 24px !important;
+  border-radius: 18px !important;
+}
+
+.b2c-modal-form-panel .b2c-summary-row {
+  font-size: 15px !important;
+  margin-bottom: 10px !important;
+}
+
+.b2c-modal-form-panel .b2c-summary-row.total {
+  font-size: 19px !important;
+  margin-top: 14px !important;
+}
+
+.b2c-modal-form-panel .b2c-summary-row.total strong {
+  font-size: 22px !important;
+}
+
+.b2c-modal-form-panel .b2c-modal-actions .b2c-btn-primary,
+.b2c-modal-form-panel .b2c-modal-actions .b2c-btn-secondary {
+  font-size: 16px !important;
+  padding: 16px 24px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+}
+
 
 .b2c-fav-button {
   transition: transform 0.2s ease;

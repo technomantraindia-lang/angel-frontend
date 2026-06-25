@@ -2489,7 +2489,7 @@ function AdminPanel({ unreadNotifications = 0 }) {
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--blue)' }}>Tiers defined:</span>
                     {p.pricing_tiers.map((t, idx) => (
                       <span key={idx} style={{ fontSize: '11px', color: 'var(--ink)' }}>
-                        📄 {t.min}{t.max ? ` to ${t.max}` : '+'} copies = <strong>{t.discount}% discount</strong>
+                        📄 {t.min}{t.max ? ` to ${t.max}` : '+'} copies = <strong>{t.discount}% discount</strong> ({t.print_side === 'both' ? 'Front & Back' : 'Front'})
                       </span>
                     ))}
                   </div>
